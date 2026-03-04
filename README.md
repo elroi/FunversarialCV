@@ -1,0 +1,43 @@
+# 🐙 FunversarialCV
+**The Security Architect's Approach to Professional Differentiation.**
+
+FunversarialCV is an open-source tool designed for the "duality of AI security". It allows candidates to "harden" their CVs by injecting technical easter eggs, metadata "watermarks," and adversarial layers that bridge the gap between human creativity and machine parsing.
+
+Built by a Senior Security Architect specialized in AI Governance, this tool serves as a "Red Teaming" exercise for the HR-tech industry.
+
+---
+
+## 🛠 Features (The "Egg Library")
+Every feature in FunversarialCV is an "Egg" mapped to the **OWASP Top 10 for LLM Applications**, allowing for extensible, community-driven "attacks" on automated recruitment systems.
+
+* **The Invisible Hand (LLM01: Prompt Injection):** Injects white-font "system instructions" (0.5pt) to influence LLM-based ranking systems.
+* **The Metadata Shadow (LLM02: Insecure Output):** Embeds custom key-value pairs in file properties (e.g., `Ranking: Top_1%`).
+* **The Logic Bomb (Creative):** Wraps your email address in a pre-filled `mailto:` link formatted as a system log entry.
+* **The Canary Wing (LLM10: Model Theft):** Embeds trackable tokens to notify you when your CV is processed in specific environments.
+
+---
+
+## 🔒 Security & Privacy (The Duality Pillar)
+As a tool focused on **Security for AI and AI for Security**, we prioritize data integrity:
+
+* **Zero-Retention Architecture:** Files are processed entirely in volatile memory (RAM) and are never written to disk or a database.
+* **PII Sanitization:** Before "hardening," the tool identifies PII patterns (Phone, Address) to help you redact sensitive data before sharing your CV globally.
+* **Stateless Execution:** Your data exists only for the duration of the request. Once the download is complete, the memory is purged.
+
+---
+
+## 🚀 For Recruiters & Developers
+* **For Recruiters:** Find the hidden layers? You’ve found a candidate with deep technical integration skills.
+* **For AI Developers:** Use this tool to "unit test" your parsers against prompt injection and metadata manipulation. Learn what it takes to build resilient HR-tech.
+
+---
+
+## 🧩 Extensibility
+The Egg Library is a **Plugin System**. Want to add a new "attack" or a creative "Technical Implementation"? Simply add a new plugin to the `/src/eggs/` folder using our standard `IEgg` interface.
+
+---
+
+## 🎓 About the Creator
+**Elroi Luria** is a Senior Security Architect and Innovation Team Leader focused on **AI Governance** and **Emerging Technologies**. With a background spanning **Cyber Security Innovation at Citi**, **Incident Response at PayPal**, and **Music**, Elroi builds tools that harmonize technical rigor with creative disruption.
+
+---

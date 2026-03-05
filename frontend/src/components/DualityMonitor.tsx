@@ -1,0 +1,218 @@
+import React from "react";
+import type { DualityCheckResult } from "../engine/dualityCheck";
+import clsx from "clsx";
+
+export type ProcessingStageId =
+  | "accept"
+  | "duality-check"
+  | "dehydration"
+  | "injection"
+  | "rehydration";
+
+export type LogLevel = "info" | "success" | "warning" | "error";
+
+export interface LogEntry {
+  id: string;
+  stage: ProcessingStageId;
+  level: LogLevel;
+  message: string;
+}
+
+export type ProcessingState = "idle" | "processing" | "completed" | "error";
+
+export interface DualityMonitorProps {
+  processingState: ProcessingState;
+  activeStage?: ProcessingStageId;
+  log: LogEntry[];
+  dualityResult?: DualityCheckResult | null;
+}
+
+const STAGES: Array<{ id: ProcessingStageId; label: string }> = [
+  { id: "accept", label: "Accept Buffer" },
+  { id: "duality-check", label: "Duality Check" },
+  { id: "dehydration", label: "Dehydration" },
+  { id: "injection", label: "Injection" },
+  { id: "rehydration", label: "Rehydration" },
+];
+
+function stageStatus(
+  stage: ProcessingStageId,
+  activeStage: ProcessingStageId | undefined,
+  processingState: ProcessingState
+): "pending" | "running" | "done" | "error" {
+  if (processingState === "idle") return "pending";
+  if (processingState === "error") {
+    if (stage === activeStage) return "error";
+    return "done";
+  }
+  if (processingState === "completed") return "done";
+  if (!activeStage) return "pending";
+
+  const order = STAGES.map((s) => s.id);
+  const activeIndex = order.indexOf(activeStage);
+  const stageIndex = order.indexOf(stage);
+
+  if (stageIndex < activeIndex) return "done";
+  if (stageIndex === activeIndex) return "running";
+  return "pending";
+}
+
+export const DualityMonitor: React.FC<DualityMonitorProps> = ({
+  processingState,
+  activeStage,
+  log,
+  dualityResult,
+}) => {
+  const showScan =
+    !!dualityResult && dualityResult.matchedPatterns.length > 0;
+
+  return (
+    <section className="flex flex-col gap-4 rounded-xl border border-noir-border bg-noir-panel/60 p-4 text-xs text-noir-foreground/80">
+      <header className="flex items-center justify-between">
+        <div className="text-[10px] uppercase tracking-[0.2em] text-neon-cyan">
+          Duality Monitor
+        </div>
+        <div
+          className={clsx(
+            "rounded-full px-2 py-0.5 text-[10px] font-medium",
+            processingState === "completed" && "border border-neon-green/60",
+            processingState === "processing" && "border border-neon-cyan/60",
+            processingState === "idle" && "border border-noir-border",
+            processingState === "error" && "border border-neon-red/70"
+          )}
+        >
+          {processingState === "idle" && (
+            <span className="text-noir-foreground/70">Idle</span>
+          )}
+          {processingState === "processing" && (
+            <span className="text-neon-cyan">Processing</span>
+          )}
+          {processingState === "completed" && (
+            <span className="text-neon-green">Completed</span>
+          )}
+          {processingState === "error" && (
+            <span className="text-neon-red">Error</span>
+          )}
+        </div>
+      </header>
+
+      <div className="space-y-3">
+        <div className="space-y-2">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-noir-foreground/60">
+            Pipeline Stages
+          </p>
+          <ol className="space-y-1">
+            {STAGES.map((stage) => {
+              const status = stageStatus(stage.id, activeStage, processingState);
+              return (
+                <li
+                  key={stage.id}
+                  className="flex items-center justify-between rounded-lg bg-noir-bg/60 px-2 py-1"
+                >
+                  <span className="font-mono text-[11px]">
+                    {stage.label}
+                  </span>
+                  <span
+                    className={clsx(
+                      "text-[10px] uppercase tracking-[0.18em]",
+                      status === "pending" &&
+                        "text-noir-foreground/50",
+                      status === "running" &&
+                        "text-neon-cyan",
+                      status === "done" &&
+                        "text-neon-green",
+                      status === "error" &&
+                        "text-neon-red"
+                    )}
+                  >
+                    {status}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-noir-foreground/60">
+            Security Scan (Duality Check)
+          </p>
+          <p className="text-[10px] text-noir-foreground/50">
+            PII handling is{" "}
+            <span className="font-semibold text-neon-cyan">
+              Stateless &amp; Volatile
+            </span>{" "}
+            — in-memory only, never stored.
+          </p>
+          <div className="mt-1 rounded-lg border border-noir-border bg-noir-bg/80 p-2">
+            {!dualityResult && (
+              <p className="text-[11px] text-noir-foreground/60">
+                Awaiting first scan. Drop a CV to begin analysis.
+              </p>
+            )}
+            {dualityResult && !dualityResult.hasSuspiciousPatterns && (
+              <p className="text-[11px] text-neon-green">
+                No suspicious prompt-injection patterns detected in the
+                original CV.
+              </p>
+            )}
+            {dualityResult && dualityResult.hasSuspiciousPatterns && (
+              <div className="space-y-2">
+                <p className="text-[11px] text-neon-red">
+                  Suspicious prompt-injection–style patterns detected:
+                </p>
+                <ul className="ml-4 list-disc space-y-1 text-[11px]">
+                  {dualityResult.matchedPatterns.map((name) => (
+                    <li key={name} className="text-noir-foreground/80">
+                      <span className="font-mono text-[11px]">
+                        {name}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {dualityResult.details && (
+                  <ul className="mt-1 space-y-0.5 text-[10px] text-noir-foreground/60">
+                    {dualityResult.details.map((detail) => (
+                      <li key={detail}>{detail}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-noir-foreground/60">
+          Terminal Log
+        </p>
+        <div className="noir-shell relative max-h-40 overflow-y-auto rounded-lg border border-noir-border bg-noir-bg/80 p-2 font-mono text-[11px] leading-relaxed">
+          <div className="scanlines pointer-events-none absolute inset-0 rounded-lg" />
+          <div className="relative space-y-0.5">
+            {log.length === 0 && (
+              <p className="text-noir-foreground/50">
+                &gt; Awaiting input… drop a CV to start the pipeline.
+              </p>
+            )}
+            {log.map((entry) => (
+              <p
+                key={entry.id}
+                className={clsx(
+                  "whitespace-pre-wrap",
+                  entry.level === "info" && "text-noir-foreground/80",
+                  entry.level === "success" && "text-neon-green",
+                  entry.level === "warning" && "text-neon-cyan",
+                  entry.level === "error" && "text-neon-red"
+                )}
+              >
+                {entry.message}
+              </p>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+

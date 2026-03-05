@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #050814;
+  --color-panel: #050b18;
+  --color-border: #1f2937;
+  --color-foreground: #e5e7eb;
+  --color-neon-green: #00ff41;
+  --color-neon-red: #ff3131;
+  --color-neon-cyan: #00d4ff;
+}
+
+body {
+  @apply bg-noir-bg text-noir-foreground antialiased;
+}
+
+.noir-shell {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(148, 163, 184, 0.12) 1px,
+    transparent 0
+  );
+  background-size: 16px 16px;
+}
+
+.scanlines::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(15, 23, 42, 0.7) 0px,
+    rgba(15, 23, 42, 0.7) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: soft-light;
+}
+

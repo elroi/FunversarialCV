@@ -1,0 +1,372 @@
+"use client";
+
+import React, { useCallback, useEffect, useState } from "react";
+import clsx from "clsx";
+import {
+  INCIDENT_MAILTO_TEMPLATES,
+  DEFAULT_INCIDENT_MAILTO_TEMPLATE_ID,
+  getIncidentMailtoTemplateById,
+} from "../eggs/templates/incidentMailtoTemplates";
+import type {
+  IncidentMailtoConfig,
+  IncidentMailtoEmailConfig,
+  IncidentMailtoTemplateConfig,
+} from "../eggs/templates/incidentMailtoTypes";
+
+const CUSTOM_TEMPLATE_ID = "__custom__";
+
+export interface IncidentMailtoConfigCardProps {
+  /** Current JSON payload; controlled from parent. */
+  payload?: string;
+  /** Called when user changes config; parent should set payloads["incident-mailto"]. */
+  onPayloadChange: (payload: string) => void;
+  disabled?: boolean;
+  className?: string;
+}
+
+function parsePayloadSafe(payload: string | undefined): IncidentMailtoConfig {
+  if (!payload?.trim()) return {};
+  try {
+    const parsed = JSON.parse(payload) as IncidentMailtoConfig;
+    return typeof parsed === "object" && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> = ({
+  payload,
+  onPayloadChange,
+  disabled = false,
+  className,
+}) => {
+  const config = parsePayloadSafe(payload);
+
+  const [templateId, setTemplateId] = useState<string>(
+    config.templateConfig?.templateId ?? DEFAULT_INCIDENT_MAILTO_TEMPLATE_ID
+  );
+  const [subject, setSubject] = useState(
+    config.templateConfig?.subjectTemplate ?? ""
+  );
+  const [body, setBody] = useState(config.templateConfig?.bodyTemplate ?? "");
+  const [incidentType, setIncidentType] = useState(
+    config.templateConfig?.incidentType ?? ""
+  );
+  const [mailtoLabel, setMailtoLabel] = useState(
+    config.templateConfig?.mailtoLabel ?? ""
+  );
+  const [ccInput, setCcInput] = useState(
+    (config.emailConfig?.cc ?? []).join(", ")
+  );
+  const [bccInput, setBccInput] = useState(
+    (config.emailConfig?.bcc ?? []).join(", ")
+  );
+  const [mode, setMode] = useState<"wrap-visible-email" | "append-separate-link">(
+    config.emailConfig?.mode ?? "wrap-visible-email"
+  );
+  const [targetTokenIndex, setTargetTokenIndex] = useState(
+    config.emailConfig?.targetTokenIndex ?? 0
+  );
+  const [showAdvanced, setShowAdvanced] = useState(templateId === CUSTOM_TEMPLATE_ID);
+
+  const selectedTemplate = templateId === CUSTOM_TEMPLATE_ID ? null : getIncidentMailtoTemplateById(templateId);
+  const displaySubject = subject || (selectedTemplate?.config.subjectTemplate ?? "");
+  const displayBody = body || (selectedTemplate?.config.bodyTemplate ?? "");
+
+  /** Card title reflects selected template for quick visual feedback. */
+  const cardTitle =
+    templateId === CUSTOM_TEMPLATE_ID
+      ? "Incident Report Mailto"
+      : selectedTemplate?.name ?? "Incident Report Mailto";
+
+  const emit = useCallback(
+    (next: IncidentMailtoConfig) => {
+      onPayloadChange(JSON.stringify(next));
+    },
+    [onPayloadChange]
+  );
+
+  useEffect(() => {
+    const cc = ccInput
+      .split(/[\s,]+/)
+      .map((e) => e.trim())
+      .filter(Boolean);
+    const bcc = bccInput
+      .split(/[\s,]+/)
+      .map((e) => e.trim())
+      .filter(Boolean);
+    const emailConfig: IncidentMailtoEmailConfig = {
+      mode,
+      targetTokenIndex,
+      ...(cc.length ? { cc } : {}),
+      ...(bcc.length ? { bcc } : {}),
+    };
+    const templateConfig: IncidentMailtoTemplateConfig = {
+      ...(templateId !== CUSTOM_TEMPLATE_ID ? { templateId } : {}),
+      ...(subject ? { subjectTemplate: subject } : {}),
+      ...(body ? { bodyTemplate: body } : {}),
+      ...(incidentType ? { incidentType } : {}),
+      ...(mailtoLabel ? { mailtoLabel } : {}),
+    };
+    emit({ emailConfig, templateConfig });
+  }, [
+    ccInput,
+    bccInput,
+    mode,
+    targetTokenIndex,
+    templateId,
+    subject,
+    body,
+    incidentType,
+    mailtoLabel,
+    emit,
+  ]);
+
+  const onTemplateChange = (id: string) => {
+    setTemplateId(id);
+    if (id !== CUSTOM_TEMPLATE_ID) {
+      const t = getIncidentMailtoTemplateById(id);
+      if (t) {
+        setSubject(t.config.subjectTemplate ?? "");
+        setBody(t.config.bodyTemplate ?? "");
+        setIncidentType(t.config.incidentType ?? "");
+        setMailtoLabel(t.config.mailtoLabel ?? "");
+      }
+      setShowAdvanced(false);
+    } else {
+      setShowAdvanced(true);
+    }
+  };
+
+  return (
+    <div
+      className={clsx(
+        "rounded-xl border border-noir-border bg-noir-panel/70 p-4 noir-shell",
+        disabled && "opacity-60 pointer-events-none",
+        className
+      )}
+      aria-labelledby="incident-mailto-card-title"
+    >
+      <h3
+        id="incident-mailto-card-title"
+        className="text-xs font-semibold uppercase tracking-[0.2em] text-neon-cyan mb-3"
+        title="OWASP LLM02: Wraps the candidate email in a pre-filled mailto link for incident reporting. Tests whether downstream systems follow structured output (links) insecurely."
+      >
+        {cardTitle}
+      </h3>
+      <p
+        className="text-[10px] text-noir-foreground/70 mb-4"
+        title="This egg identifies the email token in your CV and turns it into a rich mailto: link with configurable subject, body, CC, and BCC."
+      >
+        LLM02: Insecure Output — wrap candidate email in a pre-filled mailto link.
+      </p>
+
+      {/* —— Email fields (routing) —— */}
+      <fieldset className="mb-4">
+        <legend
+          className="text-[10px] uppercase tracking-wider text-noir-foreground/80 mb-2"
+          title="CC, BCC, link placement, and which email token in the CV gets the mailto link."
+        >
+          Email routing
+        </legend>
+        <div className="space-y-2">
+          <label
+            className="block text-[10px] text-noir-foreground/70"
+            title="Optional comma-separated addresses to CC on the incident report (e.g. security@company.com). Non-PII service addresses only."
+          >
+            CC (comma-separated)
+          </label>
+          <input
+            type="text"
+            value={ccInput}
+            onChange={(e) => setCcInput(e.target.value)}
+            placeholder="security@example.com"
+            className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
+            aria-describedby="cc-hint"
+            title="Optional comma-separated addresses to CC on the incident report. Non-PII service addresses only."
+          />
+          <span id="cc-hint" className="text-[10px] text-noir-foreground/50">
+            Non-PII service addresses only.
+          </span>
+          <label
+            className="block text-[10px] text-noir-foreground/70 mt-2"
+            title="Optional comma-separated addresses to BCC on the incident report."
+          >
+            BCC
+          </label>
+          <input
+            type="text"
+            value={bccInput}
+            onChange={(e) => setBccInput(e.target.value)}
+            placeholder="optional"
+            className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
+            title="Optional comma-separated addresses to BCC."
+          />
+          <div className="flex gap-4 pt-2">
+            <label
+              className="flex items-center gap-2 text-xs"
+              title="Replaces the visible email in the CV with the same text plus the full mailto link in parentheses (e.g. email@example.com (mailto:?...)). Use to test if parsers or clients make the address clickable."
+            >
+              <input
+                type="radio"
+                name="incident-mailto-mode"
+                checked={mode === "wrap-visible-email"}
+                onChange={() => setMode("wrap-visible-email")}
+                className="text-neon-cyan focus:ring-neon-cyan"
+              />
+              Wrap visible email
+            </label>
+            <label
+              className="flex items-center gap-2 text-xs"
+              title="Keeps the email as-is and adds a separate incident link next to it (e.g. email@example.com — Report incident [mailto:?...]). Use when you want the CV text unchanged but still want a planted link."
+            >
+              <input
+                type="radio"
+                name="incident-mailto-mode"
+                checked={mode === "append-separate-link"}
+                onChange={() => setMode("append-separate-link")}
+                className="text-neon-cyan focus:ring-neon-cyan"
+              />
+              Append link
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <label
+              className="text-[10px] text-noir-foreground/70"
+              title="Your CV's email addresses are replaced by tokens {{PII_EMAIL_0}}, {{PII_EMAIL_1}}, etc. This index (0-based) chooses which token gets the mailto link. Use 0 for the first email, 1 for the second, and so on."
+            >
+              Email token index
+            </label>
+            <input
+              type="number"
+              min={0}
+              value={targetTokenIndex}
+              onChange={(e) => setTargetTokenIndex(parseInt(e.target.value, 10) || 0)}
+              className="w-16 rounded border border-noir-border bg-noir-bg px-2 py-1 text-xs focus:border-neon-cyan focus:outline-none"
+              aria-label="Which PII_EMAIL token to use (0-based)"
+              title="0-based index: which {{PII_EMAIL_n}} token gets the mailto link (0 = first email, 1 = second, etc.)."
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      {/* —— Template fields —— */}
+      <fieldset>
+        <legend
+          className="text-[10px] uppercase tracking-wider text-noir-foreground/80 mb-2"
+          title="Preset subject, body, and incident type. Override any field to mix styles (e.g. canary wording with a different subject)."
+        >
+          Incident template
+        </legend>
+        <div className="space-y-2">
+          <label
+            className="block text-[10px] text-noir-foreground/70"
+            title="Preset subject, body, and incident type. You can override any field below to mix styles (e.g. canary wording with a different subject)."
+          >
+            Template
+          </label>
+          <select
+            value={templateId}
+            onChange={(e) => onTemplateChange(e.target.value)}
+            className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground focus:border-neon-cyan focus:outline-none"
+            aria-describedby="template-hint"
+            aria-label="Choose incident mailto template"
+            title="Choose a preset or Custom to edit everything. Templates are presets — use Override to mix features (e.g. canary body + any subject)."
+          >
+            {INCIDENT_MAILTO_TEMPLATES.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+            <option value={CUSTOM_TEMPLATE_ID}>Custom / Advanced</option>
+          </select>
+          <p
+            id="template-hint"
+            className="text-[10px] text-noir-foreground/50"
+            title="Templates only pre-fill subject, body, and incident type. Features like canary wording are not locked to one template — mix and match via Override."
+          >
+            Templates are presets. Use &quot;Override subject/body&quot; to mix features (e.g. canary-style body with another subject, or add incident types to any template).
+          </p>
+
+          {selectedTemplate?.description && (
+            <p className="text-[10px] text-neon-cyan/80 italic">
+              {selectedTemplate.description}
+            </p>
+          )}
+
+          {(showAdvanced || templateId === CUSTOM_TEMPLATE_ID) && (
+            <div className="mt-3 space-y-2 pt-2 border-t border-noir-border">
+              <label
+                className="block text-[10px] text-noir-foreground/70"
+                title="The email subject line of the incident report (mailto subject= parameter)."
+              >
+                Subject
+              </label>
+              <input
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder={displaySubject || "Incident Report — FunversarialCV"}
+                className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
+                title="Subject line of the incident email (mailto subject= parameter)."
+              />
+              <label
+                className="block text-[10px] text-noir-foreground/70"
+                title="The body text of the incident email (mailto body= parameter)."
+              >
+                Body
+              </label>
+              <textarea
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                placeholder={displayBody || "This incident was triggered by an adversarial CV layer."}
+                rows={3}
+                className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none resize-y"
+                title="Body text of the incident email (mailto body= parameter). Can include canary-style or custom wording."
+              />
+              <label
+                className="block text-[10px] text-noir-foreground/70"
+                title="Optional tag sent as x-incident-type in the mailto query (e.g. LLM_Prompt_Abuse_Canary, Model_Theft_Canary). Available for any template."
+              >
+                Incident type tag
+              </label>
+              <input
+                type="text"
+                value={incidentType}
+                onChange={(e) => setIncidentType(e.target.value)}
+                placeholder="e.g. LLM_Prompt_Abuse_Canary"
+                className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
+                title="Optional x-incident-type mailto parameter. Use with any template (e.g. canary, screening abuse)."
+              />
+              <label
+                className="block text-[10px] text-noir-foreground/70"
+                title="When using Append link mode, this is the visible label for the incident link (e.g. Report incident)."
+              >
+                Link label
+              </label>
+              <input
+                type="text"
+                value={mailtoLabel}
+                onChange={(e) => setMailtoLabel(e.target.value)}
+                placeholder="Report incident"
+                className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
+                title="Visible label for the link when using Append link mode."
+              />
+            </div>
+          )}
+
+          {!showAdvanced && templateId !== CUSTOM_TEMPLATE_ID && (
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(true)}
+              className="text-[10px] text-neon-cyan hover:underline mt-1"
+              title="Templates are presets. Click to show subject, body, incident type, and link label so you can mix features (e.g. canary-style body with another subject)."
+            >
+              Override subject/body
+            </button>
+          )}
+        </div>
+      </fieldset>
+    </div>
+  );
+};

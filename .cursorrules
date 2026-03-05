@@ -29,3 +29,7 @@ You are an expert Fullstack Security Engineer and AI Architect. You are assistin
 - Use functional programming patterns where possible.
 - Provide clear comments for every security-related logic block.
 - Ensure the "LLM-Trap" (Invisible Prompt Injection) is rendered at 0.5pt font in white to ensure invisibility to humans but readability for parsers.
+
+## 🔧 Development Practices
+- **TDD:** Always write code in TDD: write tests first, then implement to make them pass.
+- **Feature branches:** Always make changes in feature branches; never commit directly to `main`. Create a branch (e.g. `feature/...` or `fix/...`), implement and test there, then merge to `main` via PR or after review.

@@ -15,6 +15,9 @@ import { MetadataShadowConfigCard } from "../src/components/MetadataShadowConfig
 import type { DualityCheckResult } from "../src/engine/dualityCheck";
 import { EGG_OPTIONS, DEFAULT_ENABLED_EGG_IDS } from "../src/eggs/eggMetadata";
 
+/** Must match API route MAX_BODY_BYTES so client rejects before sending. */
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
@@ -215,7 +218,10 @@ export default function Home() {
             <div className="mb-4 text-xs uppercase tracking-[0.2em] text-neon-cyan">
               Input Channel
             </div>
-            <DropZone onFileSelect={onFileSelect} />
+            <DropZone onFileSelect={onFileSelect} maxSizeBytes={MAX_FILE_SIZE_BYTES} />
+            <p className="mt-1 text-[10px] text-noir-foreground/50">
+              Max 10 MB. PDF or DOCX only.
+            </p>
             {selectedFileName && (
               <>
                 <p className="mt-3 text-xs text-neon-green">

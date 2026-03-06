@@ -5,6 +5,9 @@
 
 import { NextRequest } from "next/server";
 
+/** Max request body size (file) — 10 MB. Enforced in-route; App Router has no built-in body limit. */
+export const MAX_BODY_BYTES = 10 * 1024 * 1024;
+
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const file = formData.get("file");
@@ -15,6 +18,12 @@ export async function POST(request: NextRequest) {
     );
   }
   const buffer = Buffer.from(await file.arrayBuffer());
+  if (buffer.length > MAX_BODY_BYTES) {
+    return Response.json(
+      { error: "File too large. Max size is 10 MB." },
+      { status: 413 }
+    );
+  }
   const payloadsRaw = formData.get("payloads");
   let payloads: Record<string, string> = {};
   if (payloadsRaw && typeof payloadsRaw === "string") {
@@ -45,6 +54,8 @@ export async function POST(request: NextRequest) {
   const { AVAILABLE_EGGS } = await import("@/eggs/registry");
   const {
     detectDocumentType,
+    MIME_PDF,
+    MIME_DOCX,
   } = await import("@/engine/documentExtract");
 
   const mimeType = detectDocumentType(buffer);
@@ -54,6 +65,17 @@ export async function POST(request: NextRequest) {
         error:
           "Unsupported or invalid document: file must be a valid PDF or DOCX.",
       },
+      { status: 400 }
+    );
+  }
+
+  const ext = file.name.toLowerCase();
+  if (
+    (mimeType === MIME_PDF && !ext.endsWith(".pdf")) ||
+    (mimeType === MIME_DOCX && !ext.endsWith(".docx"))
+  ) {
+    return Response.json(
+      { error: "File content does not match extension." },
       { status: 400 }
     );
   }

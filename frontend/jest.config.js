@@ -4,7 +4,19 @@ module.exports = {
   roots: ["<rootDir>/src"],
   testMatch: ["**/*.test.ts", "**/*.test.tsx"],
   moduleNameMapper: { "^@/(.*)$": "<rootDir>/src/$1" },
-  transform: { "^.+\\.tsx?$": "ts-jest" },
+  // Next.js tsconfig uses jsx: "preserve"; Jest needs JSX compiled for Node, so override here.
+  transform: {
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        tsconfig: {
+          jsx: "react-jsx",
+          module: "commonjs",
+          moduleResolution: "node",
+        },
+      },
+    ],
+  },
   collectCoverageFrom: [
     "src/**/*.{ts,tsx}",
     "!src/**/*.d.ts",

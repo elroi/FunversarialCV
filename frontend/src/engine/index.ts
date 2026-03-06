@@ -3,7 +3,7 @@
  */
 
 export { process, type ProcessorInput, type ProcessorOutput } from "./Processor";
-export { runScan, type ScanInput, type ScanResult } from "../lib/Scanner";
+export { runScan, buildScannerReport, DUALITY_ALERT_MESSAGE, type ScanInput, type ScanResult, type ScannerReport } from "../lib/Scanner";
 export { runDualityCheck, type DualityCheckResult } from "./dualityCheck";
 export {
   extractText,

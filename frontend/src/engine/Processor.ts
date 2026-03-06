@@ -5,8 +5,8 @@
 
 import { dehydrate, rehydrate } from "../lib/vault";
 import type { IEgg } from "../types/egg";
-import { runScan } from "../lib/Scanner";
-import type { ScanResult } from "../lib/Scanner";
+import { runScan, buildScannerReport } from "../lib/Scanner";
+import type { ScanResult, ScannerReport } from "../lib/Scanner";
 import {
   extractText,
   createDocumentWithText,
@@ -25,6 +25,8 @@ export interface ProcessorOutput {
   buffer: Buffer;
   /** Pre-hardening scan result (observational; does not block processing). */
   dualityCheck: ScanResult;
+  /** Duality feedback report; includes [DUALITY_ALERT] when existing adversarial layer detected. */
+  scannerReport: ScannerReport;
 }
 
 /**
@@ -45,7 +47,8 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
 
   // —— Stage 2: Duality check (defensive scan) — observational only; no PII leaves this step ——
   const rawText = await extractText(buffer, mimeType);
-  const dualityCheck = await runScan({ text: rawText, buffer, mimeType });
+  const scan = await runScan({ text: rawText, buffer, mimeType });
+  const scannerReport = buildScannerReport(scan);
 
   // —— Stage 3: Dehydration — only tokens from here until rehydration ——
   const { dehydrated, store } = dehydrate(rawText);
@@ -65,5 +68,5 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
   const rehydratedText = rehydrate(finalText, store);
   const outputBuffer = await createDocumentWithText(rehydratedText, mimeType);
 
-  return { buffer: outputBuffer, dualityCheck };
+  return { buffer: outputBuffer, dualityCheck: scan, scannerReport };
 }

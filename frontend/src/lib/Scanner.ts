@@ -21,6 +21,25 @@ export interface ScanResult {
   details?: string[];
 }
 
+/** Duality feedback: report returned alongside the hardened buffer when an existing adversarial layer is detected. */
+export interface ScannerReport {
+  /** Pre-hardening scan result. */
+  scan: ScanResult;
+  /** Alerts for the duality feedback loop; includes [DUALITY_ALERT] when existing injection/layer is found. */
+  alerts: string[];
+}
+
+/** Message emitted when the scanner finds an existing adversarial layer (prompt injection, canary, or metadata stuffing). */
+export const DUALITY_ALERT_MESSAGE = "[DUALITY_ALERT] Existing Adversarial Layer Detected.";
+
+/**
+ * Builds a ScannerReport from a ScanResult. When the scan found suspicious patterns, adds the duality alert.
+ */
+export function buildScannerReport(scan: ScanResult): ScannerReport {
+  const alerts: string[] = scan.hasSuspiciousPatterns ? [DUALITY_ALERT_MESSAGE] : [];
+  return { scan, alerts };
+}
+
 // —— Detection rules (OWASP LLM01-aligned). Single source of truth for patterns. ——
 const LLM01_PATTERNS: Array<{ name: string; regex: RegExp }> = [
   { name: "ignore_previous_instructions", regex: /ignore\s+(?:all\s+)?(?:previous|above)\s+instructions?/gi },

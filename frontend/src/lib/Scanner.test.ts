@@ -2,7 +2,7 @@
  * Scanner tests (TDD): Pre-hardening defensive scan — LLM01, LLM10, metadata, edge cases.
  */
 
-import { runScan } from "./Scanner";
+import { runScan, buildScannerReport, DUALITY_ALERT_MESSAGE } from "./Scanner";
 import { PDFDocument } from "pdf-lib";
 import { MIME_PDF, MIME_DOCX } from "../engine/documentExtract";
 import JSZip from "jszip";
@@ -156,6 +156,26 @@ describe("Scanner", () => {
       });
       expect(result.hasSuspiciousPatterns).toBe(true);
       expect(result.matchedPatterns).toContain("metadata_ranking");
+    });
+  });
+
+  describe("ScannerReport (duality feedback loop)", () => {
+    it("buildScannerReport adds [DUALITY_ALERT] when scan has suspicious patterns", () => {
+      const report = buildScannerReport({
+        hasSuspiciousPatterns: true,
+        matchedPatterns: ["ignore_previous_instructions"],
+        details: ["ignore_previous_instructions: 1 match(es)"],
+      });
+      expect(report.scan.hasSuspiciousPatterns).toBe(true);
+      expect(report.alerts).toContain(DUALITY_ALERT_MESSAGE);
+    });
+
+    it("buildScannerReport has empty alerts when scan is clean", () => {
+      const report = buildScannerReport({
+        hasSuspiciousPatterns: false,
+        matchedPatterns: [],
+      });
+      expect(report.alerts).toEqual([]);
     });
   });
 });

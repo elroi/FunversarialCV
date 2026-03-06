@@ -7,6 +7,20 @@ Built by a Senior Security Architect specialized in AI Governance, this tool ser
 
 ---
 
+## 📖 Using FunversarialCV
+
+The service uses a **two-step flow** so you can configure eggs before hardening:
+
+1. **Upload your CV** — Drop or select a PDF or DOCX file. The file is "armed" (held in memory in your browser only); no processing runs yet.
+2. **Configure eggs** — Use the config cards to set options for each egg (e.g. Incident Mailto template, Canary Wing URL or token). You can change these as needed.
+3. **Click Harden** — When ready, click **Harden** to run the pipeline. The file is sent to the server, processed in memory (stateless), and your hardened CV downloads automatically. The Duality Monitor shows the pre-hardening scan result (e.g. existing prompt-injection or canary patterns in your original file).
+
+You can upload a different file at any time to replace the armed CV and configure again before hardening.
+
+**Note:** Hardening rebuilds the document from extracted text; original PDF or DOCX layout and styling are not preserved in the output.
+
+---
+
 ## 🛠 Features (The "Egg Library")
 Every feature in FunversarialCV is an "Egg" mapped to the **OWASP Top 10 for LLM Applications**, allowing for extensible, community-driven "attacks" on automated recruitment systems.
 
@@ -34,6 +48,8 @@ As a tool focused on **Security for AI and AI for Security**, we prioritize data
 
 ## 🧩 Extensibility
 The Egg Library is a **Plugin System**. Want to add a new "attack" or a creative "Technical Implementation"? Simply add a new plugin to the `/src/eggs/` folder using our standard `IEgg` interface.
+
+Implementation plan and contributing: see [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md).
 
 ---
 

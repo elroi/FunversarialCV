@@ -116,3 +116,24 @@ export async function createDocumentWithText(
 export function isSupportedMimeType(mime: string): mime is SupportedMimeType {
   return mime === MIME_PDF || mime === MIME_DOCX;
 }
+
+/**
+ * Detects document type from in-file magic bytes (not from filename or Content-Type).
+ * PDF: %PDF (0x25, 0x50, 0x44, 0x46); DOCX: PK (ZIP, 0x50, 0x4b).
+ */
+export function detectDocumentType(buffer: Buffer): SupportedMimeType | null {
+  if (!buffer || buffer.length < 2) return null;
+  if (
+    buffer.length >= 4 &&
+    buffer[0] === 0x25 &&
+    buffer[1] === 0x50 &&
+    buffer[2] === 0x44 &&
+    buffer[3] === 0x46
+  ) {
+    return MIME_PDF;
+  }
+  if (buffer[0] === 0x50 && buffer[1] === 0x4b) {
+    return MIME_DOCX;
+  }
+  return null;
+}

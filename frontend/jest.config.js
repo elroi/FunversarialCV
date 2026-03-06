@@ -1,7 +1,7 @@
 /** @type {import('jest').Config} */
 module.exports = {
   testEnvironment: "jsdom",
-  roots: ["<rootDir>/src"],
+  roots: ["<rootDir>/src", "<rootDir>/app"],
   testMatch: ["**/*.test.ts", "**/*.test.tsx"],
   moduleNameMapper: { "^@/(.*)$": "<rootDir>/src/$1" },
   // Next.js tsconfig uses jsx: "preserve"; Jest needs JSX compiled for Node, so override here.

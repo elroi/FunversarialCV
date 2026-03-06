@@ -35,6 +35,11 @@ const STAGES: Array<{ id: ProcessingStageId; label: string }> = [
   { id: "rehydration", label: "Rehydration" },
 ];
 
+/** Remediation copy for duality feedback loop (single source; generic for LLM01, LLM10, metadata). */
+const DUALITY_REMEDIATION_LABEL = "Remediation";
+const DUALITY_REMEDIATION_MESSAGE =
+  "Warning: Existing adversarial layers (prompt injection, canary URLs, or metadata) may decrease document readability for modern LLM parsers.";
+
 function stageStatus(
   stage: ProcessingStageId,
   activeStage: ProcessingStageId | undefined,
@@ -161,22 +166,32 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
                 <p className="text-[11px] text-neon-red">
                   Suspicious patterns detected (prompt-injection, canary URLs, or metadata):
                 </p>
-                <ul className="ml-4 list-disc space-y-1 text-[11px]">
+                <ul className="ml-4 list-disc space-y-1 text-[11px] text-neon-red">
                   {dualityResult.matchedPatterns.map((name) => (
-                    <li key={name} className="text-noir-foreground/80">
-                      <span className="font-mono text-[11px]">
-                        {name}
-                      </span>
+                    <li key={name}>
+                      <span className="font-mono">{name}</span>
                     </li>
                   ))}
                 </ul>
                 {dualityResult.details && (
-                  <ul className="mt-1 space-y-0.5 text-[10px] text-noir-foreground/60">
+                  <ul className="mt-1 space-y-0.5 text-[10px] text-neon-red">
                     {dualityResult.details.map((detail) => (
                       <li key={detail}>{detail}</li>
                     ))}
                   </ul>
                 )}
+                <div
+                  className="mt-2 border-l-4 border-neon-red/70 rounded-r-lg bg-noir-bg/90 px-2 py-1.5"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-red/90">
+                    {DUALITY_REMEDIATION_LABEL}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-noir-foreground/90">
+                    {DUALITY_REMEDIATION_MESSAGE}
+                  </p>
+                </div>
               </div>
             )}
           </div>

@@ -54,13 +54,37 @@ describe("DualityMonitor", () => {
       />
     );
 
-    expect(screen.getByText(/security scan/i)).toBeInTheDocument();
+    expect(screen.getByText(/pre-hardening scan/i)).toBeInTheDocument();
     expect(
       screen.getByText(/ignore_previous_instructions/i)
     ).toBeInTheDocument();
     expect(screen.getByText(/jailbreak_style/i)).toBeInTheDocument();
     expect(
       screen.getByText(/ignore_previous_instructions: 2 match\(es\)/i)
+    ).toBeInTheDocument();
+  });
+
+  it("shows Remediation block with message when existing adversarial layer detected", () => {
+    // When Jest/JSX is fixed: asserts Remediation label and generic message are present.
+    const resultWithFindings: DualityCheckResult = {
+      hasSuspiciousPatterns: true,
+      matchedPatterns: ["existing_canary_url"],
+      details: ["existing_canary_url: 1 match(es)"],
+    };
+
+    render(
+      <DualityMonitor
+        processingState="completed"
+        log={[]}
+        dualityResult={resultWithFindings}
+      />
+    );
+
+    expect(screen.getByText("Remediation")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /existing adversarial layers.*may decrease document readability for modern LLM parsers/i
+      )
     ).toBeInTheDocument();
   });
 

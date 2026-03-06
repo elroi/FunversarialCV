@@ -9,6 +9,7 @@ import {
   type ProcessingState,
 } from "../src/components/DualityMonitor";
 import { IncidentMailtoConfigCard } from "../src/components/IncidentMailtoConfigCard";
+import { CanaryWingConfigCard } from "../src/components/CanaryWingConfigCard";
 import type { DualityCheckResult } from "../src/engine/dualityCheck";
 
 export default function Home() {
@@ -23,6 +24,7 @@ export default function Home() {
   const [dualityResult, setDualityResult] =
     useState<DualityCheckResult | null>(null);
   const [incidentMailtoPayload, setIncidentMailtoPayload] = useState<string>("");
+  const [canaryWingPayload, setCanaryWingPayload] = useState<string>("");
 
   const startPipelineForFile = (file: File) => {
     const name = file.name;
@@ -120,6 +122,12 @@ export default function Home() {
               <IncidentMailtoConfigCard
                 payload={incidentMailtoPayload}
                 onPayloadChange={setIncidentMailtoPayload}
+              />
+            </div>
+            <div className="mt-4">
+              <CanaryWingConfigCard
+                payload={canaryWingPayload}
+                onPayloadChange={setCanaryWingPayload}
               />
             </div>
           </div>

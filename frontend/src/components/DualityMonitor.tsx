@@ -135,7 +135,7 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
 
         <div className="space-y-2">
           <p className="text-[10px] uppercase tracking-[0.2em] text-noir-foreground/60">
-            Security Scan (Duality Check)
+            Pre-hardening scan (Duality Check)
           </p>
           <p className="text-[10px] text-noir-foreground/50">
             PII handling is{" "}
@@ -159,7 +159,7 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
             {dualityResult && dualityResult.hasSuspiciousPatterns && (
               <div className="space-y-2">
                 <p className="text-[11px] text-neon-red">
-                  Suspicious prompt-injection–style patterns detected:
+                  Suspicious patterns detected (prompt-injection, canary URLs, or metadata):
                 </p>
                 <ul className="ml-4 list-disc space-y-1 text-[11px]">
                   {dualityResult.matchedPatterns.map((name) => (

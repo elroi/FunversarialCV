@@ -53,7 +53,7 @@ describe("InvisibleHand", () => {
     it("injects trap text into PDF buffer (default when payload empty)", async () => {
       const minimalPdf = await createDocumentWithText("Resume content", MIME_PDF);
       const result = await invisibleHand.transform(minimalPdf, "");
-      const doc = await PDFDocument.load(result);
+      const doc = await PDFDocument.load(new Uint8Array(result));
       expect(doc.getPageCount()).toBeGreaterThanOrEqual(1);
       // PDF streams are compressed; trap text is embedded invisibly (0.5pt white)
       expect(result.length).toBeGreaterThan(minimalPdf.length);
@@ -63,7 +63,7 @@ describe("InvisibleHand", () => {
       const minimalPdf = await createDocumentWithText("Resume content", MIME_PDF);
       const custom = "My custom system note for AI.";
       const result = await invisibleHand.transform(minimalPdf, custom);
-      const doc = await PDFDocument.load(result);
+      const doc = await PDFDocument.load(new Uint8Array(result));
       expect(doc.getPageCount()).toBeGreaterThanOrEqual(1);
       // PDF streams are compressed; we verified transform ran and produced valid PDF
       expect(result.length).toBeGreaterThan(minimalPdf.length);

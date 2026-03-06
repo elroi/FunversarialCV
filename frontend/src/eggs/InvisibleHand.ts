@@ -46,7 +46,8 @@ export const invisibleHand: IEgg = {
     const trapText = getTrapText(payload);
 
     if (isPdfBuffer(buffer)) {
-      const doc = await PDFDocument.load(buffer);
+      const bytes = new Uint8Array(buffer);
+      const doc = await PDFDocument.load(bytes);
       const pages = doc.getPages();
       const page = pages[0];
       if (!page) return buffer;

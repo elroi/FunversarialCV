@@ -5,7 +5,8 @@
 
 import { dehydrate, rehydrate } from "../lib/vault";
 import type { IEgg } from "../types/egg";
-import { runDualityCheck, type DualityCheckResult } from "./dualityCheck";
+import { runScan } from "../lib/Scanner";
+import type { ScanResult } from "../lib/Scanner";
 import {
   extractText,
   createDocumentWithText,
@@ -22,7 +23,8 @@ export interface ProcessorInput {
 
 export interface ProcessorOutput {
   buffer: Buffer;
-  dualityCheck: DualityCheckResult;
+  /** Pre-hardening scan result (observational; does not block processing). */
+  dualityCheck: ScanResult;
 }
 
 /**
@@ -41,9 +43,9 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
     throw new Error(`Unsupported document type: ${mimeType}. Use PDF or DOCX.`);
   }
 
-  // —— Stage 2: Duality check — observational only; no PII leaves this step ——
+  // —— Stage 2: Duality check (defensive scan) — observational only; no PII leaves this step ——
   const rawText = await extractText(buffer, mimeType);
-  const dualityCheck = runDualityCheck(rawText);
+  const dualityCheck = await runScan({ text: rawText, buffer, mimeType });
 
   // —— Stage 3: Dehydration — only tokens from here until rehydration ——
   const { dehydrated, store } = dehydrate(rawText);

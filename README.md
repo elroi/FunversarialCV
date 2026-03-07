@@ -42,14 +42,14 @@ As a tool focused on **Security for AI and AI for Security**, we prioritize data
 
 ## 🚀 For Recruiters & Developers
 * **For Recruiters:** Find the hidden layers? You’ve found a candidate with deep technical integration skills.
-* **For AI Developers:** Use this tool to "unit test" your parsers against prompt injection and metadata manipulation. Learn what it takes to build resilient HR-tech.
+* **For AI Developers:** Use this tool to "unit test" your parsers against prompt injection and metadata manipulation. Learn what it takes to build resilient HR-tech. API contract: [docs/API.md](docs/API.md).
 
 ---
 
 ## 🧩 Extensibility
 The Egg Library is a **Plugin System**. Want to add a new "attack" or a creative "Technical Implementation"? Simply add a new plugin to the `/src/eggs/` folder using our standard `IEgg` interface.
 
-Implementation plan and contributing: see [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and workflow. Implementation plan: [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md).
 
 ---
 

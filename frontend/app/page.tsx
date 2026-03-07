@@ -41,6 +41,11 @@ export default function Home() {
   const successMessageRef = useRef<HTMLParagraphElement>(null);
   const retryButtonRef = useRef<HTMLButtonElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
+  const lastHardenedBlobRef = useRef<Blob | null>(null);
+  const lastHardenedConfigRef = useRef<{
+    payloads: Record<string, string>;
+    eggIds: string[];
+  } | null>(null);
   const [dualityMonitorOpen, setDualityMonitorOpen] = useState(true);
 
   const toggleEgg = (id: string) => {
@@ -57,6 +62,8 @@ export default function Home() {
     setSelectedFileName(file.name);
     setError(null);
     setSuccessMessage(null);
+    lastHardenedBlobRef.current = null;
+    lastHardenedConfigRef.current = null;
     setDualityResult(null);
     setLog([]);
     setProcessingState("idle");
@@ -68,11 +75,64 @@ export default function Home() {
     setSelectedFileName(null);
     setError(null);
     setSuccessMessage(null);
+    lastHardenedBlobRef.current = null;
+    lastHardenedConfigRef.current = null;
     setDualityResult(null);
     setLog([]);
     setProcessingState("idle");
     setActiveStage(undefined);
   }, []);
+
+  const triggerDownload = useCallback(() => {
+    const blob = lastHardenedBlobRef.current;
+    if (!blob || !successMessage) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = successMessage;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [successMessage]);
+
+  /** True if egg config (payloads or enabled set) has changed since last successful harden. */
+  const haveEggsChanged = useCallback(() => {
+    const snap = lastHardenedConfigRef.current;
+    if (!snap) return false;
+    const currentIds = [...enabledEggIds].sort();
+    const snapIds = [...snap.eggIds].sort();
+    if (
+      currentIds.length !== snapIds.length ||
+      currentIds.some((id, i) => id !== snapIds[i])
+    )
+      return true;
+    const payloads: Record<string, string> = {
+      "invisible-hand": invisibleHandPayload,
+      "incident-mailto": incidentMailtoPayload,
+      "canary-wing": canaryWingPayload,
+      "metadata-shadow": metadataShadowPayload,
+    };
+    const currentPayloads: Record<string, string> = {};
+    for (const id of enabledEggIds) {
+      if (payloads[id] !== undefined) currentPayloads[id] = payloads[id];
+    }
+    const snapKeys = Object.keys(snap.payloads).sort();
+    const currentKeys = Object.keys(currentPayloads).sort();
+    if (
+      snapKeys.length !== currentKeys.length ||
+      snapKeys.some((k, i) => k !== currentKeys[i])
+    )
+      return true;
+    for (const id of snapKeys) {
+      if (currentPayloads[id] !== snap.payloads[id]) return true;
+    }
+    return false;
+  }, [
+    enabledEggIds,
+    invisibleHandPayload,
+    incidentMailtoPayload,
+    canaryWingPayload,
+    metadataShadowPayload,
+  ]);
 
   const runHarden = () => {
     if (!selectedFile) return;
@@ -82,6 +142,9 @@ export default function Home() {
   const startPipelineForFile = async (file: File) => {
     const name = file.name;
     setError(null);
+    setSuccessMessage(null);
+    lastHardenedBlobRef.current = null;
+    lastHardenedConfigRef.current = null;
     setProcessingState("processing");
     setActiveStage("accept");
     setLog([
@@ -144,12 +207,11 @@ export default function Home() {
         bytes[i] = binaryString.charCodeAt(i);
       }
       const blob = new Blob([bytes], { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `hardened-${originalName}`;
-      a.click();
-      URL.revokeObjectURL(url);
+      lastHardenedBlobRef.current = blob;
+      lastHardenedConfigRef.current = {
+        payloads: { ...payloadsForEnabled },
+        eggIds: [...enabledEggIds],
+      };
 
       if (scannerScan && typeof scannerScan === "object") {
         setDualityResult({
@@ -308,15 +370,34 @@ export default function Home() {
               </>
             )}
             {successMessage && (
-              <p
-                ref={successMessageRef}
-                tabIndex={-1}
-                role="status"
-                aria-live="polite"
-                className="mt-2 text-xs text-neon-green"
-              >
-                &gt; Hardened CV downloaded as <span className="font-mono">{successMessage}</span>
-              </p>
+              <div className="mt-2" role="status" aria-live="polite">
+                <p
+                  ref={successMessageRef}
+                  tabIndex={-1}
+                  className="text-xs text-neon-green"
+                >
+                  &gt; Hardened CV ready: <span className="font-mono">{successMessage}</span>
+                </p>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  <Button
+                    variant="primary"
+                    onClick={triggerDownload}
+                    className="min-h-[36px] py-2"
+                    aria-label={`Download ${successMessage}`}
+                  >
+                    Download
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={runHarden}
+                    disabled={processingState === "processing" || !haveEggsChanged()}
+                    className="min-h-[36px] py-2"
+                    aria-label="Re-process with current egg config"
+                  >
+                    Re-process
+                  </Button>
+                </div>
+              </div>
             )}
             {error && (
               <div ref={errorRef} className="mt-2" role="alert">

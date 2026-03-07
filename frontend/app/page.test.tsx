@@ -46,7 +46,7 @@ describe("Home page", () => {
   });
 
   describe("success message after download", () => {
-    it("shows success message with filename after successful harden", async () => {
+    it("shows success message with filename and Download button after successful harden", async () => {
       global.fetch = mockFetchSuccess("my-cv.pdf");
       render(<Home />);
 
@@ -65,6 +65,12 @@ describe("Home page", () => {
       await waitFor(() => {
         expect(screen.getByText(/hardened.*my-cv\.pdf/i)).toBeInTheDocument();
       });
+
+      const downloadBtn = screen.getByRole("button", { name: /download/i });
+      expect(downloadBtn).toBeInTheDocument();
+      fireEvent.click(downloadBtn);
+      expect(createObjectURL).toHaveBeenCalled();
+      expect(revokeObjectURL).toHaveBeenCalled();
     });
   });
 

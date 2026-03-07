@@ -112,6 +112,7 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
             value={key}
             onChange={handleKeyChange}
             placeholder="Ranking"
+            disabled={disabled}
             className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
             aria-describedby="meta-key-hint"
           />
@@ -129,6 +130,7 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
             onChange={handleValueChange}
             placeholder="Top_1%"
             maxLength={MAX_VALUE_LENGTH}
+            disabled={disabled}
             className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
             aria-describedby="meta-value-hint"
           />

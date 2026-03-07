@@ -99,6 +99,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://canarytokens.com/feedback/abc/xyz123"
+            disabled={disabled}
             className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
             title="Full URL to embed as-is (e.g. CanaryTokens.com). If set, base URL and token are ignored."
             aria-describedby="url-hint"
@@ -120,6 +121,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
             placeholder="https://your-app.example.com/api/canary"
+            disabled={disabled}
             className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
             title="Base URL for your canary endpoint. If url is empty, we build baseUrl/token. Defaults to this app's /api/canary when left blank."
             aria-describedby="baseurl-hint"
@@ -141,6 +143,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
             value={token}
             onChange={(e) => setToken(e.target.value)}
             placeholder="safe-token-or-leave-blank"
+            disabled={disabled}
             className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
             title="Optional token for the URL path. If empty, a UUID is generated. Never put PII here."
             aria-describedby="token-hint"

@@ -41,3 +41,41 @@ body {
   mix-blend-mode: soft-light;
 }
 
+/* Terminal-style blinking cursor (for pipeline log when processing). */
+@keyframes cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.terminal-cursor::after {
+  content: "▌";
+  animation: cursor-blink 1s step-end infinite;
+  margin-left: 2px;
+}
+
+/* Subtle pulse for Engine Online badge. */
+@keyframes engine-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.25); }
+  50% { box-shadow: 0 0 0 4px rgba(0, 255, 65, 0.1); }
+}
+
+.engine-online-pulse {
+  animation: engine-pulse 2s ease-in-out infinite;
+}
+
+/* Music-themed loading (M.Mus/BA.Mus): minimal waveform bars. */
+@keyframes music-bar {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
+.music-loading-bar {
+  animation: music-bar 0.5s ease-in-out infinite;
+}
+
+.music-loading-bar:nth-child(1) { animation-delay: 0s; }
+.music-loading-bar:nth-child(2) { animation-delay: 0.1s; }
+.music-loading-bar:nth-child(3) { animation-delay: 0.2s; }
+.music-loading-bar:nth-child(4) { animation-delay: 0.15s; }
+.music-loading-bar:nth-child(5) { animation-delay: 0.05s; }
+

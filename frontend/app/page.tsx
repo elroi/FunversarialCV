@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { DropZone } from "../src/components/DropZone";
 import {
   DualityMonitor,
@@ -14,6 +14,8 @@ import { InvisibleHandConfigCard } from "../src/components/InvisibleHandConfigCa
 import { MetadataShadowConfigCard } from "../src/components/MetadataShadowConfigCard";
 import type { DualityCheckResult } from "../src/engine/dualityCheck";
 import { EGG_OPTIONS, DEFAULT_ENABLED_EGG_IDS } from "../src/eggs/eggMetadata";
+import { Button } from "../src/components/ui/Button";
+import { Card } from "../src/components/ui/Card";
 
 /** Must match API route MAX_BODY_BYTES so client rejects before sending. */
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -35,6 +37,11 @@ export default function Home() {
   const [canaryWingPayload, setCanaryWingPayload] = useState<string>("");
   const [metadataShadowPayload, setMetadataShadowPayload] = useState<string>("");
   const [enabledEggIds, setEnabledEggIds] = useState<Set<string>>(() => new Set(DEFAULT_ENABLED_EGG_IDS));
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const successMessageRef = useRef<HTMLParagraphElement>(null);
+  const retryButtonRef = useRef<HTMLButtonElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+  const [dualityMonitorOpen, setDualityMonitorOpen] = useState(true);
 
   const toggleEgg = (id: string) => {
     setEnabledEggIds((prev) => {
@@ -49,11 +56,23 @@ export default function Home() {
     setSelectedFile(file);
     setSelectedFileName(file.name);
     setError(null);
+    setSuccessMessage(null);
     setDualityResult(null);
     setLog([]);
     setProcessingState("idle");
     setActiveStage(undefined);
   };
+
+  const clearFile = useCallback(() => {
+    setSelectedFile(null);
+    setSelectedFileName(null);
+    setError(null);
+    setSuccessMessage(null);
+    setDualityResult(null);
+    setLog([]);
+    setProcessingState("idle");
+    setActiveStage(undefined);
+  }, []);
 
   const runHarden = () => {
     if (!selectedFile) return;
@@ -110,6 +129,7 @@ export default function Home() {
             message: `[ERROR] ${errMsg}`,
           },
         ]);
+        retryButtonRef.current?.focus();
         return;
       }
 
@@ -145,6 +165,8 @@ export default function Home() {
 
       setProcessingState("completed");
       setActiveStage("rehydration");
+      setSuccessMessage(`hardened-${originalName}`);
+      successMessageRef.current?.focus();
       setLog((prev) => [
         ...prev,
         {
@@ -179,6 +201,7 @@ export default function Home() {
       setError("Network error. Please try again.");
       setProcessingState("error");
       setActiveStage("accept");
+      retryButtonRef.current?.focus();
       setLog((prev) => [
         ...prev,
         {
@@ -192,7 +215,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-noir-bg text-noir-foreground">
+    <main id="main-content" className="min-h-screen bg-noir-bg text-noir-foreground">
       <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-6 py-10">
         <header className="mb-10 flex items-center justify-between border-b border-noir-border pb-4">
           <div>
@@ -208,7 +231,7 @@ export default function Home() {
               PII Mode: Stateless &amp; Volatile
             </p>
           </div>
-          <span className="rounded-full border border-neon-green/60 bg-noir-panel px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-neon-green">
+          <span className="rounded-full border border-neon-green/60 bg-noir-panel px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-neon-green engine-online-pulse">
             Engine Online
           </span>
         </header>
@@ -227,17 +250,26 @@ export default function Home() {
                 <p className="mt-3 text-xs text-neon-green">
                   &gt; Armed CV: <span className="font-semibold">{selectedFileName}</span>
                 </p>
+                <Button
+                  variant="secondary"
+                  onClick={clearFile}
+                  className="mt-1 text-[10px] min-h-[32px] py-1 px-2"
+                  aria-label="Clear file"
+                >
+                  Change file
+                </Button>
                 <p className="mt-1 text-[10px] text-noir-foreground/60">
                   Configure eggs below, then click Harden.
                 </p>
                 <p className="mt-0.5 text-[10px] text-noir-foreground/50">
                   Output uses plain-text layout; original formatting is not preserved.
                 </p>
-                <div className="mt-3 rounded-lg border border-noir-border bg-noir-panel/50 px-3 py-2">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-noir-foreground/60 mb-2">
-                    Eggs to run
-                  </p>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                <div className="mt-3">
+                  <Card className="px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-noir-foreground/60 mb-2">
+                      Eggs to run
+                    </p>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1">
                     {EGG_OPTIONS.map((egg) => (
                       <label
                         key={egg.id}
@@ -252,56 +284,107 @@ export default function Home() {
                         <span>{egg.name}</span>
                       </label>
                     ))}
-                  </div>
+                    </div>
+                  </Card>
                 </div>
-                <button
-                  type="button"
+                <Button
                   onClick={runHarden}
                   disabled={processingState === "processing"}
-                  className="mt-4 w-full rounded-lg border border-neon-green bg-noir-panel px-4 py-3 text-sm font-medium text-neon-green transition hover:bg-neon-green/10 disabled:pointer-events-none disabled:opacity-50"
+                  aria-label={processingState === "processing" ? "Harden (processing…)" : "Harden"}
+                  className="mt-4 w-full flex items-center justify-center gap-2"
                 >
+                  {processingState === "processing" && (
+                    <span className="flex items-end gap-0.5 h-4" aria-hidden="true">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <span
+                          key={i}
+                          className="music-loading-bar w-0.5 h-3 bg-neon-cyan rounded-full origin-bottom"
+                        />
+                      ))}
+                    </span>
+                  )}
                   {processingState === "processing" ? "Processing…" : "Harden"}
-                </button>
+                </Button>
               </>
             )}
-            {error && (
-              <p className="mt-2 text-xs text-neon-red">
-                &gt; Alert: {error}
+            {successMessage && (
+              <p
+                ref={successMessageRef}
+                tabIndex={-1}
+                role="status"
+                aria-live="polite"
+                className="mt-2 text-xs text-neon-green"
+              >
+                &gt; Hardened CV downloaded as <span className="font-mono">{successMessage}</span>
               </p>
+            )}
+            {error && (
+              <div ref={errorRef} className="mt-2" role="alert">
+                <p className="text-xs text-neon-red">
+                  &gt; Alert: {error}
+                </p>
+                <Button
+                  ref={retryButtonRef}
+                  variant="secondary"
+                  onClick={runHarden}
+                  className="mt-1 text-xs px-2 py-1 min-h-[44px]"
+                  aria-label="Retry"
+                >
+                  Retry
+                </Button>
+              </div>
             )}
             <div className="mt-6">
               <InvisibleHandConfigCard
                 payload={invisibleHandPayload}
                 onPayloadChange={setInvisibleHandPayload}
+                disabled={!enabledEggIds.has("invisible-hand")}
               />
             </div>
             <div className="mt-4">
               <IncidentMailtoConfigCard
                 payload={incidentMailtoPayload}
                 onPayloadChange={setIncidentMailtoPayload}
+                disabled={!enabledEggIds.has("incident-mailto")}
               />
             </div>
             <div className="mt-4">
               <CanaryWingConfigCard
                 payload={canaryWingPayload}
                 onPayloadChange={setCanaryWingPayload}
+                disabled={!enabledEggIds.has("canary-wing")}
               />
             </div>
             <div className="mt-4">
               <MetadataShadowConfigCard
                 payload={metadataShadowPayload}
                 onPayloadChange={setMetadataShadowPayload}
+                disabled={!enabledEggIds.has("metadata-shadow")}
               />
             </div>
           </div>
 
-          <aside className="mt-8 w-full text-xs text-noir-foreground/80 md:mt-0 md:w-80 md:shrink-0">
+          <aside className="mt-8 w-full text-xs text-noir-foreground/80 md:mt-0 md:w-80 md:shrink-0 md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-3rem)] md:overflow-y-auto">
+            <div className="block md:hidden mb-2">
+              <button
+                type="button"
+                onClick={() => setDualityMonitorOpen((o) => !o)}
+                className="text-[10px] uppercase tracking-[0.2em] text-neon-cyan focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50 rounded px-2 py-1"
+                aria-expanded={dualityMonitorOpen ? "true" : "false"}
+                aria-controls="duality-monitor-content"
+                id="duality-monitor-toggle"
+              >
+                {dualityMonitorOpen ? "▼ Pipeline status" : "▶ Pipeline status"}
+              </button>
+            </div>
+            <div id="duality-monitor-content" className={dualityMonitorOpen ? "block" : "hidden md:block"} aria-labelledby="duality-monitor-toggle">
             <DualityMonitor
               processingState={processingState}
               activeStage={activeStage}
               log={log}
               dualityResult={dualityResult ?? undefined}
             />
+            </div>
           </aside>
         </section>
       </div>

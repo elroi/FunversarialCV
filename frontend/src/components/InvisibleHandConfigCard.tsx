@@ -68,6 +68,7 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
           placeholder="Leave blank to use default system note."
           maxLength={MAX_PAYLOAD_LENGTH}
           rows={3}
+          disabled={disabled}
           className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none resize-y"
           title="Optional. Leave blank to use default system note. Max 500 characters."
           aria-describedby="invisible-hand-hint"

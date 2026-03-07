@@ -16,6 +16,12 @@ export default function RootLayout({
       <body
         className={`${jetBrainsMono.className} min-h-screen bg-noir-bg text-noir-foreground`}
       >
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-noir-panel focus:px-3 focus:py-2 focus:text-neon-cyan focus:outline-none focus:ring-2 focus:ring-neon-cyan"
+        >
+          Skip to main content
+        </a>
         {children}
       </body>
     </html>

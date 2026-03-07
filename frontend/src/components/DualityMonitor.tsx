@@ -202,7 +202,11 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
         <p className="text-[10px] uppercase tracking-[0.2em] text-noir-foreground/60">
           Terminal Log
         </p>
-        <div className="noir-shell relative max-h-40 overflow-y-auto rounded-lg border border-noir-border bg-noir-bg/80 p-2 font-mono text-[11px] leading-relaxed">
+        <div className="noir-shell relative max-h-40 overflow-y-auto rounded-lg border border-noir-border bg-noir-bg/80 p-2 font-mono text-[11px] leading-relaxed"
+          role="log"
+          aria-live="polite"
+          aria-label="Terminal log"
+        >
           <div className="scanlines pointer-events-none absolute inset-0 rounded-lg" />
           <div className="relative space-y-0.5">
             {log.length === 0 && (
@@ -224,6 +228,9 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
                 {entry.message}
               </p>
             ))}
+            {processingState === "processing" && (
+              <span className="terminal-cursor text-neon-green inline-block" aria-hidden="true" />
+            )}
           </div>
         </div>
       </div>

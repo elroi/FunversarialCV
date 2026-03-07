@@ -48,7 +48,7 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
     >
       <h3
         id="invisible-hand-card-title"
-        className="text-xs font-semibold uppercase tracking-[0.2em] text-neon-cyan mb-3"
+        className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-neon-cyan mb-3"
         title="OWASP LLM01: Injects a 0.5pt white system note for AI parsers; invisible to humans, readable by LLMs."
       >
         The Invisible Hand (LLM01)
@@ -73,7 +73,7 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
           title="Optional. Leave blank to use default system note. Max 500 characters."
           aria-describedby="invisible-hand-hint"
         />
-        <p id="invisible-hand-hint" className="text-[10px] text-noir-foreground/50 mt-1">
+        <p id="invisible-hand-hint" className="text-[10px] sm:text-xs text-noir-foreground/50 mt-1">
           {trapText.length}/{MAX_PAYLOAD_LENGTH} characters. No HTML or script; letters, digits, spaces, and basic punctuation only.
         </p>
       </label>

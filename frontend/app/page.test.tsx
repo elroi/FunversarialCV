@@ -203,4 +203,106 @@ describe("Home page", () => {
       expect(trapTextarea).toBeDisabled();
     });
   });
+
+  describe("mobile UI (touch targets and layout)", () => {
+    it("main wrapper has responsive padding classes for mobile", () => {
+      render(<Home />);
+      const main = document.getElementById("main-content");
+      expect(main).toBeInTheDocument();
+      const wrapper = main?.firstElementChild;
+      expect(wrapper).toBeInTheDocument();
+      expect(wrapper).toHaveClass("px-4");
+      expect(wrapper).toHaveClass("sm:px-6");
+    });
+
+    it("Change file button has 44px minimum touch target when file is selected", async () => {
+      render(<Home />);
+      const input = screen.getByTestId("dropzone-input");
+      fireEvent.change(input, {
+        target: { files: [createFile("resume.pdf", "application/pdf")] },
+      });
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /clear file|change file/i })).toBeInTheDocument();
+      });
+      const changeFileBtn = screen.getByRole("button", { name: /clear file|change file/i });
+      expect(changeFileBtn).toHaveClass("min-h-[44px]");
+    });
+
+    it("Download and Re-process buttons have 44px minimum touch target when hardened", async () => {
+      global.fetch = mockFetchSuccess("out.pdf");
+      render(<Home />);
+      const input = screen.getByTestId("dropzone-input");
+      fireEvent.change(input, {
+        target: { files: [createFile("cv.pdf", "application/pdf")] },
+      });
+      await waitFor(() => screen.getByRole("button", { name: /harden/i }));
+      fireEvent.click(screen.getByRole("button", { name: /harden/i }));
+      await waitFor(() => screen.getByRole("button", { name: /download/i }));
+      const downloadBtn = screen.getByRole("button", { name: /download/i });
+      const reprocessBtn = screen.getByRole("button", { name: /re-process/i });
+      expect(downloadBtn).toHaveClass("min-h-[44px]");
+      expect(reprocessBtn).toHaveClass("min-h-[44px]");
+    });
+
+    it("Retry button has 44px minimum touch target when error is shown", async () => {
+      global.fetch = mockFetchError("Server error");
+      render(<Home />);
+      const input = screen.getByTestId("dropzone-input");
+      fireEvent.change(input, {
+        target: { files: [createFile("cv.pdf", "application/pdf")] },
+      });
+      await waitFor(() => screen.getByRole("button", { name: /harden/i }));
+      fireEvent.click(screen.getByRole("button", { name: /harden/i }));
+      await waitFor(() => screen.getByRole("button", { name: /retry/i }));
+      const retryBtn = screen.getByRole("button", { name: /retry/i });
+      expect(retryBtn).toHaveClass("min-h-[44px]");
+    });
+
+    it("Pipeline status toggle has touch-friendly minimum height", () => {
+      render(<Home />);
+      const toggle = screen.getByRole("button", { name: /pipeline status/i });
+      expect(toggle).toHaveClass("min-h-[44px]");
+    });
+
+    it("egg checkbox labels have touch-friendly row padding", async () => {
+      render(<Home />);
+      const input = screen.getByTestId("dropzone-input");
+      fireEvent.change(input, {
+        target: { files: [createFile("resume.pdf", "application/pdf")] },
+      });
+      await waitFor(() => screen.getByText(/Eggs to run/i));
+      const label = screen.getByRole("checkbox", { name: /Invisible Hand/i }).closest("label");
+      expect(label).toHaveClass("py-2");
+    });
+
+    it("scrolls focused element into view when harden succeeds", async () => {
+      const scrollIntoViewMock = jest.fn();
+      HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
+      global.fetch = mockFetchSuccess("out.pdf");
+      render(<Home />);
+      const input = screen.getByTestId("dropzone-input");
+      fireEvent.change(input, {
+        target: { files: [createFile("cv.pdf", "application/pdf")] },
+      });
+      await waitFor(() => screen.getByRole("button", { name: /harden/i }));
+      fireEvent.click(screen.getByRole("button", { name: /harden/i }));
+      await waitFor(() => screen.getByRole("button", { name: /download/i }));
+      expect(scrollIntoViewMock).toHaveBeenCalled();
+    });
+
+    it("scrolls retry button into view when harden fails", async () => {
+      const scrollIntoViewMock = jest.fn();
+      HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
+      global.fetch = mockFetchError("Failed");
+      render(<Home />);
+      const input = screen.getByTestId("dropzone-input");
+      fireEvent.change(input, {
+        target: { files: [createFile("cv.pdf", "application/pdf")] },
+      });
+      await waitFor(() => screen.getByRole("button", { name: /harden/i }));
+      fireEvent.click(screen.getByRole("button", { name: /harden/i }));
+      await waitFor(() => screen.getByRole("button", { name: /retry/i }));
+      expect(scrollIntoViewMock).toHaveBeenCalled();
+    });
+  });
 });

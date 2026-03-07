@@ -1,5 +1,8 @@
 import "./globals.css";
 import { JetBrains_Mono } from "next/font/google";
+import { viewport } from "./viewport";
+
+export { viewport };
 
 const jetBrainsMono = JetBrains_Mono({
   subsets: ["latin"],

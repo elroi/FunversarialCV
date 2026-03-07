@@ -74,12 +74,12 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
   return (
     <section className="flex flex-col gap-4 rounded-xl border border-noir-border bg-noir-panel/60 p-4 text-xs text-noir-foreground/80">
       <header className="flex items-center justify-between">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-neon-cyan">
+        <div className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-cyan">
           Duality Monitor
         </div>
         <div
           className={clsx(
-            "rounded-full px-2 py-0.5 text-[10px] font-medium",
+            "rounded-full px-2 py-0.5 text-[10px] sm:text-xs font-medium",
             processingState === "completed" && "border border-neon-green/60",
             processingState === "processing" && "border border-neon-cyan/60",
             processingState === "idle" && "border border-noir-border",
@@ -103,7 +103,7 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
 
       <div className="space-y-3">
         <div className="space-y-2">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-noir-foreground/60">
+          <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-noir-foreground/60">
             Pipeline Stages
           </p>
           <ol className="space-y-1">
@@ -114,7 +114,7 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
                   key={stage.id}
                   className="flex items-center justify-between rounded-lg bg-noir-bg/60 px-2 py-1"
                 >
-                  <span className="font-mono text-[11px]">
+                  <span className="font-mono text-[11px] sm:text-xs">
                     {stage.label}
                   </span>
                   <span
@@ -139,10 +139,10 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
         </div>
 
         <div className="space-y-2">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-noir-foreground/60">
+          <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-noir-foreground/60">
             Pre-hardening scan (Duality Check)
           </p>
-          <p className="text-[10px] text-noir-foreground/50">
+          <p className="text-[10px] sm:text-xs text-noir-foreground/50">
             PII handling is{" "}
             <span className="font-semibold text-neon-cyan">
               Stateless &amp; Volatile
@@ -199,10 +199,10 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
       </div>
 
       <div className="space-y-1">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-noir-foreground/60">
+        <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-noir-foreground/60">
           Terminal Log
         </p>
-        <div className="noir-shell relative max-h-40 overflow-y-auto rounded-lg border border-noir-border bg-noir-bg/80 p-2 font-mono text-[11px] leading-relaxed"
+        <div className="noir-shell relative max-h-40 overflow-y-auto rounded-lg border border-noir-border bg-noir-bg/80 p-2 font-mono text-xs md:text-[11px] leading-relaxed"
           role="log"
           aria-live="polite"
           aria-label="Terminal log"

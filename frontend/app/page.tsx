@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { DropZone } from "../src/components/DropZone";
 import {
   DualityMonitor,
@@ -46,7 +46,19 @@ export default function Home() {
     payloads: Record<string, string>;
     eggIds: string[];
   } | null>(null);
-  const [dualityMonitorOpen, setDualityMonitorOpen] = useState(true);
+  const [dualityMonitorOpen, setDualityMonitorOpen] = useState(false);
+
+  // Scroll focused success/error targets into view after render (refs are set post-commit).
+  useEffect(() => {
+    if (successMessage && successMessageRef.current && typeof successMessageRef.current.scrollIntoView === "function") {
+      successMessageRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [successMessage]);
+  useEffect(() => {
+    if (error && retryButtonRef.current && typeof retryButtonRef.current.scrollIntoView === "function") {
+      retryButtonRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [error]);
 
   const toggleEgg = (id: string) => {
     setEnabledEggIds((prev) => {
@@ -278,8 +290,8 @@ export default function Home() {
 
   return (
     <main id="main-content" className="min-h-screen bg-noir-bg text-noir-foreground">
-      <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-6 py-10">
-        <header className="mb-10 flex items-center justify-between border-b border-noir-border pb-4">
+      <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
+        <header className="mb-10 flex flex-wrap items-start justify-between gap-2 border-b border-noir-border pb-4">
           <div>
             <h1 className="text-2xl font-semibold">
               <span className="bg-gradient-to-r from-neon-green via-neon-cyan to-neon-green bg-clip-text text-transparent">
@@ -289,11 +301,11 @@ export default function Home() {
             <p className="text-xs text-noir-foreground/70">
               Adversarial CV hardening console for hungry LLMs.
             </p>
-            <p className="mt-1 text-[10px] font-mono uppercase tracking-[0.2em] text-neon-cyan/80">
+            <p className="mt-1 text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-neon-cyan/80">
               PII Mode: Stateless &amp; Volatile
             </p>
           </div>
-          <span className="rounded-full border border-neon-green/60 bg-noir-panel px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-neon-green engine-online-pulse">
+          <span className="shrink-0 rounded-full border border-neon-green/60 bg-noir-panel px-3 py-1 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-green engine-online-pulse">
             Engine Online
           </span>
         </header>
@@ -315,7 +327,7 @@ export default function Home() {
                 <Button
                   variant="secondary"
                   onClick={clearFile}
-                  className="mt-1 text-[10px] min-h-[32px] py-1 px-2"
+                  className="mt-1 min-h-[44px] py-2 px-3 text-[10px] sm:text-xs"
                   aria-label="Clear file"
                 >
                   Change file
@@ -331,11 +343,11 @@ export default function Home() {
                     <p className="text-[10px] uppercase tracking-[0.2em] text-noir-foreground/60 mb-2">
                       Eggs to run
                     </p>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    <div className="flex flex-wrap gap-x-4 gap-y-0">
                     {EGG_OPTIONS.map((egg) => (
                       <label
                         key={egg.id}
-                        className="flex items-center gap-1.5 text-xs text-noir-foreground/80 cursor-pointer"
+                        className="flex min-h-[44px] cursor-pointer items-center gap-2 py-2 pr-2 text-xs text-noir-foreground/80"
                       >
                         <input
                           type="checkbox"
@@ -382,7 +394,7 @@ export default function Home() {
                   <Button
                     variant="primary"
                     onClick={triggerDownload}
-                    className="min-h-[36px] py-2"
+                    className="min-h-[44px] py-2"
                     aria-label={`Download ${successMessage}`}
                   >
                     Download
@@ -391,7 +403,7 @@ export default function Home() {
                     variant="secondary"
                     onClick={runHarden}
                     disabled={processingState === "processing" || !haveEggsChanged()}
-                    className="min-h-[36px] py-2"
+                    className="min-h-[44px] py-2"
                     aria-label="Re-process with current egg config"
                   >
                     Re-process
@@ -450,15 +462,20 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setDualityMonitorOpen((o) => !o)}
-                className="text-[10px] uppercase tracking-[0.2em] text-neon-cyan focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50 rounded px-2 py-1"
+                className="flex w-full min-h-[44px] items-center justify-between rounded px-3 py-3 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-cyan focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50"
                 aria-expanded={dualityMonitorOpen ? "true" : "false"}
                 aria-controls="duality-monitor-content"
                 id="duality-monitor-toggle"
               >
-                {dualityMonitorOpen ? "▼ Pipeline status" : "▶ Pipeline status"}
+                <span>Pipeline status</span>
+                <span aria-hidden="true">{dualityMonitorOpen ? "▼" : "▶"}</span>
               </button>
             </div>
-            <div id="duality-monitor-content" className={dualityMonitorOpen ? "block" : "hidden md:block"} aria-labelledby="duality-monitor-toggle">
+            <div
+              id="duality-monitor-content"
+              className={`${dualityMonitorOpen ? "block" : "hidden md:block"} max-h-[60vh] overflow-y-auto md:max-h-none`}
+              aria-labelledby="duality-monitor-toggle"
+            >
             <DualityMonitor
               processingState={processingState}
               activeStage={activeStage}

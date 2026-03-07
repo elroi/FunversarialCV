@@ -7,6 +7,7 @@ import {
   DEFAULT_INCIDENT_MAILTO_TEMPLATE_ID,
   getIncidentMailtoTemplateById,
 } from "../eggs/templates/incidentMailtoTemplates";
+import { buildMailtoPreview } from "../eggs/templates/incidentMailtoBuild";
 import type {
   IncidentMailtoConfig,
   IncidentMailtoEmailConfig,
@@ -137,6 +138,12 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
       setShowAdvanced(true);
     }
   };
+
+  const tokenPlaceholder = `{{PII_EMAIL_${targetTokenIndex}}}`;
+  const resultingLink = buildMailtoPreview(config, tokenPlaceholder);
+  const copyMailtoLink = useCallback(() => {
+    void navigator.clipboard.writeText(resultingLink);
+  }, [resultingLink]);
 
   return (
     <div
@@ -375,6 +382,41 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
               Override subject/body
             </button>
           )}
+        </div>
+      </fieldset>
+
+      {/* —— Resulting link: copy to add manually to CV —— */}
+      <fieldset className="mt-4 pt-4 border-t border-noir-border">
+        <legend
+          className="text-[10px] uppercase tracking-wider text-noir-foreground/80 mb-2"
+          title="Copy this link to add the incident-report mailto to your CV manually (e.g. in Word or PDF). Replace the placeholder with your email in the document if needed."
+        >
+          Resulting link — copy to enrich your CV manually
+        </legend>
+        <p
+          id="resulting-link-hint"
+          className="text-[10px] text-noir-foreground/50 mb-2"
+          title="Copy this link to add the incident-report mailto to your CV manually (e.g. paste next to your email). Replace {{PII_EMAIL_0}} with your email in the document if needed."
+        >
+          Copy this link to add it manually to your CV (e.g. paste next to your email). Replace {tokenPlaceholder} with your email in the document if needed.
+        </p>
+        <div className="flex gap-2 items-center">
+          <code
+            className="flex-1 min-w-0 rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-[10px] text-noir-foreground break-all"
+            title={resultingLink}
+          >
+            {resultingLink}
+          </code>
+          <button
+            type="button"
+            onClick={copyMailtoLink}
+            disabled={disabled}
+            className="shrink-0 rounded border border-noir-border bg-noir-panel px-2 py-1.5 text-[10px] text-neon-cyan hover:bg-noir-border/50 focus:border-neon-cyan focus:outline-none disabled:opacity-50"
+            title="Copy this link to add the incident-report mailto to your CV manually."
+            aria-label="Copy resulting mailto link"
+          >
+            Copy
+          </button>
         </div>
       </fieldset>
     </div>

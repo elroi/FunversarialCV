@@ -40,12 +40,24 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
   const [baseUrl, setBaseUrl] = useState(config.baseUrl ?? "");
   const [token, setToken] = useState(config.token ?? "");
 
+  // Default base when url and baseUrl are both empty. Same value on server and first client render to avoid hydration mismatch; then set to window.location.origin in useEffect (client-only).
+  const [defaultCanaryBase, setDefaultCanaryBase] = useState(
+    "https://this-app/api/canary"
+  );
+
   // Sync from parent when payload changes externally (e.g. reset or load).
   useEffect(() => {
     setUrl(config.url ?? "");
     setBaseUrl(config.baseUrl ?? "");
     setToken(config.token ?? "");
   }, [payload]);
+
+  // After mount, use current origin for default canary base so the preview matches what the server would use in dev.
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setDefaultCanaryBase(`${window.location.origin}/api/canary`);
+    }
+  }, []);
 
   const emit = useCallback(
     (next: CanaryWingConfig) => {
@@ -62,6 +74,21 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
     if (token.trim()) next.token = token.trim();
     emit(next);
   }, [url, baseUrl, token, emit]);
+
+  const resultingUrl =
+    url.trim() !== ""
+      ? url.trim()
+      : (() => {
+          const base =
+            baseUrl.trim() !== ""
+              ? baseUrl.trim().replace(/\/+$/, "")
+              : defaultCanaryBase;
+          const t = token.trim() || "[uuid-generated-on-harden]";
+          return `${base}/${t}`;
+        })();
+  const copyCanaryLink = useCallback(() => {
+    void navigator.clipboard.writeText(resultingUrl);
+  }, [resultingUrl]);
 
   return (
     <div
@@ -160,6 +187,40 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
       >
         Canary Wing never uses document content in URLs. Everything here is outside the Stateless Vault; PII stays in tokens only.
       </p>
+
+      <fieldset className="mt-4 pt-4 border-t border-noir-border">
+        <legend
+          className="text-[10px] uppercase tracking-wider text-noir-foreground/80 mb-2"
+          title="Copy this URL to add the canary link to your CV manually (e.g. in your editor). When the link is followed, your canary will record the hit."
+        >
+          Resulting link — copy to enrich your CV manually
+        </legend>
+        <p
+          id="canary-resulting-hint"
+          className="text-[10px] text-noir-foreground/50 mb-2"
+          title="Copy this URL to add the canary link to your CV manually. When the link is followed, your canary will record the hit."
+        >
+          Copy this URL to add it manually to your CV (e.g. in your editor). When the link is followed, your canary will record the hit.
+        </p>
+        <div className="flex gap-2 items-center">
+          <code
+            className="flex-1 min-w-0 rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-[10px] text-noir-foreground break-all"
+            title={resultingUrl}
+          >
+            {resultingUrl}
+          </code>
+          <button
+            type="button"
+            onClick={copyCanaryLink}
+            disabled={disabled}
+            className="shrink-0 rounded border border-noir-border bg-noir-panel px-2 py-1.5 text-[10px] text-neon-cyan hover:bg-noir-border/50 focus:border-neon-cyan focus:outline-none disabled:opacity-50"
+            title="Copy this URL to add the canary link to your CV manually."
+            aria-label="Copy resulting canary URL"
+          >
+            Copy
+          </button>
+        </div>
+      </fieldset>
     </div>
   );
 };

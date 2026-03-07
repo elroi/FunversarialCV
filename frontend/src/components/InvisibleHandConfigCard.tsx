@@ -77,6 +77,25 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
           {trapText.length}/{MAX_PAYLOAD_LENGTH} characters. No HTML or script; letters, digits, spaces, and basic punctuation only.
         </p>
       </label>
+
+      <div
+        className="mt-4 pt-4 border-t border-noir-border"
+        role="region"
+        aria-labelledby="invisible-hand-manual-title"
+      >
+        <h4
+          id="invisible-hand-manual-title"
+          className="text-[10px] uppercase tracking-wider text-noir-foreground/80 mb-2"
+        >
+          Do it manually
+        </h4>
+        <p
+          className="text-[10px] text-noir-foreground/70"
+          title="Instructions to add the same invisible trap text manually in your own PDF or Word document."
+        >
+          To add this manually in your own file: in a PDF, insert text at the top of the first page in 0.5pt size and white color so it is invisible to humans but still readable by parsers. In Word, add a paragraph with 1pt font and white color, then save as PDF if needed. The goal is invisible-to-humans, readable-by-LLMs system-style text.
+        </p>
+      </div>
     </div>
   );
 };

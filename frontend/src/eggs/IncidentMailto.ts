@@ -10,10 +10,9 @@ import type {
   IncidentMailtoTemplateConfig,
 } from "./templates/incidentMailtoTypes";
 import {
-  getIncidentMailtoTemplateById,
-  mergeIncidentMailtoTemplateConfig,
-  DEFAULT_INCIDENT_MAILTO_TEMPLATE_ID,
-} from "./templates/incidentMailtoTemplates";
+  getResolvedTemplateConfigFromConfig,
+  buildMailtoUri,
+} from "./templates/incidentMailtoBuild";
 import {
   extractText,
   createDocumentWithText,
@@ -69,43 +68,9 @@ function validateEmails(list: string[] | undefined): boolean {
   return list.every((e) => typeof e === "string" && EMAIL_PATTERN.test(e));
 }
 
-function getResolvedTemplateConfigFromConfig(
-  config: IncidentMailtoConfig
-): IncidentMailtoTemplateConfig {
-  const templateConfig = config.templateConfig ?? {};
-  const templateId =
-    templateConfig.templateId ?? DEFAULT_INCIDENT_MAILTO_TEMPLATE_ID;
-  const builtIn = getIncidentMailtoTemplateById(templateId)?.config;
-  return mergeIncidentMailtoTemplateConfig(builtIn, templateConfig);
-}
-
 function getResolvedTemplateConfig(payload: string): IncidentMailtoTemplateConfig {
   const { config } = parsePayload(payload);
   return getResolvedTemplateConfigFromConfig(config);
-}
-
-function buildMailtoUri(
-  token: string,
-  template: IncidentMailtoTemplateConfig
-): string {
-  const params = new URLSearchParams();
-  const subject = template.subjectTemplate ?? "Incident Report — FunversarialCV";
-  const body =
-    template.bodyTemplate ??
-    "This incident was triggered by an adversarial CV layer. — FunversarialCV";
-  params.set("subject", subject);
-  params.set("body", body);
-  if (template.incidentType) {
-    params.set("x-incident-type", template.incidentType);
-  }
-  if (template.extraParams) {
-    for (const [k, v] of Object.entries(template.extraParams)) {
-      if (k && v !== undefined) params.set(k, v);
-    }
-  }
-  const query = params.toString();
-  const base = `mailto:${token}`;
-  return query ? `${base}?${query}` : base;
 }
 
 function applyMailtoToText(

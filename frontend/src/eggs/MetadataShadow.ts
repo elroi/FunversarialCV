@@ -9,7 +9,7 @@ import JSZip from "jszip";
 import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
 import { MIME_PDF, MIME_DOCX } from "../engine/documentExtract";
-import { PII_REGEX } from "../lib/vault";
+import { containsPii } from "../lib/vault";
 
 const KEY_PATTERN = /^[a-zA-Z0-9_]+$/;
 const MAX_VALUE_LENGTH = 200;
@@ -43,10 +43,6 @@ function parsePayload(payload: string): Record<string, string> {
   } catch {
     return {};
   }
-}
-
-function containsPii(value: string): boolean {
-  return PII_REGEX.EMAIL.test(value) || PII_REGEX.PHONE.test(value);
 }
 
 export const metadataShadow: IEgg = {
@@ -97,7 +93,18 @@ export const metadataShadow: IEgg = {
 
     if (isDocxBuffer(buffer)) {
       const zip = await JSZip.loadAsync(buffer);
-      const customXml = buildCustomXml(props);
+      let mergedProps: Record<string, string> = { ...props };
+      const customFile = zip.file("docProps/custom.xml");
+      if (customFile) {
+        try {
+          const existingXml = await customFile.async("string");
+          const existing = parseCustomXml(existingXml);
+          mergedProps = { ...existing, ...props };
+        } catch {
+          // Corrupt or unexpected custom.xml; use only new props.
+        }
+      }
+      const customXml = buildCustomXml(mergedProps);
       zip.file("docProps/custom.xml", customXml);
       await ensureContentType(zip, "/docProps/custom.xml", "application/vnd.openxmlformats-officedocument.custom-properties+xml");
       const out = await zip.generateAsync({
@@ -116,6 +123,33 @@ const CUSTOM_XML_NS =
   'http://schemas.openxmlformats.org/officeDocument/2006/custom-properties';
 const VT_NS =
   'http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes';
+
+/**
+ * Parses existing docProps/custom.xml and returns name -> value (unescaped).
+ * Returns {} if missing or invalid so caller can merge with new props.
+ */
+function parseCustomXml(xml: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  const propertyRegex = /<property\s[^>]*\bname\s*=\s*["']([^"']+)["'][^>]*>[\s\S]*?<vt:lpwstr>([\s\S]*?)<\/vt:lpwstr>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = propertyRegex.exec(xml)) !== null) {
+    const name = m[1];
+    const raw = m[2];
+    if (KEY_PATTERN.test(name)) {
+      out[name] = unescapeXml(raw);
+    }
+  }
+  return out;
+}
+
+function unescapeXml(s: string): string {
+  return s
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'");
+}
 
 function buildCustomXml(props: Record<string, string>): string {
   const fmtid =

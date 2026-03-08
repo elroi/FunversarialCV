@@ -58,7 +58,6 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
 
   const allAddOnly =
     preserveStyles &&
-    eggs.length >= 0 &&
     eggs.every((egg) => ADD_ONLY_EGG_IDS.has(egg.id));
 
   if (allAddOnly) {

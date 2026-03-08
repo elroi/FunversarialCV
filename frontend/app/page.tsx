@@ -278,17 +278,53 @@ export default function Home() {
         return;
       }
 
-      const bufferBase64 = data.bufferBase64 as string;
+      const bufferBase64 = data.bufferBase64;
+      if (typeof bufferBase64 !== "string") {
+        setError("Invalid response from server: missing document data.");
+        setProcessingState("error");
+        setActiveStage("duality-check");
+        setLog((prev) => [
+          ...prev,
+          {
+            id: "invalid-resp",
+            stage: "duality-check",
+            level: "error",
+            message: "[ERROR] Invalid response from server.",
+          },
+        ]);
+        retryButtonRef.current?.focus();
+        return;
+      }
+
       const mimeType = data.mimeType as string;
       const originalName = (data.originalName as string) || name;
       const scannerScan = data.scannerReport?.scan;
 
-      const binaryString = atob(bufferBase64);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
+      let blob: Blob;
+      try {
+        const binaryString = atob(bufferBase64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        blob = new Blob([bytes], { type: mimeType });
+      } catch {
+        setError("Invalid response from server: invalid document data.");
+        setProcessingState("error");
+        setActiveStage("duality-check");
+        setLog((prev) => [
+          ...prev,
+          {
+            id: "invalid-resp",
+            stage: "duality-check",
+            level: "error",
+            message: "[ERROR] Invalid response from server.",
+          },
+        ]);
+        retryButtonRef.current?.focus();
+        return;
       }
-      const blob = new Blob([bytes], { type: mimeType });
+
       lastHardenedBlobRef.current = blob;
       lastHardenedConfigRef.current = {
         payloads: { ...payloadsForEnabled },

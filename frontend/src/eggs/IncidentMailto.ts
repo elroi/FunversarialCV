@@ -82,11 +82,11 @@ function applyMailtoToText(
 ): string {
   if (mode === "wrap-visible-email") {
     const linkPart = `${token} (${mailtoUri})`;
-    return text.replace(token, linkPart);
+    return text.replaceAll(token, linkPart);
   }
   const linkLabel = label ?? "Report incident";
   const append = ` — ${linkLabel}[${mailtoUri}]`;
-  return text.replace(token, `${token}${append}`);
+  return text.replaceAll(token, `${token}${append}`);
 }
 
 export const incidentMailto: IEgg = {

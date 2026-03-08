@@ -6,6 +6,19 @@ export interface PIIStore {
     EMAIL: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
     PHONE: /(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/g,
   };
+
+/** Non-global regexes for one-off .test() checks. Using PII_REGEX.EMAIL.test() repeatedly can give wrong results due to lastIndex. */
+const PII_TEST = {
+  EMAIL: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/,
+  PHONE: /(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/,
+};
+
+/**
+ * Returns true if the string contains PII (email or phone). Safe to call repeatedly (does not mutate regex state).
+ */
+export function containsPii(text: string): boolean {
+  return PII_TEST.EMAIL.test(text) || PII_TEST.PHONE.test(text);
+}
   
   /**
    * Dehydrates a string by replacing PII with tokens.

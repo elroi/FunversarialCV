@@ -10,7 +10,7 @@ import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
 import { injectHiddenParagraphIntoDocx } from "../engine/docxInject";
 import { injectCanaryIntoDocx } from "../engine/docxCanary";
-import { PII_REGEX } from "../lib/vault";
+import { containsPii } from "../lib/vault";
 
 const MAX_PAYLOAD_LENGTH = 2048;
 const UNSAFE_PATTERN = /[<>]|<\s*script|javascript\s*:/i;
@@ -96,11 +96,6 @@ function isValidHttpUrl(s: string): boolean {
   } catch {
     return false;
   }
-}
-
-/** Reject if string looks like PII (e.g. email in baseUrl). */
-function containsPii(s: string): boolean {
-  return PII_REGEX.EMAIL.test(s) || PII_REGEX.PHONE.test(s);
 }
 
 /** Variant identifiers for attribution (which embedding type was triggered). */

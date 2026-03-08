@@ -13,12 +13,21 @@ import {
   isSupportedMimeType,
 } from "./documentExtract";
 
+/** Egg ids that only add content (no visible body text change). When preserveStyles is true and only these run, we use the original buffer. */
+export const ADD_ONLY_EGG_IDS = new Set([
+  "invisible-hand",
+  "canary-wing",
+  "metadata-shadow",
+]);
+
 export interface ProcessorInput {
   buffer: Buffer;
   mimeType: string;
   eggs: IEgg[];
   /** Optional payload per egg id; default empty string. */
   payloads?: Record<string, string>;
+  /** When true and only add-only eggs are selected, use original buffer (preserve styles). */
+  preserveStyles?: boolean;
 }
 
 export interface ProcessorOutput {
@@ -36,13 +45,35 @@ export interface ProcessorOutput {
  * 3) Dehydration (PII → tokens)
  * 4) Injection (run each IEgg on dehydrated buffer)
  * 5) Rehydration (tokens → PII) and return final buffer
+ *
+ * When preserveStyles is true and only add-only eggs are selected, skips rebuild and runs eggs on the original buffer.
  */
 export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
-  const { buffer, mimeType, eggs, payloads = {} } = input;
+  const { buffer, mimeType, eggs, payloads = {}, preserveStyles = false } = input;
 
   // —— Stage 1: Accept buffer ——
   if (!isSupportedMimeType(mimeType)) {
     throw new Error(`Unsupported document type: ${mimeType}. Use PDF or DOCX.`);
+  }
+
+  const allAddOnly =
+    preserveStyles &&
+    eggs.length >= 0 &&
+    eggs.every((egg) => ADD_ONLY_EGG_IDS.has(egg.id));
+
+  if (allAddOnly) {
+    const rawText = await extractText(buffer, mimeType);
+    const scan = await runScan({ text: rawText, buffer, mimeType });
+    const scannerReport = buildScannerReport(scan);
+    let currentBuffer = buffer;
+    for (const egg of eggs) {
+      const payload = payloads[egg.id] ?? "";
+      if (!egg.validatePayload(payload)) {
+        throw new Error(`Egg "${egg.id}" rejected payload validation.`);
+      }
+      currentBuffer = await egg.transform(currentBuffer, payload);
+    }
+    return { buffer: currentBuffer, dualityCheck: scan, scannerReport };
   }
 
   // —— Stage 2: Duality check (defensive scan) — observational only; no PII leaves this step ——

@@ -49,6 +49,7 @@ export default function Home() {
     preserveStyles: boolean;
   } | null>(null);
   const [dualityMonitorOpen, setDualityMonitorOpen] = useState(false);
+  const openFilePickerRef = useRef<(() => void) | null>(null);
 
   /** Egg metadata from GET /api/eggs (id -> { name, manualCheckAndValidation }). */
   const [eggMetadataById, setEggMetadataById] = useState<Record<string, { name: string; manualCheckAndValidation: string }>>({});
@@ -343,7 +344,7 @@ export default function Home() {
             <div className="mb-4 text-xs uppercase tracking-[0.2em] text-neon-cyan">
               Input Channel
             </div>
-            <DropZone onFileSelect={onFileSelect} maxSizeBytes={MAX_FILE_SIZE_BYTES} />
+            <DropZone onFileSelect={onFileSelect} maxSizeBytes={MAX_FILE_SIZE_BYTES} openFilePickerRef={openFilePickerRef} />
             <p className="mt-1 text-[10px] text-noir-foreground/50">
               Max 10 MB. PDF or DOCX only.
             </p>
@@ -354,9 +355,11 @@ export default function Home() {
                 </p>
                 <Button
                   variant="secondary"
-                  onClick={clearFile}
+                  onClick={() => {
+                    openFilePickerRef.current?.();
+                  }}
                   className="mt-1 min-h-[44px] py-2 px-3 text-[10px] sm:text-xs"
-                  aria-label="Clear file"
+                  aria-label="Change file"
                 >
                   Change file
                 </Button>

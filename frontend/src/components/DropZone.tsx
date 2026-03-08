@@ -1,10 +1,12 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 
 export interface DropZoneProps {
   onFileSelect: (file: File) => void;
   accept?: string;
   maxSizeBytes?: number;
+  /** Optional ref the parent can use to open the file picker (e.g. for "Change file"). */
+  openFilePickerRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 const ACCEPTED_EXTENSIONS = [".pdf", ".docx"];
@@ -18,10 +20,21 @@ export const DropZone: React.FC<DropZoneProps> = ({
   onFileSelect,
   accept = ".pdf,.docx",
   maxSizeBytes,
+  openFilePickerRef,
 }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!openFilePickerRef) return;
+    openFilePickerRef.current = () => {
+      inputRef.current?.click();
+    };
+    return () => {
+      openFilePickerRef.current = null;
+    };
+  }, [openFilePickerRef]);
 
   const handleFiles = useCallback(
     (files: FileList | null) => {

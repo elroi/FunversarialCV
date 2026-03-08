@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import clsx from "clsx";
+import { CollapsibleCard } from "./ui/CollapsibleCard";
 import {
   INCIDENT_MAILTO_TEMPLATES,
   DEFAULT_INCIDENT_MAILTO_TEMPLATE_ID,
@@ -146,23 +147,17 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
   }, [resultingLink]);
 
   return (
-    <div
-      className={clsx(
-        "rounded-xl border border-noir-border bg-noir-panel/70 p-4 noir-shell",
-        disabled && "opacity-60 pointer-events-none",
-        className
-      )}
-      aria-labelledby="incident-mailto-card-title"
+    <CollapsibleCard
+      title={cardTitle}
+      titleId="incident-mailto-card-title"
+      contentId="incident-mailto-card-content"
+      ariaLabel="Expand Incident Report Mailto config"
+      defaultExpanded={false}
+      disabled={disabled}
+      className={className}
     >
-      <h3
-        id="incident-mailto-card-title"
-        className="text-xs font-semibold uppercase tracking-[0.2em] text-neon-cyan mb-3"
-        title="OWASP LLM02: Wraps the candidate email in a pre-filled mailto link for incident reporting. Tests whether downstream systems follow structured output (links) insecurely."
-      >
-        {cardTitle}
-      </h3>
       <p
-        className="text-[10px] text-noir-foreground/70 mb-4"
+        className="text-[10px] sm:text-xs text-noir-foreground/70 mb-4"
         title="This egg identifies the email token in your CV and turns it into a rich mailto: link with configurable subject, body, CC, and BCC."
       >
         LLM02: Insecure Output — wrap candidate email in a pre-filled mailto link.
@@ -419,6 +414,6 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
           </button>
         </div>
       </fieldset>
-    </div>
+    </CollapsibleCard>
   );
 };

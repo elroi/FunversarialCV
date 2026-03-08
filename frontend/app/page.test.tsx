@@ -305,4 +305,120 @@ describe("Home page", () => {
       expect(scrollIntoViewMock).toHaveBeenCalled();
     });
   });
+
+  describe("Manual test list (automated coverage)", () => {
+    describe("1. Layout and viewport", () => {
+      it("main wrapper has max-width constraint to avoid horizontal scroll", () => {
+        render(<Home />);
+        const main = document.getElementById("main-content");
+        const wrapper = main?.firstElementChild;
+        expect(wrapper).toHaveClass("max-w-4xl");
+      });
+
+      it("main wrapper has responsive padding (px-4, sm:px-6)", () => {
+        render(<Home />);
+        const main = document.getElementById("main-content");
+        const wrapper = main?.firstElementChild;
+        expect(wrapper).toHaveClass("px-4");
+        expect(wrapper).toHaveClass("sm:px-6");
+      });
+    });
+
+    describe("2. Header", () => {
+      it("header has flex-wrap so title and badge fit on narrow widths", () => {
+        render(<Home />);
+        const header = document.querySelector("header");
+        expect(header).toHaveClass("flex-wrap");
+      });
+
+      it("Engine Online badge has shrink-0 so it does not overflow", () => {
+        render(<Home />);
+        const badge = screen.getByText("Engine Online");
+        expect(badge).toHaveClass("shrink-0");
+      });
+
+      it("PII Mode and Engine Online text are present", () => {
+        render(<Home />);
+        expect(screen.getByText(/PII Mode: Stateless/i)).toBeInTheDocument();
+        expect(screen.getByText("Engine Online")).toBeInTheDocument();
+      });
+    });
+
+    describe("4. Pipeline status panel", () => {
+      it("Pipeline status toggle is collapsed by default (aria-expanded false)", () => {
+        render(<Home />);
+        const toggle = screen.getByRole("button", { name: /pipeline status/i });
+        expect(toggle).toHaveAttribute("aria-expanded", "false");
+      });
+
+      it("Pipeline status expands on click and collapses on second click", () => {
+        render(<Home />);
+        const toggle = screen.getByRole("button", { name: /pipeline status/i });
+        fireEvent.click(toggle);
+        expect(toggle).toHaveAttribute("aria-expanded", "true");
+        fireEvent.click(toggle);
+        expect(toggle).toHaveAttribute("aria-expanded", "false");
+      });
+    });
+
+    describe("6. Forms and inputs — egg config cards", () => {
+      it("all four egg config cards are collapsed by default when file is selected", async () => {
+        render(<Home />);
+        const input = screen.getByTestId("dropzone-input");
+        fireEvent.change(input, {
+          target: { files: [createFile("resume.pdf", "application/pdf")] },
+        });
+        await waitFor(() => screen.getByText(/Eggs to run/i));
+        const invisibleHand = screen.getByRole("button", { name: /expand.*Invisible Hand/i });
+        const incidentMailto = screen.getByRole("button", { name: /expand.*Incident.*Mailto/i });
+        const canaryWing = screen.getByRole("button", { name: /expand.*Canary Wing/i });
+        const metadataShadow = screen.getByRole("button", { name: /expand.*Metadata Shadow/i });
+        expect(invisibleHand).toHaveAttribute("aria-expanded", "false");
+        expect(incidentMailto).toHaveAttribute("aria-expanded", "false");
+        expect(canaryWing).toHaveAttribute("aria-expanded", "false");
+        expect(metadataShadow).toHaveAttribute("aria-expanded", "false");
+      });
+
+      it("expanding Invisible Hand card shows trap text area", async () => {
+        render(<Home />);
+        const dropInput = screen.getByTestId("dropzone-input");
+        fireEvent.change(dropInput, {
+          target: { files: [createFile("resume.pdf", "application/pdf")] },
+        });
+        await waitFor(() => screen.getByRole("button", { name: /expand.*Invisible Hand/i }));
+        const trigger = screen.getByRole("button", { name: /expand.*Invisible Hand/i });
+        fireEvent.click(trigger);
+        expect(screen.getByPlaceholderText(/leave blank to use default/i)).toBeInTheDocument();
+        expect(trigger).toHaveAttribute("aria-expanded", "true");
+      });
+    });
+
+    describe("8. Focus and accessibility", () => {
+      it("main content has id main-content for Skip to main content link target", () => {
+        render(<Home />);
+        expect(document.getElementById("main-content")).toBeInTheDocument();
+      });
+    });
+
+    describe("9. Regression", () => {
+      it("section has md:flex-row for two-column layout at desktop", () => {
+        render(<Home />);
+        const section = document.querySelector("main section");
+        expect(section).toHaveClass("md:flex-row");
+      });
+
+      it("full flow: upload, harden, download", async () => {
+        global.fetch = mockFetchSuccess("hardened-cv.pdf");
+        render(<Home />);
+        fireEvent.change(screen.getByTestId("dropzone-input"), {
+          target: { files: [createFile("cv.pdf", "application/pdf")] },
+        });
+        await waitFor(() => screen.getByRole("button", { name: /harden/i }));
+        fireEvent.click(screen.getByRole("button", { name: /harden/i }));
+        await waitFor(() => screen.getByRole("button", { name: /download/i }));
+        fireEvent.click(screen.getByRole("button", { name: /download/i }));
+        expect(global.URL.createObjectURL).toHaveBeenCalled();
+      });
+    });
+  });
 });

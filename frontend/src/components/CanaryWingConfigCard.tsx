@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import clsx from "clsx";
+import { CollapsibleCard } from "./ui/CollapsibleCard";
 
 export interface CanaryWingConfig {
   url?: string;
@@ -91,23 +92,17 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
   }, [resultingUrl]);
 
   return (
-    <div
-      className={clsx(
-        "rounded-xl border border-noir-border bg-noir-panel/70 p-4 noir-shell",
-        disabled && "opacity-60 pointer-events-none",
-        className
-      )}
-      aria-labelledby="canary-wing-card-title"
+    <CollapsibleCard
+      title="The Canary Wing (LLM10)"
+      titleId="canary-wing-card-title"
+      contentId="canary-wing-card-content"
+      ariaLabel="Expand Canary Wing config"
+      defaultExpanded={false}
+      disabled={disabled}
+      className={className}
     >
-      <h3
-        id="canary-wing-card-title"
-        className="text-xs font-semibold uppercase tracking-[0.2em] text-neon-cyan mb-3"
-        title="OWASP LLM10: Embeds a unique, trackable canary-style URL to detect when CV content is exfiltrated or used (e.g. link followed by crawler/model pipeline)."
-      >
-        The Canary Wing (LLM10)
-      </h3>
       <p
-        className="text-[10px] text-noir-foreground/70 mb-4"
+        className="text-[10px] sm:text-xs text-noir-foreground/70 mb-4"
         title="The canary URL is built only from this config; no document content (and no PII) is ever included."
       >
         Embeds an almost invisible, trackable URL to detect when your CV is exfiltrated or used for model training. No PII ever goes into this URL.
@@ -221,6 +216,6 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
           </button>
         </div>
       </fieldset>
-    </div>
+    </CollapsibleCard>
   );
 };

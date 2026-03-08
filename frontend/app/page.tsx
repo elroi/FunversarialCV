@@ -458,6 +458,9 @@ export default function Home() {
           </div>
 
           <aside className="mt-8 w-full text-xs text-noir-foreground/80 md:mt-0 md:w-80 md:shrink-0 md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-3rem)] md:overflow-y-auto">
+            <div className="mb-4 text-xs uppercase tracking-[0.2em] text-neon-cyan">
+              Pipeline Status
+            </div>
             <div className="block md:hidden mb-2">
               <button
                 type="button"

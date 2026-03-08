@@ -8,7 +8,8 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
-        "test": "jest"
+        "test": "jest",
+        "test:manual-list": "jest app/page.test.tsx --testNamePattern=\"Manual test list\""
     },
     "dependencies": {
         "clsx": "^2.1.0",

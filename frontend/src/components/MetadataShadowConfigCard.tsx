@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import clsx from "clsx";
+import { CollapsibleCard } from "./ui/CollapsibleCard";
 
 const KEY_PATTERN = /^[a-zA-Z0-9_]*$/;
 const MAX_VALUE_LENGTH = 200;
@@ -83,22 +84,16 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
   };
 
   return (
-    <div
-      className={clsx(
-        "rounded-xl border border-noir-border bg-noir-panel/70 p-4 noir-shell",
-        disabled && "opacity-60 pointer-events-none",
-        className
-      )}
-      aria-labelledby="metadata-shadow-card-title"
+    <CollapsibleCard
+      title="The Metadata Shadow (LLM02)"
+      titleId="metadata-shadow-card-title"
+      contentId="metadata-shadow-card-content"
+      ariaLabel="Expand Metadata Shadow config"
+      defaultExpanded={false}
+      disabled={disabled}
+      className={className}
     >
-      <h3
-        id="metadata-shadow-card-title"
-        className="text-xs font-semibold uppercase tracking-[0.2em] text-neon-cyan mb-3"
-        title="OWASP LLM02: Embeds custom key-value pairs in file properties to test insecure output handling."
-      >
-        The Metadata Shadow (LLM02)
-      </h3>
-      <p className="text-[10px] text-noir-foreground/70 mb-4">
+      <p className="text-[10px] sm:text-xs text-noir-foreground/70 mb-4">
         Add a custom document property (e.g. Ranking: Top_1%). Keys: letters, numbers, underscore only. No PII in values.
       </p>
 
@@ -158,6 +153,6 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
           To add this manually: in a PDF use File → Properties → Custom properties (or equivalent) and add the key/value. In Word use File → Info → Properties → Advanced Properties → Custom, then add the property name and value. Many editors expose document properties under metadata or file info.
         </p>
       </div>
-    </div>
+    </CollapsibleCard>
   );
 };

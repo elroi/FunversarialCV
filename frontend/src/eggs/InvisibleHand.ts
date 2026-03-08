@@ -4,10 +4,9 @@
  */
 
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
-import { Document, Paragraph, Packer, TextRun } from "docx";
 import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
-import { extractText, MIME_DOCX } from "../engine/documentExtract";
+import { injectHiddenParagraphIntoDocx } from "../engine/docxInject";
 
 /** Default/example trap text when payload is empty. */
 export const DEFAULT_INVISIBLE_HAND_TRAP =
@@ -35,6 +34,9 @@ export const invisibleHand: IEgg = {
   name: "The Invisible Hand",
   description: "OWASP LLM01: Injects a 0.5pt white system note for AI parsers; invisible to humans, readable by LLMs.",
   owaspMapping: OwaspMapping.LLM01_Prompt_Injection,
+
+  manualCheckAndValidation:
+    "Manual check: In a PDF, use Select All (Ctrl/Cmd+A) or search in the viewer for the trap text; it is 0.5pt white so it may only appear when selected. In Word (DOCX), inspect the document or enable showing hidden content to find the hidden paragraph. Validation: Run the transform with a known payload, then parse the output (PDF or DOCX); confirm the trap text is present at 0.5pt/white in PDF or in the hidden DOCX element.",
 
   validatePayload(payload: string): boolean {
     if (payload.length > MAX_PAYLOAD_LENGTH) return false;
@@ -66,31 +68,7 @@ export const invisibleHand: IEgg = {
     }
 
     if (isDocxBuffer(buffer)) {
-      const bodyText = await extractText(buffer, MIME_DOCX);
-      const trapParagraph = new Paragraph({
-        children: [
-          new TextRun({
-            text: trapText,
-            size: 1,
-            color: "FFFFFF",
-          }),
-        ],
-      });
-      const bodyParagraphs = bodyText.split(/\r?\n/).map(
-        (line) =>
-          new Paragraph({
-            children: [new TextRun({ text: line || " " })],
-          })
-      );
-      const doc = new Document({
-        sections: [
-          {
-            children: [trapParagraph, ...bodyParagraphs],
-          },
-        ],
-      });
-      const blob = await Packer.toBuffer(doc);
-      return Buffer.from(blob);
+      return injectHiddenParagraphIntoDocx(buffer, trapText);
     }
 
     throw new Error("Unsupported document format: buffer is neither PDF nor DOCX.");

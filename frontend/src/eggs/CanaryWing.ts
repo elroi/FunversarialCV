@@ -6,10 +6,9 @@
  */
 
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
-import { Document, Paragraph, Packer, TextRun } from "docx";
 import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
-import { extractText, MIME_DOCX } from "../engine/documentExtract";
+import { injectHiddenParagraphIntoDocx } from "../engine/docxInject";
 import { PII_REGEX } from "../lib/vault";
 
 const MAX_PAYLOAD_LENGTH = 1024;
@@ -91,6 +90,9 @@ export const canaryWing: IEgg = {
     "OWASP LLM10: Embeds a unique, trackable canary-style URL in the document to detect when CV content is exfiltrated or used (e.g. link followed by crawler/model pipeline). Model Theft & Exfiltration.",
   owaspMapping: OwaspMapping.LLM10_Model_Theft,
 
+  manualCheckAndValidation:
+    "Manual check: In a PDF use Select All or search for a URL; in DOCX inspect the hidden paragraph or enable showing hidden content to find the canary URL. Validation: Run the transform and verify the canary URL appears in the output; optionally GET the URL to confirm the canary endpoint logs the hit.",
+
   validatePayload(payload: string): boolean {
     if (payload.length > MAX_PAYLOAD_LENGTH) return false;
     const { config, parseOk } = parsePayload(payload);
@@ -155,31 +157,7 @@ export const canaryWing: IEgg = {
     }
 
     if (isDocxBuffer(buffer)) {
-      const bodyText = await extractText(buffer, MIME_DOCX);
-      const canaryParagraph = new Paragraph({
-        children: [
-          new TextRun({
-            text: canaryUrl,
-            size: 1,
-            color: "FFFFFF",
-          }),
-        ],
-      });
-      const bodyParagraphs = bodyText.split(/\r?\n/).map(
-        (line) =>
-          new Paragraph({
-            children: [new TextRun({ text: line || " " })],
-          })
-      );
-      const doc = new Document({
-        sections: [
-          {
-            children: [canaryParagraph, ...bodyParagraphs],
-          },
-        ],
-      });
-      const blob = await Packer.toBuffer(doc);
-      return Buffer.from(blob);
+      return injectHiddenParagraphIntoDocx(buffer, canaryUrl);
     }
 
     throw new Error("Unsupported document format: buffer is neither PDF nor DOCX.");

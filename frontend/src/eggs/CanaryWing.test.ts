@@ -26,6 +26,10 @@ describe("CanaryWing", () => {
       expect(canaryWing.name).toBeTruthy();
       expect(canaryWing.description).toBeTruthy();
     });
+    it("has non-empty manualCheckAndValidation with manual check and validation instructions", () => {
+      expect(canaryWing.manualCheckAndValidation).toBeTruthy();
+      expect(canaryWing.manualCheckAndValidation.length).toBeGreaterThan(20);
+    });
   });
 
   describe("validatePayload", () => {

@@ -10,6 +10,13 @@ export enum OwaspMapping {
     name: string;
     description: string;
     owaspMapping: OwaspMapping;
+
+    /**
+     * Human-readable instructions:
+     * - How to manually check that this egg is present in a hardened document.
+     * - How to validate that the egg has been implemented correctly.
+     */
+    manualCheckAndValidation: string;
     
     /**
      * Transforms the document buffer.

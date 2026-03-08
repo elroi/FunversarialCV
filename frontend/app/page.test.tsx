@@ -76,13 +76,23 @@ describe("Home page", () => {
 
   describe("retry on error", () => {
     it("shows Retry button when processing fails and calls runHarden when clicked", async () => {
-      const fetchMock = jest
-        .fn()
-        .mockResolvedValueOnce({
-          ok: false,
-          json: async () => ({ error: "Server error" }),
-        })
-        .mockResolvedValueOnce({
+      let hardenCallCount = 0;
+      const fetchMock = jest.fn((input: RequestInfo | URL) => {
+        const url = typeof input === "string" ? input : input instanceof URL ? input.href : (input as Request).url;
+        if (url.includes("/api/eggs")) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({ eggs: [] }),
+          });
+        }
+        hardenCallCount++;
+        if (hardenCallCount === 1) {
+          return Promise.resolve({
+            ok: false,
+            json: async () => ({ error: "Server error" }),
+          });
+        }
+        return Promise.resolve({
           ok: true,
           json: async () => ({
             bufferBase64: Buffer.from("x").toString("base64"),
@@ -91,6 +101,7 @@ describe("Home page", () => {
             scannerReport: { scan: { hasSuspiciousPatterns: false, matchedPatterns: [] } },
           }),
         });
+      });
       global.fetch = fetchMock;
       render(<Home />);
 
@@ -114,7 +125,7 @@ describe("Home page", () => {
       fireEvent.click(retryBtn);
 
       await waitFor(() => {
-        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(fetchMock).toHaveBeenCalledTimes(3); // /api/eggs + /api/harden (fail) + /api/harden (retry)
       });
     });
   });

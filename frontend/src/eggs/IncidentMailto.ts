@@ -96,6 +96,9 @@ export const incidentMailto: IEgg = {
     "OWASP LLM02: Wraps the candidate email in a pre-filled mailto: link for incident reporting. Tests whether downstream systems follow structured output (links) insecurely.",
   owaspMapping: OwaspMapping.LLM02_Insecure_Output,
 
+  manualCheckAndValidation:
+    "Manual check: Open the hardened PDF or DOCX and locate the candidate email; confirm it is wrapped in a mailto link (e.g. 'email (mailto:...)' or has an appended 'Report incident' link). Validation: Run the transform on text containing {{PII_EMAIL_0}}; assert the output contains a mailto URI and, if configured, the expected subject/body or label.",
+
   validatePayload(payload: string): boolean {
     if (payload.length > MAX_PAYLOAD_LENGTH) return false;
     const { config, parseOk } = parsePayload(payload);

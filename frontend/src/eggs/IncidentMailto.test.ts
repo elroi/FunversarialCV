@@ -25,6 +25,10 @@ describe("IncidentMailto", () => {
       expect(incidentMailto.name).toBeTruthy();
       expect(incidentMailto.description).toBeTruthy();
     });
+    it("has non-empty manualCheckAndValidation with manual check and validation instructions", () => {
+      expect(incidentMailto.manualCheckAndValidation).toBeTruthy();
+      expect(incidentMailto.manualCheckAndValidation.length).toBeGreaterThan(20);
+    });
   });
 
   describe("validatePayload", () => {

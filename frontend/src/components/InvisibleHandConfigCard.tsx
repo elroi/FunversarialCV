@@ -12,6 +12,8 @@ export interface InvisibleHandConfigCardProps {
   onPayloadChange: (payload: string) => void;
   disabled?: boolean;
   className?: string;
+  /** Instructions for manual check and validation (from GET /api/eggs). */
+  manualCheckAndValidation?: string;
 }
 
 export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = ({
@@ -19,6 +21,7 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
   onPayloadChange,
   disabled = false,
   className,
+  manualCheckAndValidation,
 }) => {
   const [trapText, setTrapText] = useState(payload);
 
@@ -81,14 +84,20 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
           id="invisible-hand-manual-title"
           className="text-[10px] sm:text-xs uppercase tracking-wider text-noir-foreground/80 mb-2"
         >
-          Do it manually
+          How to check &amp; validate
         </h4>
-        <p
-          className="text-[10px] sm:text-xs text-noir-foreground/70"
-          title="Instructions to add the same invisible trap text manually in your own PDF or Word document."
-        >
-          To add this manually in your own file: in a PDF, insert text at the top of the first page in 0.5pt size and white color so it is invisible to humans but still readable by parsers. In Word, add a paragraph with 1pt font and white color, then save as PDF if needed. The goal is invisible-to-humans, readable-by-LLMs system-style text.
-        </p>
+        {manualCheckAndValidation ? (
+          <p
+            className="text-[10px] sm:text-xs text-noir-foreground/70"
+            title="How to manually check for this egg and validate it was implemented."
+          >
+            {manualCheckAndValidation}
+          </p>
+        ) : (
+          <p className="text-[10px] sm:text-xs text-noir-foreground/50 italic">
+            Instructions not available. Ensure the app can reach /api/eggs.
+          </p>
+        )}
       </div>
     </CollapsibleCard>
   );

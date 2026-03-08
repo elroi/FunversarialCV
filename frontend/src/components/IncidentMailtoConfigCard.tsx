@@ -24,6 +24,8 @@ export interface IncidentMailtoConfigCardProps {
   onPayloadChange: (payload: string) => void;
   disabled?: boolean;
   className?: string;
+  /** Instructions for manual check and validation (from GET /api/eggs). */
+  manualCheckAndValidation?: string;
 }
 
 function parsePayloadSafe(payload: string | undefined): IncidentMailtoConfig {
@@ -41,6 +43,7 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
   onPayloadChange,
   disabled = false,
   className,
+  manualCheckAndValidation,
 }) => {
   const config = parsePayloadSafe(payload);
 
@@ -414,6 +417,28 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
           </button>
         </div>
       </fieldset>
+
+      <div
+        className="mt-4 pt-4 border-t border-noir-border"
+        role="region"
+        aria-labelledby="incident-mailto-check-validate-title"
+      >
+        <h4
+          id="incident-mailto-check-validate-title"
+          className="text-[10px] sm:text-xs uppercase tracking-wider text-noir-foreground/80 mb-2"
+        >
+          How to check &amp; validate
+        </h4>
+        {manualCheckAndValidation ? (
+          <p className="text-[10px] sm:text-xs text-noir-foreground/70">
+            {manualCheckAndValidation}
+          </p>
+        ) : (
+          <p className="text-[10px] sm:text-xs text-noir-foreground/50 italic">
+            Instructions not available. Ensure the app can reach /api/eggs.
+          </p>
+        )}
+      </div>
     </CollapsibleCard>
   );
 };

@@ -17,6 +17,10 @@ describe("MetadataShadow", () => {
       expect(metadataShadow.name).toBeTruthy();
       expect(metadataShadow.description).toBeTruthy();
     });
+    it("has non-empty manualCheckAndValidation with manual check and validation instructions", () => {
+      expect(metadataShadow.manualCheckAndValidation).toBeTruthy();
+      expect(metadataShadow.manualCheckAndValidation.length).toBeGreaterThan(20);
+    });
   });
 
   describe("validatePayload", () => {

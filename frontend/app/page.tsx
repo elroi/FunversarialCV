@@ -37,6 +37,7 @@ export default function Home() {
   const [canaryWingPayload, setCanaryWingPayload] = useState<string>("");
   const [metadataShadowPayload, setMetadataShadowPayload] = useState<string>("");
   const [enabledEggIds, setEnabledEggIds] = useState<Set<string>>(() => new Set(DEFAULT_ENABLED_EGG_IDS));
+  const [preserveStyles, setPreserveStyles] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const successMessageRef = useRef<HTMLParagraphElement>(null);
   const retryButtonRef = useRef<HTMLButtonElement>(null);
@@ -47,6 +48,25 @@ export default function Home() {
     eggIds: string[];
   } | null>(null);
   const [dualityMonitorOpen, setDualityMonitorOpen] = useState(false);
+
+  /** Egg metadata from GET /api/eggs (id -> { name, manualCheckAndValidation }). */
+  const [eggMetadataById, setEggMetadataById] = useState<Record<string, { name: string; manualCheckAndValidation: string }>>({});
+
+  useEffect(() => {
+    if (typeof fetch !== "function") return;
+    fetch("/api/eggs")
+      .then((res) => res.ok ? res.json() : null)
+      .then((data: { eggs?: Array<{ id: string; name: string; manualCheckAndValidation: string }> } | null) => {
+        if (data?.eggs && Array.isArray(data.eggs)) {
+          const byId: Record<string, { name: string; manualCheckAndValidation: string }> = {};
+          for (const e of data.eggs) {
+            byId[e.id] = { name: e.name, manualCheckAndValidation: e.manualCheckAndValidation };
+          }
+          setEggMetadataById(byId);
+        }
+      })
+      .catch(() => { /* ignore; cards will hide section */ });
+  }, []);
 
   // Scroll focused success/error targets into view after render (refs are set post-commit).
   useEffect(() => {
@@ -184,6 +204,9 @@ export default function Home() {
     formData.append("file", file);
     formData.append("payloads", JSON.stringify(payloadsForEnabled));
     formData.append("eggIds", JSON.stringify([...enabledEggIds]));
+    if (preserveStyles) {
+      formData.append("preserveStyles", "true");
+    }
 
     try {
       const res = await fetch("/api/harden", { method: "POST", body: formData });
@@ -336,8 +359,23 @@ export default function Home() {
                   Configure eggs below, then click Harden.
                 </p>
                 <p className="mt-0.5 text-[10px] text-noir-foreground/50">
-                  Output uses plain-text layout; original formatting is not preserved.
+                  Output uses plain-text layout unless &quot;Preserve styles&quot; is on (add-only eggs only).
                 </p>
+                <div className="mt-2">
+                  <label className="flex min-h-[44px] cursor-pointer items-center gap-2 py-2 text-xs text-noir-foreground/80">
+                    <input
+                      type="checkbox"
+                      checked={preserveStyles}
+                      onChange={() => setPreserveStyles((p) => !p)}
+                      className="rounded border-noir-border text-neon-cyan focus:ring-neon-cyan/50"
+                      aria-describedby="preserve-styles-desc"
+                    />
+                    <span>Preserve styles</span>
+                  </label>
+                  <p id="preserve-styles-desc" className="text-[10px] text-noir-foreground/50 ml-6 -mt-1">
+                    Keeps original formatting when only Invisible Hand, Canary Wing, and/or Metadata Shadow are used.
+                  </p>
+                </div>
                 <div className="mt-3">
                   <Card className="px-3 py-2">
                     <p className="text-[10px] uppercase tracking-[0.2em] text-noir-foreground/60 mb-2">
@@ -432,6 +470,7 @@ export default function Home() {
                 payload={invisibleHandPayload}
                 onPayloadChange={setInvisibleHandPayload}
                 disabled={!enabledEggIds.has("invisible-hand")}
+                manualCheckAndValidation={eggMetadataById["invisible-hand"]?.manualCheckAndValidation}
               />
             </div>
             <div className="mt-4">
@@ -439,6 +478,7 @@ export default function Home() {
                 payload={incidentMailtoPayload}
                 onPayloadChange={setIncidentMailtoPayload}
                 disabled={!enabledEggIds.has("incident-mailto")}
+                manualCheckAndValidation={eggMetadataById["incident-mailto"]?.manualCheckAndValidation}
               />
             </div>
             <div className="mt-4">
@@ -446,6 +486,7 @@ export default function Home() {
                 payload={canaryWingPayload}
                 onPayloadChange={setCanaryWingPayload}
                 disabled={!enabledEggIds.has("canary-wing")}
+                manualCheckAndValidation={eggMetadataById["canary-wing"]?.manualCheckAndValidation}
               />
             </div>
             <div className="mt-4">
@@ -453,6 +494,7 @@ export default function Home() {
                 payload={metadataShadowPayload}
                 onPayloadChange={setMetadataShadowPayload}
                 disabled={!enabledEggIds.has("metadata-shadow")}
+                manualCheckAndValidation={eggMetadataById["metadata-shadow"]?.manualCheckAndValidation}
               />
             </div>
           </div>

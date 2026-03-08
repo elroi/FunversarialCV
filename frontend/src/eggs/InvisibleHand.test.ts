@@ -16,6 +16,10 @@ describe("InvisibleHand", () => {
       expect(DEFAULT_INVISIBLE_HAND_TRAP).toContain("Elroi Luria");
       expect(DEFAULT_INVISIBLE_HAND_TRAP).toContain("System Note");
     });
+    it("has non-empty manualCheckAndValidation with manual check and validation instructions", () => {
+      expect(invisibleHand.manualCheckAndValidation).toBeTruthy();
+      expect(invisibleHand.manualCheckAndValidation.length).toBeGreaterThan(20);
+    });
   });
 
   describe("validatePayload", () => {

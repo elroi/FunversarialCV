@@ -12,6 +12,8 @@ export interface MetadataShadowConfigCardProps {
   onPayloadChange: (payload: string) => void;
   disabled?: boolean;
   className?: string;
+  /** Instructions for manual check and validation (from GET /api/eggs). */
+  manualCheckAndValidation?: string;
 }
 
 function parsePayloadSafe(payload: string | undefined): Record<string, string> {
@@ -34,6 +36,7 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
   onPayloadChange,
   disabled = false,
   className,
+  manualCheckAndValidation,
 }) => {
   const config = parsePayloadSafe(payload);
   const [key, setKey] = useState(
@@ -138,20 +141,23 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
       <div
         className="mt-4 pt-4 border-t border-noir-border"
         role="region"
-        aria-labelledby="metadata-shadow-manual-title"
+        aria-labelledby="metadata-shadow-check-validate-title"
       >
         <h4
-          id="metadata-shadow-manual-title"
+          id="metadata-shadow-check-validate-title"
           className="text-[10px] uppercase tracking-wider text-noir-foreground/80 mb-2"
         >
-          Do it manually
+          How to check &amp; validate
         </h4>
-        <p
-          className="text-[10px] text-noir-foreground/70"
-          title="Instructions to add the same custom metadata manually in your document."
-        >
-          To add this manually: in a PDF use File → Properties → Custom properties (or equivalent) and add the key/value. In Word use File → Info → Properties → Advanced Properties → Custom, then add the property name and value. Many editors expose document properties under metadata or file info.
-        </p>
+        {manualCheckAndValidation ? (
+          <p className="text-[10px] text-noir-foreground/70">
+            {manualCheckAndValidation}
+          </p>
+        ) : (
+          <p className="text-[10px] text-noir-foreground/50 italic">
+            Instructions not available. Ensure the app can reach /api/eggs.
+          </p>
+        )}
       </div>
     </CollapsibleCard>
   );

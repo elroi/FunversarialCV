@@ -46,6 +46,7 @@ export default function Home() {
   const lastHardenedConfigRef = useRef<{
     payloads: Record<string, string>;
     eggIds: string[];
+    preserveStyles: boolean;
   } | null>(null);
   const [dualityMonitorOpen, setDualityMonitorOpen] = useState(false);
 
@@ -135,8 +136,9 @@ export default function Home() {
     if (
       currentIds.length !== snapIds.length ||
       currentIds.some((id, i) => id !== snapIds[i])
-    )
+    ) {
       return true;
+    }
     const payloads: Record<string, string> = {
       "invisible-hand": invisibleHandPayload,
       "incident-mailto": incidentMailtoPayload,
@@ -157,9 +159,11 @@ export default function Home() {
     for (const id of snapKeys) {
       if (currentPayloads[id] !== snap.payloads[id]) return true;
     }
+    if (preserveStyles !== snap.preserveStyles) return true;
     return false;
   }, [
     enabledEggIds,
+    preserveStyles,
     invisibleHandPayload,
     incidentMailtoPayload,
     canaryWingPayload,
@@ -246,6 +250,7 @@ export default function Home() {
       lastHardenedConfigRef.current = {
         payloads: { ...payloadsForEnabled },
         eggIds: [...enabledEggIds],
+        preserveStyles,
       };
 
       if (scannerScan && typeof scannerScan === "object") {

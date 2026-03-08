@@ -232,4 +232,23 @@ describe("POST /api/harden", () => {
     expect(decoded[0]).toBe(0x50);
     expect(decoded[1]).toBe(0x4b);
   }, 15000);
+
+  it("passes preserveStyles to process when form has preserveStyles=true", async () => {
+    const minimalDocx = await createDocumentWithText("Resume content", MIME_DOCX);
+    const form = await buildDocxFormData(minimalDocx);
+    form.append("preserveStyles", "true");
+    form.append("eggIds", JSON.stringify(["metadata-shadow"]));
+    const req = new Request("http://localhost:3000/api/harden", {
+      method: "POST",
+      body: form,
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(200);
+    expect(Processor.process).toHaveBeenCalledWith(
+      expect.objectContaining({
+        preserveStyles: true,
+        eggs: expect.any(Array),
+      })
+    );
+  }, 15000);
 });

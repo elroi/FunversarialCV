@@ -50,6 +50,10 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const preserveStylesRaw = formData.get("preserveStyles");
+  const preserveStyles =
+    preserveStylesRaw === "true" || preserveStylesRaw === "1";
+
   const { process } = await import("@/engine/Processor");
   const { AVAILABLE_EGGS } = await import("@/eggs/registry");
   const {
@@ -103,6 +107,7 @@ export async function POST(request: NextRequest) {
       mimeType,
       eggs,
       payloads: payloadsForEggs,
+      preserveStyles,
     });
     return Response.json({
       bufferBase64: result.buffer.toString("base64"),

@@ -8,8 +8,22 @@ export interface CanaryWingConfig {
   url?: string;
   baseUrl?: string;
   token?: string;
-  docxLinkStyle?: "hidden" | "clickable" | "clickable-with-text";
+  /** DOCX: include hidden canary text (default true). Can combine with clickable link. */
+  docxHiddenText?: boolean;
+  /** DOCX: include clickable hyperlink (default false). Can combine with hidden text. */
+  docxClickableLink?: boolean;
+  /** DOCX: make clickable link visible (recommended for social engineering). Default false. */
+  docxClickableVisible?: boolean;
+  /** DOCX: place clickable link at end of document or in footer. Default "end". */
+  docxPlacement?: "end" | "footer";
   docxDisplayText?: string;
+  /** PDF: include invisible canary text (default true). Can combine with clickable link. */
+  pdfHiddenText?: boolean;
+  /** PDF: add clickable link region (default false). Can combine with hidden text. */
+  pdfClickableLink?: boolean;
+  /** @deprecated Use docxHiddenText + docxClickableLink instead. Still supported for backward compat. */
+  docxLinkStyle?: "hidden" | "clickable" | "clickable-with-text";
+  /** @deprecated Use pdfHiddenText + pdfClickableLink instead. Still supported for backward compat. */
   pdfLinkStyle?: "hidden" | "clickable";
 }
 
@@ -46,12 +60,20 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
   const [url, setUrl] = useState(config.url ?? "");
   const [baseUrl, setBaseUrl] = useState(config.baseUrl ?? "");
   const [token, setToken] = useState(config.token ?? "");
-  const [docxLinkStyle, setDocxLinkStyle] = useState<CanaryWingConfig["docxLinkStyle"]>(
-    config.docxLinkStyle ?? "hidden"
+  const [docxHiddenText, setDocxHiddenText] = useState(
+    config.docxHiddenText ?? (config.docxLinkStyle === "hidden" || !config.docxLinkStyle)
   );
+  const [docxClickableLink, setDocxClickableLink] = useState(
+    config.docxClickableLink ?? (config.docxLinkStyle === "clickable" || config.docxLinkStyle === "clickable-with-text")
+  );
+  const [docxClickableVisible, setDocxClickableVisible] = useState(config.docxClickableVisible ?? false);
+  const [docxPlacement, setDocxPlacement] = useState<"end" | "footer">(config.docxPlacement ?? "end");
   const [docxDisplayText, setDocxDisplayText] = useState(config.docxDisplayText ?? "");
-  const [pdfLinkStyle, setPdfLinkStyle] = useState<CanaryWingConfig["pdfLinkStyle"]>(
-    config.pdfLinkStyle ?? "hidden"
+  const [pdfHiddenText, setPdfHiddenText] = useState(
+    config.pdfHiddenText ?? (config.pdfLinkStyle !== "clickable")
+  );
+  const [pdfClickableLink, setPdfClickableLink] = useState(
+    config.pdfClickableLink ?? (config.pdfLinkStyle === "clickable")
   );
 
   // Default base when url and baseUrl are both empty. Same value on server and first client render to avoid hydration mismatch; then set to window.location.origin in useEffect (client-only).
@@ -64,9 +86,17 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
     setUrl(config.url ?? "");
     setBaseUrl(config.baseUrl ?? "");
     setToken(config.token ?? "");
-    setDocxLinkStyle(config.docxLinkStyle ?? "hidden");
+    setDocxHiddenText(
+      config.docxHiddenText ?? (config.docxLinkStyle === "hidden" || !config.docxLinkStyle)
+    );
+    setDocxClickableLink(
+      config.docxClickableLink ?? (config.docxLinkStyle === "clickable" || config.docxLinkStyle === "clickable-with-text")
+    );
+    setDocxClickableVisible(config.docxClickableVisible ?? false);
+    setDocxPlacement(config.docxPlacement ?? "end");
     setDocxDisplayText(config.docxDisplayText ?? "");
-    setPdfLinkStyle(config.pdfLinkStyle ?? "hidden");
+    setPdfHiddenText(config.pdfHiddenText ?? (config.pdfLinkStyle !== "clickable"));
+    setPdfClickableLink(config.pdfClickableLink ?? (config.pdfLinkStyle === "clickable"));
   }, [payload]);
 
   // After mount, use current origin for default canary base so the preview matches what the server would use in dev.
@@ -89,11 +119,15 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
     if (url.trim()) next.url = url.trim();
     if (baseUrl.trim()) next.baseUrl = baseUrl.trim();
     if (token.trim()) next.token = token.trim();
-    next.docxLinkStyle = docxLinkStyle ?? "hidden";
+    next.docxHiddenText = docxHiddenText;
+    next.docxClickableLink = docxClickableLink;
+    next.docxClickableVisible = docxClickableVisible;
+    next.docxPlacement = docxPlacement;
     if (docxDisplayText.trim()) next.docxDisplayText = docxDisplayText.trim();
-    next.pdfLinkStyle = pdfLinkStyle ?? "hidden";
+    next.pdfHiddenText = pdfHiddenText;
+    next.pdfClickableLink = pdfClickableLink;
     emit(next);
-  }, [url, baseUrl, token, docxLinkStyle, docxDisplayText, pdfLinkStyle, emit]);
+  }, [url, baseUrl, token, docxHiddenText, docxClickableLink, docxClickableVisible, docxPlacement, docxDisplayText, pdfHiddenText, pdfClickableLink, emit]);
 
   const resultingUrl =
     url.trim() !== ""
@@ -207,67 +241,133 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
           Embedding options
         </legend>
         <p className="text-[10px] text-noir-foreground/50 mb-3">
-          Only options for the format of the file you upload are applied.
+          Only options for the format of the file you upload are applied. You can enable more than one option per format.
         </p>
         <div className="space-y-3">
           <div>
-            <span className="block text-[10px] text-noir-foreground/70 mb-1">DOCX link style</span>
-            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="DOCX link style">
-              {(["hidden", "clickable", "clickable-with-text"] as const).map((value) => (
-                <label key={value} className="flex items-center gap-1.5 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="docxLinkStyle"
-                    checked={docxLinkStyle === value}
-                    onChange={() => setDocxLinkStyle(value)}
-                    disabled={disabled}
-                    className="rounded border-noir-border text-neon-cyan focus:ring-neon-cyan"
-                  />
-                  <span className="text-[10px] text-noir-foreground/80">
-                    {value === "hidden" && "Hidden text only (current)"}
-                    {value === "clickable" && "Clickable link (same hidden look)"}
-                    {value === "clickable-with-text" && "Clickable link with custom text"}
-                  </span>
-                </label>
-              ))}
-            </div>
-            {docxLinkStyle === "clickable-with-text" && (
-              <div className="mt-2">
+            <span className="block text-[10px] text-noir-foreground/70 mb-1">DOCX</span>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input
-                  type="text"
-                  value={docxDisplayText}
-                  onChange={(e) => setDocxDisplayText(e.target.value)}
-                  placeholder="Verify document integrity"
+                  type="checkbox"
+                  checked={docxHiddenText}
+                  onChange={(e) => setDocxHiddenText(e.target.checked)}
                   disabled={disabled}
-                  maxLength={100}
-                  className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
-                  aria-describedby="docx-display-hint"
+                  className="rounded border-noir-border text-neon-cyan focus:ring-neon-cyan"
+                  aria-describedby="docx-hidden-desc"
                 />
-                <p id="docx-display-hint" className="text-[10px] text-noir-foreground/50 mt-1">
-                  This text can increase click-through; use wording you&apos;re comfortable with. FunversarialCV does not provide official verification—this is for detection only.
-                </p>
-              </div>
-            )}
+                <span className="text-[10px] text-noir-foreground/80">Include hidden canary text</span>
+              </label>
+              <p id="docx-hidden-desc" className="text-[10px] text-noir-foreground/50 ml-5">
+                Invisible paragraph with the canary URL (extractable by parsers).
+              </p>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={docxClickableLink}
+                  onChange={(e) => setDocxClickableLink(e.target.checked)}
+                  disabled={disabled}
+                  className="rounded border-noir-border text-neon-cyan focus:ring-neon-cyan"
+                  aria-describedby="docx-clickable-desc"
+                />
+                <span className="text-[10px] text-noir-foreground/80">Include clickable link</span>
+              </label>
+              <p id="docx-clickable-desc" className="text-[10px] text-noir-foreground/50 ml-5">
+                Real hyperlink. Can be hidden (tiny white) or visible (recommended for social engineering). Can be used together with hidden text.
+              </p>
+              {docxClickableLink && (
+                <>
+                  <label className="flex items-center gap-2 cursor-pointer ml-5">
+                    <input
+                      type="checkbox"
+                      checked={docxClickableVisible}
+                      onChange={(e) => setDocxClickableVisible(e.target.checked)}
+                      disabled={disabled}
+                      className="rounded border-noir-border text-neon-cyan focus:ring-neon-cyan"
+                      aria-describedby="docx-visible-desc"
+                    />
+                    <span className="text-[10px] text-noir-foreground/80">Make link visible (9pt, blue — recommended for tricking users)</span>
+                  </label>
+                  <p id="docx-visible-desc" className="text-[10px] text-noir-foreground/50 ml-10">
+                    When unchecked, the link is tiny white (hidden). When checked, it appears as a normal link so readers may click it.
+                  </p>
+                  <div className="ml-5 mt-2">
+                    <span className="block text-[10px] text-noir-foreground/70 mb-1">Place link</span>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="docx-placement"
+                          checked={docxPlacement === "end"}
+                          onChange={() => setDocxPlacement("end")}
+                          disabled={disabled}
+                          className="border-noir-border text-neon-cyan focus:ring-neon-cyan"
+                        />
+                        <span className="text-[10px] text-noir-foreground/80">End of document</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="docx-placement"
+                          checked={docxPlacement === "footer"}
+                          onChange={() => setDocxPlacement("footer")}
+                          disabled={disabled}
+                          className="border-noir-border text-neon-cyan focus:ring-neon-cyan"
+                        />
+                        <span className="text-[10px] text-noir-foreground/80">Document footer</span>
+                      </label>
+                    </div>
+                    <p className="text-[10px] text-noir-foreground/50 mt-1">
+                      Both options place the canary link at the end of the document so Word can open the file. A true OOXML footer is not used for compatibility.
+                    </p>
+                  </div>
+                </>
+              )}
+              {docxClickableLink && (
+                <div className="ml-5 mt-2">
+                  <input
+                    type="text"
+                    value={docxDisplayText}
+                    onChange={(e) => setDocxDisplayText(e.target.value)}
+                    placeholder="Optional custom link text (e.g. Verify document integrity)"
+                    disabled={disabled}
+                    maxLength={100}
+                    className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
+                    aria-describedby="docx-display-hint"
+                  />
+                  <p id="docx-display-hint" className="text-[10px] text-noir-foreground/50 mt-1">
+                    This text can increase click-through; use wording you&apos;re comfortable with. FunversarialCV does not provide official verification—this is for detection only.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
           <div>
-            <span className="block text-[10px] text-noir-foreground/70 mb-1">PDF link style</span>
-            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="PDF link style">
-              {(["hidden", "clickable"] as const).map((value) => (
-                <label key={value} className="flex items-center gap-1.5 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="pdfLinkStyle"
-                    checked={pdfLinkStyle === value}
-                    onChange={() => setPdfLinkStyle(value)}
-                    disabled={disabled}
-                    className="rounded border-noir-border text-neon-cyan focus:ring-neon-cyan"
-                  />
-                  <span className="text-[10px] text-noir-foreground/80">
-                    {value === "hidden" && "Hidden text only"}
-                    {value === "clickable" && "Clickable link (invisible region)"}
-                  </span>
-                </label>
-              ))}
+            <span className="block text-[10px] text-noir-foreground/70 mb-1">PDF</span>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={pdfHiddenText}
+                  onChange={(e) => setPdfHiddenText(e.target.checked)}
+                  disabled={disabled}
+                  className="rounded border-noir-border text-neon-cyan focus:ring-neon-cyan"
+                />
+                <span className="text-[10px] text-noir-foreground/80">Include invisible canary text</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={pdfClickableLink}
+                  onChange={(e) => setPdfClickableLink(e.target.checked)}
+                  disabled={disabled}
+                  className="rounded border-noir-border text-neon-cyan focus:ring-neon-cyan"
+                />
+                <span className="text-[10px] text-noir-foreground/80">Add clickable link region</span>
+              </label>
+              <p className="text-[10px] text-noir-foreground/50 ml-5">
+                Invisible region over the canary text that opens the URL when clicked. Can be used together with invisible text.
+              </p>
             </div>
           </div>
           <div>
@@ -275,7 +375,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => { setDocxLinkStyle("hidden"); setPdfLinkStyle("hidden"); setDocxDisplayText(""); }}
+                onClick={() => { setDocxHiddenText(true); setDocxClickableLink(false); setPdfHiddenText(true); setPdfClickableLink(false); setDocxDisplayText(""); }}
                 disabled={disabled}
                 className="rounded border border-noir-border bg-noir-panel px-2 py-1 text-[10px] text-noir-foreground hover:bg-noir-border/50 focus:border-neon-cyan focus:outline-none disabled:opacity-50"
               >
@@ -283,7 +383,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => { setDocxLinkStyle("clickable"); setPdfLinkStyle("clickable"); setDocxDisplayText(""); }}
+                onClick={() => { setDocxHiddenText(true); setDocxClickableLink(true); setPdfHiddenText(true); setPdfClickableLink(true); setDocxDisplayText(""); }}
                 disabled={disabled}
                 className="rounded border border-noir-border bg-noir-panel px-2 py-1 text-[10px] text-noir-foreground hover:bg-noir-border/50 focus:border-neon-cyan focus:outline-none disabled:opacity-50"
               >
@@ -291,7 +391,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => { setDocxLinkStyle("clickable-with-text"); setPdfLinkStyle("clickable"); setDocxDisplayText("Verify document integrity"); }}
+                onClick={() => { setDocxHiddenText(true); setDocxClickableLink(true); setPdfHiddenText(true); setPdfClickableLink(true); setDocxDisplayText("Verify document integrity"); }}
                 disabled={disabled}
                 className="rounded border border-noir-border bg-noir-panel px-2 py-1 text-[10px] text-noir-foreground hover:bg-noir-border/50 focus:border-neon-cyan focus:outline-none disabled:opacity-50"
               >
@@ -299,7 +399,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
               </button>
             </div>
             <p className="text-[10px] text-noir-foreground/50 mt-1">
-              Stealth: hidden only. Balanced: clickable link, no custom text. Maximum: clickable with display text.
+              Stealth: hidden text only. Balanced: hidden + clickable link (both formats). Maximum: same + custom link text.
             </p>
           </div>
         </div>
@@ -318,6 +418,9 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
           title="Copy this URL to add the canary link to your CV manually. When the link is followed, your canary will record the hit."
         >
           Copy this URL to add it manually to your CV (e.g. in your editor). When the link is followed, your canary will record the hit.
+        </p>
+        <p className="text-[10px] text-noir-foreground/50 mb-2">
+          Each embedding type uses a different URL (e.g. <code className="text-[9px]">…/docx-hidden</code>, <code className="text-[9px]">…/pdf-clickable</code>), so when a canary fires you can see which vector was triggered.
         </p>
         <div className="flex gap-2 items-center">
           <code

@@ -94,7 +94,7 @@ export default function Home() {
       const raw = window.localStorage.getItem(CHECKBOX_STORAGE_KEY);
       if (raw == null) return;
       const parsed = JSON.parse(raw) as { enabledEggIds?: unknown; preserveStyles?: unknown };
-      const validEggIds = new Set(EGG_OPTIONS.map((o) => o.id));
+      const validEggIds = new Set<string>(EGG_OPTIONS.map((o) => o.id));
       if (Array.isArray(parsed.enabledEggIds)) {
         const filtered = parsed.enabledEggIds.filter((id): id is string => typeof id === "string" && validEggIds.has(id));
         setEnabledEggIds(filtered.length > 0 ? new Set(filtered) : new Set(DEFAULT_ENABLED_EGG_IDS));

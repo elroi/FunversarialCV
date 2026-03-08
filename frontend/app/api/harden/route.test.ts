@@ -4,7 +4,8 @@
  * @jest-environment node
  */
 
-import { POST, MAX_BODY_BYTES } from "./route";
+import { POST } from "./route";
+import { MAX_BODY_BYTES } from "./constants";
 import { createDocumentWithText, MIME_PDF, MIME_DOCX } from "@/engine/documentExtract";
 import * as Processor from "@/engine/Processor";
 

@@ -53,11 +53,23 @@ interface CanaryPayload {
   url?: string;
   baseUrl?: string;
   token?: string;
-  /** DOCX: how to embed the canary link. Default "hidden" for backward compat. */
-  docxLinkStyle?: "hidden" | "clickable" | "clickable-with-text";
-  docxDisplayText?: string;
+  /** DOCX: include hidden canary text (default true). Can combine with clickable link. */
+  docxHiddenText?: boolean;
+  /** DOCX: include clickable hyperlink (default false). Can combine with hidden text. */
+  docxClickableLink?: boolean;
+  /** DOCX: make clickable link visible (9pt, blue, underline). Recommended for social engineering. Default false. */
+  docxClickableVisible?: boolean;
+  /** DOCX: place clickable link at "end" of body or in "footer". Default "end". */
   docxPlacement?: "end" | "footer";
+  docxDisplayText?: string;
+  /** PDF: include invisible canary text (default true). Can combine with clickable link. */
+  pdfHiddenText?: boolean;
+  /** PDF: add clickable link region (default false). Can combine with hidden text. */
+  pdfClickableLink?: boolean;
+  /** @deprecated Use docxHiddenText + docxClickableLink. Still supported. */
+  docxLinkStyle?: "hidden" | "clickable" | "clickable-with-text";
   docxLinkedImage?: boolean;
+  /** @deprecated Use pdfHiddenText + pdfClickableLink. Still supported. */
   pdfLinkStyle?: "hidden" | "clickable";
   pdfDisplayText?: string;
   addToMetadata?: boolean;
@@ -91,9 +103,28 @@ function containsPii(s: string): boolean {
   return PII_REGEX.EMAIL.test(s) || PII_REGEX.PHONE.test(s);
 }
 
-function buildCanaryUrl(baseUrl: string, token: string): string {
+/** Variant identifiers for attribution (which embedding type was triggered). */
+const CANARY_VARIANTS = new Set([
+  "docx-hidden",
+  "docx-clickable",
+  "pdf-text",
+  "pdf-clickable",
+]);
+
+function buildCanaryUrl(baseUrl: string, token: string, variant?: string): string {
   const base = baseUrl.replace(/\/+$/, "");
-  return `${base}/${token}`;
+  const path = `${base}/${token}`;
+  if (variant && CANARY_VARIANTS.has(variant)) {
+    return `${path}/${variant}`;
+  }
+  return path;
+}
+
+/** Build canary URL when user provided a full URL: append ?v=variant for our endpoint to log. */
+function buildCanaryUrlWithVariantParam(fullUrl: string, variant: string): string {
+  if (!CANARY_VARIANTS.has(variant)) return fullUrl;
+  const separator = fullUrl.includes("?") ? "&" : "?";
+  return `${fullUrl}${separator}v=${encodeURIComponent(variant)}`;
 }
 
 export const canaryWing: IEgg = {
@@ -141,6 +172,15 @@ export const canaryWing: IEgg = {
       if (!valid.includes(docxLinkStyle)) return false;
     }
 
+    if (config.docxHiddenText !== undefined && typeof config.docxHiddenText !== "boolean") return false;
+    if (config.docxClickableLink !== undefined && typeof config.docxClickableLink !== "boolean") return false;
+    if (config.docxClickableVisible !== undefined && typeof config.docxClickableVisible !== "boolean") return false;
+    if (config.docxPlacement !== undefined) {
+      if (config.docxPlacement !== "end" && config.docxPlacement !== "footer") return false;
+    }
+    if (config.pdfHiddenText !== undefined && typeof config.pdfHiddenText !== "boolean") return false;
+    if (config.pdfClickableLink !== undefined && typeof config.pdfClickableLink !== "boolean") return false;
+
     const docxDisplayText = config.docxDisplayText;
     if (docxDisplayText !== undefined) {
       if (typeof docxDisplayText !== "string") return false;
@@ -162,13 +202,17 @@ export const canaryWing: IEgg = {
 
   async transform(buffer: Buffer, payload: string): Promise<Buffer> {
     const { config } = parsePayload(payload);
-    const canaryUrl =
-      config.url && config.url.trim() !== ""
-        ? config.url.trim()
-        : buildCanaryUrl(
-            config.baseUrl?.trim().replace(/\/+$/, "") ?? getDefaultBaseUrl(),
-            config.token ?? crypto.randomUUID()
-          );
+    const useFullUrl = config.url != null && config.url.trim() !== "";
+    const baseUrl =
+      config.baseUrl?.trim().replace(/\/+$/, "") ?? getDefaultBaseUrl();
+    const token = config.token ?? crypto.randomUUID();
+
+    const urlForVariant = (variant: string): string => {
+      if (useFullUrl) {
+        return buildCanaryUrlWithVariantParam(config.url!.trim(), variant);
+      }
+      return buildCanaryUrl(baseUrl, token, variant);
+    };
 
     if (isPdfBuffer(buffer)) {
       const bytes = new Uint8Array(buffer);
@@ -179,16 +223,21 @@ export const canaryWing: IEgg = {
       const font = await doc.embedFont(StandardFonts.Helvetica);
       const margin = 40;
       const y = page.getHeight() - margin;
-      const pdfLinkStyle = config.pdfLinkStyle ?? "hidden";
-      page.drawText(canaryUrl, {
-        x: margin,
-        y,
-        size: 0.5,
-        font,
-        color: rgb(1, 1, 1),
-      });
-      if (pdfLinkStyle === "clickable") {
-        const textWidth = font.widthOfTextAtSize(canaryUrl, 0.5);
+      const pdfClickable = config.pdfClickableLink ?? (config.pdfLinkStyle === "clickable");
+      const pdfDrawText = config.pdfHiddenText !== false || pdfClickable;
+      const pdfTextUrl = urlForVariant("pdf-text");
+      const pdfLinkUrl = urlForVariant("pdf-clickable");
+      if (pdfDrawText) {
+        page.drawText(pdfTextUrl, {
+          x: margin,
+          y,
+          size: 0.5,
+          font,
+          color: rgb(1, 1, 1),
+        });
+      }
+      if (pdfClickable) {
+        const textWidth = font.widthOfTextAtSize(pdfLinkUrl, 0.5);
         const rect: [number, number, number, number] = [
           margin,
           y - 2,
@@ -203,13 +252,13 @@ export const canaryWing: IEgg = {
           A: {
             Type: "Action",
             S: "URI",
-            URI: PDFString.of(canaryUrl),
+            URI: PDFString.of(pdfLinkUrl),
           },
         });
         const linkRef = doc.context.register(linkAnnotation);
         const existingAnnots = page.node.lookup(PDFName.of("Annots"));
-        if (existingAnnots) {
-          existingAnnots.push(linkRef);
+        if (existingAnnots && "push" in existingAnnots && typeof (existingAnnots as { push: (r: unknown) => void }).push === "function") {
+          (existingAnnots as { push: (r: unknown) => void }).push(linkRef);
         } else {
           page.node.set(PDFName.of("Annots"), doc.context.obj([linkRef]));
         }
@@ -219,16 +268,31 @@ export const canaryWing: IEgg = {
     }
 
     if (isDocxBuffer(buffer)) {
-      const linkStyle = config.docxLinkStyle ?? "hidden";
-      const useClickable =
-        linkStyle === "clickable" || linkStyle === "clickable-with-text";
-      if (useClickable) {
-        return injectCanaryIntoDocx(buffer, canaryUrl, {
-          linkStyle,
-          displayText: linkStyle === "clickable-with-text" ? config.docxDisplayText : undefined,
+      const includeHidden =
+        config.docxHiddenText ??
+        (config.docxLinkStyle !== "clickable" && config.docxLinkStyle !== "clickable-with-text");
+      const includeClickable =
+        config.docxClickableLink ??
+        (config.docxLinkStyle === "clickable" || config.docxLinkStyle === "clickable-with-text");
+      const atLeastOne = includeHidden || includeClickable;
+      const docxHiddenUrl = urlForVariant("docx-hidden");
+      const docxClickableUrl = urlForVariant("docx-clickable");
+      let buf = buffer;
+      if (atLeastOne && includeHidden) {
+        buf = await injectHiddenParagraphIntoDocx(buf, docxHiddenUrl);
+      }
+      if (includeClickable) {
+        buf = await injectCanaryIntoDocx(buf, docxClickableUrl, {
+          linkStyle: config.docxDisplayText?.trim() ? "clickable-with-text" : "clickable",
+          displayText: config.docxDisplayText?.trim() || undefined,
+          visible: config.docxClickableVisible ?? false,
+          placement: config.docxPlacement ?? "end",
         });
       }
-      return injectHiddenParagraphIntoDocx(buffer, canaryUrl);
+      if (!atLeastOne) {
+        buf = await injectHiddenParagraphIntoDocx(buf, docxHiddenUrl);
+      }
+      return buf;
     }
 
     throw new Error("Unsupported document format: buffer is neither PDF nor DOCX.");

@@ -249,6 +249,39 @@ describe("CanaryWing", () => {
         expect(payload.length).toBeLessThanOrEqual(2048);
         expect(canaryWing.validatePayload(payload)).toBe(true);
       });
+
+      it("returns true for independent embedding booleans (docxHiddenText, docxClickableLink, pdfHiddenText, pdfClickableLink)", () => {
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ docxHiddenText: true, docxClickableLink: true })
+          )
+        ).toBe(true);
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ pdfHiddenText: true, pdfClickableLink: true })
+          )
+        ).toBe(true);
+      });
+
+      it("returns true for docxClickableVisible and docxPlacement end|footer", () => {
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ docxClickableVisible: true, docxPlacement: "end" })
+          )
+        ).toBe(true);
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ docxPlacement: "footer" })
+          )
+        ).toBe(true);
+      });
+      it("returns false when docxPlacement is not end or footer", () => {
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ docxPlacement: "header" })
+          )
+        ).toBe(false);
+      });
     });
   });
 
@@ -360,7 +393,7 @@ describe("CanaryWing", () => {
         const relsFile = zip.file("word/_rels/document.xml.rels");
         expect(relsFile).toBeTruthy();
         const relsXml = await relsFile!.async("string");
-        expect(relsXml).toContain('Target="https://canary.example.com/c/click-me"');
+        expect(relsXml).toContain('Target="https://canary.example.com/c/click-me?v=docx-clickable"');
         expect(relsXml).toMatch(/TargetMode="External"/);
         const extracted = await extractText(Buffer.from(result), MIME_DOCX);
         expect(extracted).toContain(canaryUrl);
@@ -381,7 +414,7 @@ describe("CanaryWing", () => {
         expect(docXml).toContain("w:hyperlink");
         expect(docXml).toContain("Verify document integrity");
         const relsXml = await zip.file("word/_rels/document.xml.rels")!.async("string");
-        expect(relsXml).toContain('Target="https://canary.example.com/c/tok"');
+        expect(relsXml).toContain('Target="https://canary.example.com/c/tok?v=docx-clickable"');
       });
 
       it("when docxLinkStyle is hidden or omitted, no hyperlink in DOCX (backward compat)", async () => {
@@ -393,6 +426,87 @@ describe("CanaryWing", () => {
         expect(docXml).not.toContain("w:hyperlink");
         const extracted = await extractText(Buffer.from(result), MIME_DOCX);
         expect(extracted).toContain("https://canary.example.com/c/hidden");
+      });
+
+      it("when both docxHiddenText and docxClickableLink are true, output has both hidden paragraph and hyperlink", async () => {
+        const buf = await createDocumentWithText("Resume", MIME_DOCX);
+        const canaryUrl = "https://canary.example.com/c/both";
+        const payload = JSON.stringify({
+          url: canaryUrl,
+          docxHiddenText: true,
+          docxClickableLink: true,
+        });
+        const result = await canaryWing.transform(buf, payload);
+        const zip = await JSZip.loadAsync(result);
+        const docXml = await zip.file("word/document.xml")!.async("string");
+        expect(docXml).toContain("w:hyperlink");
+        const relsXml = await zip.file("word/_rels/document.xml.rels")!.async("string");
+        expect(relsXml).toContain('Target="https://canary.example.com/c/both?v=docx-clickable"');
+        const extracted = await extractText(Buffer.from(result), MIME_DOCX);
+        expect(extracted).toContain(canaryUrl);
+      });
+
+      it("when both docxHiddenText and docxClickableLink with baseUrl+token, output contains two distinct variant URLs (docx-hidden and docx-clickable)", async () => {
+        const buf = await createDocumentWithText("Resume", MIME_DOCX);
+        const payload = JSON.stringify({
+          baseUrl: "https://canary.example.com/api/canary",
+          token: "uuid-550e8400",
+          docxHiddenText: true,
+          docxClickableLink: true,
+        });
+        const result = await canaryWing.transform(buf, payload);
+        const extracted = await extractText(Buffer.from(result), MIME_DOCX);
+        expect(extracted).toContain("https://canary.example.com/api/canary/uuid-550e8400/docx-hidden");
+        expect(extracted).toContain("https://canary.example.com/api/canary/uuid-550e8400/docx-clickable");
+        const zip = await JSZip.loadAsync(result);
+        const relsXml = await zip.file("word/_rels/document.xml.rels")!.async("string");
+        expect(relsXml).toContain("/uuid-550e8400/docx-clickable");
+      });
+
+      it("when config.url is set and both DOCX embeddings on, URLs use v= variant query param", async () => {
+        const buf = await createDocumentWithText("Resume", MIME_DOCX);
+        const fullUrl = "https://canarytokens.com/feedback/abc/xyz";
+        const payload = JSON.stringify({
+          url: fullUrl,
+          docxHiddenText: true,
+          docxClickableLink: true,
+        });
+        const result = await canaryWing.transform(buf, payload);
+        const extracted = await extractText(Buffer.from(result), MIME_DOCX);
+        expect(extracted).toMatch(/v=docx-hidden/);
+        expect(extracted).toMatch(/v=docx-clickable/);
+        const zip = await JSZip.loadAsync(result);
+        const relsXml = await zip.file("word/_rels/document.xml.rels")!.async("string");
+        expect(relsXml).toMatch(/v=docx-clickable/);
+      });
+
+      it("when docxClickableVisible is true, DOCX hyperlink has visible styling (9pt, blue)", async () => {
+        const buf = await createDocumentWithText("Resume", MIME_DOCX);
+        const payload = JSON.stringify({
+          url: "https://canary.example.com/c/visible",
+          docxClickableLink: true,
+          docxClickableVisible: true,
+        });
+        const result = await canaryWing.transform(buf, payload);
+        const zip = await JSZip.loadAsync(result);
+        const docXml = await zip.file("word/document.xml")!.async("string");
+        expect(docXml).toContain("w:sz w:val=\"18\"");
+        expect(docXml).toContain("w:color w:val=\"0563C1\"");
+      });
+
+      it("when docxPlacement is footer, link is at end of document (compatibility: no OOXML footer part)", async () => {
+        const buf = await createDocumentWithText("Resume", MIME_DOCX);
+        const payload = JSON.stringify({
+          url: "https://canary.example.com/c/foot",
+          docxClickableLink: true,
+          docxPlacement: "footer",
+          docxDisplayText: "Verify document",
+        });
+        const result = await canaryWing.transform(buf, payload);
+        const extracted = await extractText(Buffer.from(result), MIME_DOCX);
+        expect(extracted).toContain("Verify document");
+        const zip = await JSZip.loadAsync(result);
+        expect(zip.file("word/footer1.xml")).toBeFalsy();
       });
     });
 
@@ -423,6 +537,30 @@ describe("CanaryWing", () => {
         if (annots) {
           expect(annots.size()).toBe(0);
         }
+      });
+
+      it("when both pdfHiddenText and pdfClickableLink with baseUrl+token, PDF has link annotation and larger size (both variants embedded)", async () => {
+        const minimalPdf = await createDocumentWithText("Resume", MIME_PDF);
+        const payload = JSON.stringify({
+          baseUrl: "https://canary.example.com/api/canary",
+          token: "uuid-pdf-both",
+          pdfHiddenText: true,
+          pdfClickableLink: true,
+        });
+        const result = await canaryWing.transform(minimalPdf, payload);
+        const doc = await PDFDocument.load(new Uint8Array(result));
+        const page = doc.getPage(0);
+        const leaf = page as unknown as { node: { Annots?: () => { size: () => number } } };
+        const annots = leaf.node.Annots?.();
+        expect(annots).toBeDefined();
+        expect(annots!.size()).toBeGreaterThanOrEqual(1);
+        const noLinkPdf = await canaryWing.transform(minimalPdf, JSON.stringify({
+          baseUrl: "https://canary.example.com/api/canary",
+          token: "uuid-pdf-both",
+          pdfHiddenText: true,
+          pdfClickableLink: false,
+        }));
+        expect(result.length).toBeGreaterThan(noLinkPdf.length);
       });
     });
   });

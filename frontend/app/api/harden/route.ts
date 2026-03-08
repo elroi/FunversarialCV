@@ -4,9 +4,7 @@
  */
 
 import { NextRequest } from "next/server";
-
-/** Max request body size (file) — 10 MB. Enforced in-route; App Router has no built-in body limit. */
-export const MAX_BODY_BYTES = 10 * 1024 * 1024;
+import { MAX_BODY_BYTES } from "./constants";
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();

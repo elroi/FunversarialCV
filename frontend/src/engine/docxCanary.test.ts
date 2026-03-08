@@ -58,4 +58,69 @@ describe("injectCanaryIntoDocx", () => {
     const docXml = await resultZip.file("word/document.xml")!.async("string");
     expect(docXml).toMatch(/r:id="rId6"/);
   });
+
+  it("when visible is true, hyperlink run has 9pt size and blue color and underline", async () => {
+    const buffer = await createDocumentWithText("Body", MIME_DOCX);
+    const result = await injectCanaryIntoDocx(buffer, "https://canary.example.com/v", {
+      linkStyle: "clickable",
+      visible: true,
+    });
+    const zip = await JSZip.loadAsync(result);
+    const docXml = await zip.file("word/document.xml")!.async("string");
+    expect(docXml).toContain("w:sz w:val=\"18\"");
+    expect(docXml).toContain("w:color w:val=\"0563C1\"");
+    expect(docXml).toContain("w:u w:val=\"single\"");
+  });
+
+  it("when visible is false (default), hyperlink run has tiny white text", async () => {
+    const buffer = await createDocumentWithText("Body", MIME_DOCX);
+    const result = await injectCanaryIntoDocx(buffer, "https://canary.example.com/v", {
+      linkStyle: "clickable",
+    });
+    const zip = await JSZip.loadAsync(result);
+    const docXml = await zip.file("word/document.xml")!.async("string");
+    expect(docXml).toContain("w:sz w:val=\"2\"");
+    expect(docXml).toContain("w:color w:val=\"FFFFFF\"");
+  });
+
+  it("when placement is footer, places link at end of body for Word compatibility (no footer part)", async () => {
+    const buffer = await createDocumentWithText("Body", MIME_DOCX);
+    const result = await injectCanaryIntoDocx(buffer, "https://canary.example.com/footer", {
+      linkStyle: "clickable",
+      placement: "footer",
+      visible: true,
+      displayText: "Verify document",
+    });
+    const zip = await JSZip.loadAsync(result);
+    expect(zip.file("word/footer1.xml")).toBeFalsy();
+    const docXml = await zip.file("word/document.xml")!.async("string");
+    expect(docXml).toContain("Verify document");
+    expect(docXml).toContain("w:hyperlink");
+    const relsXml = await zip.file("word/_rels/document.xml.rels")!.async("string");
+    expect(relsXml).toContain('Target="https://canary.example.com/footer"');
+  });
+
+  it("when placement is footer but document already has footerReference, places link at end of body so Word can open file", async () => {
+    const buffer = await createDocumentWithText("Body", MIME_DOCX);
+    const zip = await JSZip.loadAsync(buffer);
+    let docXml = await zip.file("word/document.xml")!.async("string");
+    const existingFooterRef = "<w:footerReference w:type=\"default\" r:id=\"rId99\"/>";
+    const newSectPr = `<w:sectPr>${existingFooterRef}</w:sectPr>`;
+    const bodyClose = "</w:body>";
+    const closeIdx = docXml.indexOf(bodyClose);
+    docXml = docXml.slice(0, closeIdx) + newSectPr + docXml.slice(closeIdx);
+    zip.file("word/document.xml", docXml);
+    const bufWithFooter = Buffer.from(await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE", compressionOptions: { level: 6 } }));
+    const result = await injectCanaryIntoDocx(bufWithFooter, "https://canary.example.com/end", {
+      linkStyle: "clickable",
+      placement: "footer",
+      displayText: "Verify",
+    });
+    const outZip = await JSZip.loadAsync(result);
+    expect(outZip.file("word/footer1.xml")).toBeFalsy();
+    const outDoc = await outZip.file("word/document.xml")!.async("string");
+    expect(outDoc).toContain("Verify");
+    const outRels = await outZip.file("word/_rels/document.xml.rels")!.async("string");
+    expect(outRels).toContain("https://canary.example.com/end");
+  });
 });

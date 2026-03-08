@@ -20,6 +20,9 @@ import { Card } from "../src/components/ui/Card";
 /** Must match API route MAX_BODY_BYTES so client rejects before sending. */
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
+/** localStorage key for persisting checkbox state (Preserve styles + Eggs to run). */
+const CHECKBOX_STORAGE_KEY = "funversarialcv-checkboxes";
+
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
@@ -50,6 +53,8 @@ export default function Home() {
   } | null>(null);
   const [dualityMonitorOpen, setDualityMonitorOpen] = useState(false);
   const openFilePickerRef = useRef<(() => void) | null>(null);
+  /** Skip first persistence run so we don't overwrite localStorage with defaults before hydration. */
+  const skipNextPersistRef = useRef(true);
 
   /** Egg metadata from GET /api/eggs (id -> { name, manualCheckAndValidation }). */
   const [eggMetadataById, setEggMetadataById] = useState<Record<string, { name: string; manualCheckAndValidation: string }>>({});
@@ -81,6 +86,43 @@ export default function Home() {
       retryButtonRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [error]);
+
+  // Hydrate checkbox state from localStorage on mount (client-only).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(CHECKBOX_STORAGE_KEY);
+      if (raw == null) return;
+      const parsed = JSON.parse(raw) as { enabledEggIds?: unknown; preserveStyles?: unknown };
+      const validEggIds = new Set(EGG_OPTIONS.map((o) => o.id));
+      if (Array.isArray(parsed.enabledEggIds)) {
+        const filtered = parsed.enabledEggIds.filter((id): id is string => typeof id === "string" && validEggIds.has(id));
+        setEnabledEggIds(filtered.length > 0 ? new Set(filtered) : new Set(DEFAULT_ENABLED_EGG_IDS));
+      }
+      if (typeof parsed.preserveStyles === "boolean") {
+        setPreserveStyles(parsed.preserveStyles);
+      }
+    } catch {
+      // Corrupt or invalid JSON; keep defaults.
+    }
+  }, []);
+
+  // Persist checkbox state to localStorage whenever it changes (skip first run to avoid overwriting saved state with defaults).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (skipNextPersistRef.current) {
+      skipNextPersistRef.current = false;
+      return;
+    }
+    try {
+      window.localStorage.setItem(
+        CHECKBOX_STORAGE_KEY,
+        JSON.stringify({ enabledEggIds: [...enabledEggIds], preserveStyles })
+      );
+    } catch {
+      // Quota or disabled localStorage; ignore.
+    }
+  }, [enabledEggIds, preserveStyles]);
 
   const toggleEgg = (id: string) => {
     setEnabledEggIds((prev) => {

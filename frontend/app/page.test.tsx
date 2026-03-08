@@ -215,6 +215,72 @@ describe("Home page", () => {
     });
   });
 
+  describe("checkbox localStorage persistence", () => {
+    const STORAGE_KEY = "funversarialcv-checkboxes";
+
+    beforeEach(() => {
+      window.localStorage.removeItem(STORAGE_KEY);
+    });
+
+    afterEach(() => {
+      window.localStorage.removeItem(STORAGE_KEY);
+    });
+
+    it("hydrates Preserve styles and Eggs to run from localStorage after mount", async () => {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          enabledEggIds: ["invisible-hand", "canary-wing"],
+          preserveStyles: true,
+        })
+      );
+      render(<Home />);
+
+      const input = screen.getByTestId("dropzone-input");
+      fireEvent.change(input, {
+        target: { files: [createFile("resume.pdf", "application/pdf")] },
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Eggs to run/i)).toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByRole("checkbox", { name: /preserve styles/i })).toBeChecked();
+      });
+
+      expect(screen.getByRole("checkbox", { name: /Invisible Hand/i })).toBeChecked();
+      expect(screen.getByRole("checkbox", { name: /Canary Wing/i })).toBeChecked();
+      expect(screen.getByRole("checkbox", { name: /Incident Mailto/i })).not.toBeChecked();
+      expect(screen.getByRole("checkbox", { name: /Metadata Shadow/i })).not.toBeChecked();
+    });
+
+    it("ignores invalid or unknown egg IDs from localStorage and falls back to defaults when none valid", async () => {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          enabledEggIds: ["unknown-egg", "another-fake"],
+          preserveStyles: false,
+        })
+      );
+      render(<Home />);
+
+      const input = screen.getByTestId("dropzone-input");
+      fireEvent.change(input, {
+        target: { files: [createFile("resume.pdf", "application/pdf")] },
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Eggs to run/i)).toBeInTheDocument();
+      });
+
+      expect(screen.getByRole("checkbox", { name: /Invisible Hand/i })).toBeChecked();
+      expect(screen.getByRole("checkbox", { name: /Incident Mailto/i })).toBeChecked();
+      expect(screen.getByRole("checkbox", { name: /Canary Wing/i })).toBeChecked();
+      expect(screen.getByRole("checkbox", { name: /Metadata Shadow/i })).toBeChecked();
+    });
+  });
+
   describe("mobile UI (touch targets and layout)", () => {
     it("main wrapper has responsive padding classes for mobile", () => {
       render(<Home />);

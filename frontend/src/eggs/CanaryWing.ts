@@ -5,15 +5,19 @@
  * No PII is ever included in the URL; integrates with Stateless Vault by design.
  */
 
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { PDFDocument, rgb, StandardFonts, PDFName, PDFString } from "pdf-lib";
 import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
 import { injectHiddenParagraphIntoDocx } from "../engine/docxInject";
+import { injectCanaryIntoDocx } from "../engine/docxCanary";
 import { PII_REGEX } from "../lib/vault";
 
-const MAX_PAYLOAD_LENGTH = 1024;
+const MAX_PAYLOAD_LENGTH = 2048;
 const UNSAFE_PATTERN = /[<>]|<\s*script|javascript\s*:/i;
 const VALID_TOKEN_PATTERN = /^[a-zA-Z0-9-]{1,128}$/;
+const MAX_DISPLAY_TEXT_LENGTH = 100;
+const METADATA_KEY_PATTERN = /^[A-Za-z0-9_]+$/;
+const MAX_METADATA_KEY_LENGTH = 64;
 
 function isPdfBuffer(buffer: Buffer): boolean {
   return (
@@ -49,6 +53,15 @@ interface CanaryPayload {
   url?: string;
   baseUrl?: string;
   token?: string;
+  /** DOCX: how to embed the canary link. Default "hidden" for backward compat. */
+  docxLinkStyle?: "hidden" | "clickable" | "clickable-with-text";
+  docxDisplayText?: string;
+  docxPlacement?: "end" | "footer";
+  docxLinkedImage?: boolean;
+  pdfLinkStyle?: "hidden" | "clickable";
+  pdfDisplayText?: string;
+  addToMetadata?: boolean;
+  metadataKey?: string;
 }
 
 function parsePayload(payload: string): { config: CanaryPayload; parseOk: boolean } {
@@ -91,7 +104,7 @@ export const canaryWing: IEgg = {
   owaspMapping: OwaspMapping.LLM10_Model_Theft,
 
   manualCheckAndValidation:
-    "Manual check: In a PDF use Select All or search for a URL; in DOCX inspect the hidden paragraph or enable showing hidden content to find the canary URL. Validation: Run the transform and verify the canary URL appears in the output; optionally GET the URL to confirm the canary endpoint logs the hit.",
+    "Manual check: In a PDF use Select All or search for a URL; in DOCX inspect the hidden paragraph or enable showing hidden content to find the canary URL. When clickable link is enabled (DOCX or PDF), the canary is a real hyperlink: in Word click the hidden link or use Show Hidden; in PDF the invisible region is clickable. Validation: Run the transform and verify the canary URL appears in the output; optionally GET the URL to confirm the canary endpoint logs the hit.",
 
   validatePayload(payload: string): boolean {
     if (payload.length > MAX_PAYLOAD_LENGTH) return false;
@@ -122,6 +135,28 @@ export const canaryWing: IEgg = {
       if (UNSAFE_PATTERN.test(token)) return false;
     }
 
+    const docxLinkStyle = config.docxLinkStyle;
+    if (docxLinkStyle !== undefined) {
+      const valid: CanaryPayload["docxLinkStyle"][] = ["hidden", "clickable", "clickable-with-text"];
+      if (!valid.includes(docxLinkStyle)) return false;
+    }
+
+    const docxDisplayText = config.docxDisplayText;
+    if (docxDisplayText !== undefined) {
+      if (typeof docxDisplayText !== "string") return false;
+      if (docxDisplayText.length > MAX_DISPLAY_TEXT_LENGTH) return false;
+      if (containsPii(docxDisplayText)) return false;
+      if (UNSAFE_PATTERN.test(docxDisplayText)) return false;
+    }
+
+    const metadataKey = config.metadataKey;
+    if (metadataKey !== undefined) {
+      if (typeof metadataKey !== "string") return false;
+      if (metadataKey.length > MAX_METADATA_KEY_LENGTH) return false;
+      if (!METADATA_KEY_PATTERN.test(metadataKey)) return false;
+      if (containsPii(metadataKey)) return false;
+    }
+
     return true;
   },
 
@@ -144,7 +179,7 @@ export const canaryWing: IEgg = {
       const font = await doc.embedFont(StandardFonts.Helvetica);
       const margin = 40;
       const y = page.getHeight() - margin;
-      // Nearly invisible: 0.5pt white (same as InvisibleHand / .cursorrules)
+      const pdfLinkStyle = config.pdfLinkStyle ?? "hidden";
       page.drawText(canaryUrl, {
         x: margin,
         y,
@@ -152,11 +187,47 @@ export const canaryWing: IEgg = {
         font,
         color: rgb(1, 1, 1),
       });
+      if (pdfLinkStyle === "clickable") {
+        const textWidth = font.widthOfTextAtSize(canaryUrl, 0.5);
+        const rect: [number, number, number, number] = [
+          margin,
+          y - 2,
+          margin + textWidth + 2,
+          y + 2,
+        ];
+        const linkAnnotation = doc.context.obj({
+          Type: "Annot",
+          Subtype: "Link",
+          Rect: rect,
+          Border: [0, 0, 0],
+          A: {
+            Type: "Action",
+            S: "URI",
+            URI: PDFString.of(canaryUrl),
+          },
+        });
+        const linkRef = doc.context.register(linkAnnotation);
+        const existingAnnots = page.node.lookup(PDFName.of("Annots"));
+        if (existingAnnots) {
+          existingAnnots.push(linkRef);
+        } else {
+          page.node.set(PDFName.of("Annots"), doc.context.obj([linkRef]));
+        }
+      }
       const pdfBytes = await doc.save();
       return Buffer.from(pdfBytes);
     }
 
     if (isDocxBuffer(buffer)) {
+      const linkStyle = config.docxLinkStyle ?? "hidden";
+      const useClickable =
+        linkStyle === "clickable" || linkStyle === "clickable-with-text";
+      if (useClickable) {
+        return injectCanaryIntoDocx(buffer, canaryUrl, {
+          linkStyle,
+          displayText: linkStyle === "clickable-with-text" ? config.docxDisplayText : undefined,
+        });
+      }
       return injectHiddenParagraphIntoDocx(buffer, canaryUrl);
     }
 

@@ -12,6 +12,7 @@ import {
 } from "../engine/documentExtract";
 import { PDFDocument } from "pdf-lib";
 import { PII_REGEX } from "../lib/vault";
+import JSZip from "jszip";
 
 describe("CanaryWing", () => {
   describe("metadata", () => {
@@ -118,7 +119,7 @@ describe("CanaryWing", () => {
     });
 
     it("returns false when payload exceeds max length", () => {
-      const long = "a".repeat(1025);
+      const long = "a".repeat(2049);
       expect(canaryWing.validatePayload(long)).toBe(false);
     });
 
@@ -128,6 +129,16 @@ describe("CanaryWing", () => {
         token: "a".repeat(128),
       });
       expect(payload.length).toBeLessThanOrEqual(1024);
+      expect(canaryWing.validatePayload(payload)).toBe(true);
+    });
+
+    it("returns true when payload is at most 2048 chars", () => {
+      const payload = JSON.stringify({
+        baseUrl: "https://example.com/c",
+        docxDisplayText: "x".repeat(100),
+        metadataKey: "K".repeat(64),
+      });
+      expect(payload.length).toBeLessThanOrEqual(2048);
       expect(canaryWing.validatePayload(payload)).toBe(true);
     });
 
@@ -141,6 +152,103 @@ describe("CanaryWing", () => {
           JSON.stringify({ baseUrl: "https://evil.com/<path>" })
         )
       ).toBe(false);
+    });
+
+    describe("extended embedding options", () => {
+      it("returns true for docxLinkStyle clickable", () => {
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ docxLinkStyle: "clickable" })
+          )
+        ).toBe(true);
+      });
+      it("returns true for docxLinkStyle hidden or clickable-with-text", () => {
+        expect(canaryWing.validatePayload(JSON.stringify({ docxLinkStyle: "hidden" }))).toBe(true);
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ docxLinkStyle: "clickable-with-text" })
+          )
+        ).toBe(true);
+      });
+      it("returns true for docxDisplayText with safe chars up to 100", () => {
+        const payload = JSON.stringify({
+          docxDisplayText: "Verify document integrity",
+        });
+        expect(canaryWing.validatePayload(payload)).toBe(true);
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ docxDisplayText: "A".repeat(100) })
+          )
+        ).toBe(true);
+      });
+      it("returns false when docxDisplayText exceeds 100 chars", () => {
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ docxDisplayText: "A".repeat(101) })
+          )
+        ).toBe(false);
+      });
+      it("returns false when docxDisplayText contains PII", () => {
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ docxDisplayText: "Contact me at test@example.com" })
+          )
+        ).toBe(false);
+      });
+      it("returns false when docxDisplayText contains < or >", () => {
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ docxDisplayText: "Click <here>" })
+          )
+        ).toBe(false);
+      });
+      it("returns true for metadataKey matching allowlist (letters, numbers, underscore, max 64)", () => {
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ addToMetadata: true, metadataKey: "VerificationURL" })
+          )
+        ).toBe(true);
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ metadataKey: "A1b2_custom_key" })
+          )
+        ).toBe(true);
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ metadataKey: "K".repeat(64) })
+          )
+        ).toBe(true);
+      });
+      it("returns false when metadataKey exceeds 64 chars", () => {
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ metadataKey: "K".repeat(65) })
+          )
+        ).toBe(false);
+      });
+      it("returns false when metadataKey has invalid chars", () => {
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ metadataKey: "has-dash" })
+          )
+        ).toBe(false);
+        expect(
+          canaryWing.validatePayload(
+            JSON.stringify({ metadataKey: "has space" })
+          )
+        ).toBe(false);
+      });
+      it("returns true for payload at most 2048 chars with extended options", () => {
+        const payload = JSON.stringify({
+          baseUrl: "https://example.com/c",
+          docxLinkStyle: "clickable-with-text",
+          docxDisplayText: "Verify integrity",
+          addToMetadata: true,
+          metadataKey: "VerificationURL",
+        });
+        expect(payload.length).toBeLessThanOrEqual(2048);
+        expect(canaryWing.validatePayload(payload)).toBe(true);
+      });
     });
   });
 
@@ -234,6 +342,88 @@ describe("CanaryWing", () => {
       expect(extracted).toContain(fullUrl);
       expect(extracted).not.toContain("ignored-token");
       expect(extracted).not.toContain("other.com");
+    });
+
+    describe("DOCX clickable link (docxLinkStyle)", () => {
+      it("when docxLinkStyle is clickable, output contains w:hyperlink and relationship with Target URL", async () => {
+        const buf = await createDocumentWithText("Resume", MIME_DOCX);
+        const canaryUrl = "https://canary.example.com/c/click-me";
+        const payload = JSON.stringify({
+          url: canaryUrl,
+          docxLinkStyle: "clickable",
+        });
+        const result = await canaryWing.transform(buf, payload);
+        const zip = await JSZip.loadAsync(result);
+        const docXml = await zip.file("word/document.xml")!.async("string");
+        expect(docXml).toContain("w:hyperlink");
+        expect(docXml).toMatch(/r:id="[^"]+"/);
+        const relsFile = zip.file("word/_rels/document.xml.rels");
+        expect(relsFile).toBeTruthy();
+        const relsXml = await relsFile!.async("string");
+        expect(relsXml).toContain('Target="https://canary.example.com/c/click-me"');
+        expect(relsXml).toMatch(/TargetMode="External"/);
+        const extracted = await extractText(Buffer.from(result), MIME_DOCX);
+        expect(extracted).toContain(canaryUrl);
+      });
+
+      it("when docxLinkStyle is clickable-with-text, display text appears in document", async () => {
+        const buf = await createDocumentWithText("Resume", MIME_DOCX);
+        const payload = JSON.stringify({
+          url: "https://canary.example.com/c/tok",
+          docxLinkStyle: "clickable-with-text",
+          docxDisplayText: "Verify document integrity",
+        });
+        const result = await canaryWing.transform(buf, payload);
+        const extracted = await extractText(Buffer.from(result), MIME_DOCX);
+        expect(extracted).toContain("Verify document integrity");
+        const zip = await JSZip.loadAsync(result);
+        const docXml = await zip.file("word/document.xml")!.async("string");
+        expect(docXml).toContain("w:hyperlink");
+        expect(docXml).toContain("Verify document integrity");
+        const relsXml = await zip.file("word/_rels/document.xml.rels")!.async("string");
+        expect(relsXml).toContain('Target="https://canary.example.com/c/tok"');
+      });
+
+      it("when docxLinkStyle is hidden or omitted, no hyperlink in DOCX (backward compat)", async () => {
+        const buf = await createDocumentWithText("Resume", MIME_DOCX);
+        const payload = JSON.stringify({ url: "https://canary.example.com/c/hidden" });
+        const result = await canaryWing.transform(buf, payload);
+        const zip = await JSZip.loadAsync(result);
+        const docXml = await zip.file("word/document.xml")!.async("string");
+        expect(docXml).not.toContain("w:hyperlink");
+        const extracted = await extractText(Buffer.from(result), MIME_DOCX);
+        expect(extracted).toContain("https://canary.example.com/c/hidden");
+      });
+    });
+
+    describe("PDF clickable link (pdfLinkStyle)", () => {
+      it("when pdfLinkStyle is clickable, PDF has Link annotation with URI", async () => {
+        const minimalPdf = await createDocumentWithText("Resume", MIME_PDF);
+        const payload = JSON.stringify({
+          url: "https://canary.example.com/c/pdf-link",
+          pdfLinkStyle: "clickable",
+        });
+        const result = await canaryWing.transform(minimalPdf, payload);
+        const doc = await PDFDocument.load(new Uint8Array(result));
+        expect(doc.getPageCount()).toBeGreaterThanOrEqual(1);
+        const page = doc.getPage(0);
+        const leaf = page as unknown as { node: { Annots?: () => { size: () => number; get: (i: number) => unknown } } };
+        const annots = leaf.node.Annots?.();
+        expect(annots).toBeDefined();
+        expect(annots!.size()).toBeGreaterThanOrEqual(1);
+      });
+
+      it("when pdfLinkStyle is hidden or omitted, no Annots or empty Annots (backward compat)", async () => {
+        const minimalPdf = await createDocumentWithText("Resume", MIME_PDF);
+        const result = await canaryWing.transform(minimalPdf, "");
+        const doc = await PDFDocument.load(new Uint8Array(result));
+        const page = doc.getPage(0);
+        const leaf = page as unknown as { node: { Annots?: () => { size: () => number } } };
+        const annots = leaf.node.Annots?.();
+        if (annots) {
+          expect(annots.size()).toBe(0);
+        }
+      });
     });
   });
 });

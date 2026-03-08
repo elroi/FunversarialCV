@@ -8,6 +8,9 @@ export interface CanaryWingConfig {
   url?: string;
   baseUrl?: string;
   token?: string;
+  docxLinkStyle?: "hidden" | "clickable" | "clickable-with-text";
+  docxDisplayText?: string;
+  pdfLinkStyle?: "hidden" | "clickable";
 }
 
 export interface CanaryWingConfigCardProps {
@@ -43,6 +46,13 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
   const [url, setUrl] = useState(config.url ?? "");
   const [baseUrl, setBaseUrl] = useState(config.baseUrl ?? "");
   const [token, setToken] = useState(config.token ?? "");
+  const [docxLinkStyle, setDocxLinkStyle] = useState<CanaryWingConfig["docxLinkStyle"]>(
+    config.docxLinkStyle ?? "hidden"
+  );
+  const [docxDisplayText, setDocxDisplayText] = useState(config.docxDisplayText ?? "");
+  const [pdfLinkStyle, setPdfLinkStyle] = useState<CanaryWingConfig["pdfLinkStyle"]>(
+    config.pdfLinkStyle ?? "hidden"
+  );
 
   // Default base when url and baseUrl are both empty. Same value on server and first client render to avoid hydration mismatch; then set to window.location.origin in useEffect (client-only).
   const [defaultCanaryBase, setDefaultCanaryBase] = useState(
@@ -54,6 +64,9 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
     setUrl(config.url ?? "");
     setBaseUrl(config.baseUrl ?? "");
     setToken(config.token ?? "");
+    setDocxLinkStyle(config.docxLinkStyle ?? "hidden");
+    setDocxDisplayText(config.docxDisplayText ?? "");
+    setPdfLinkStyle(config.pdfLinkStyle ?? "hidden");
   }, [payload]);
 
   // After mount, use current origin for default canary base so the preview matches what the server would use in dev.
@@ -76,8 +89,11 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
     if (url.trim()) next.url = url.trim();
     if (baseUrl.trim()) next.baseUrl = baseUrl.trim();
     if (token.trim()) next.token = token.trim();
+    next.docxLinkStyle = docxLinkStyle ?? "hidden";
+    if (docxDisplayText.trim()) next.docxDisplayText = docxDisplayText.trim();
+    next.pdfLinkStyle = pdfLinkStyle ?? "hidden";
     emit(next);
-  }, [url, baseUrl, token, emit]);
+  }, [url, baseUrl, token, docxLinkStyle, docxDisplayText, pdfLinkStyle, emit]);
 
   const resultingUrl =
     url.trim() !== ""
@@ -185,6 +201,109 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
       >
         Canary Wing never uses document content in URLs. Everything here is outside the Stateless Vault; PII stays in tokens only.
       </p>
+
+      <fieldset className="mt-4 pt-4 border-t border-noir-border" aria-labelledby="canary-embedding-legend">
+        <legend id="canary-embedding-legend" className="text-[10px] uppercase tracking-wider text-noir-foreground/80 mb-2">
+          Embedding options
+        </legend>
+        <p className="text-[10px] text-noir-foreground/50 mb-3">
+          Only options for the format of the file you upload are applied.
+        </p>
+        <div className="space-y-3">
+          <div>
+            <span className="block text-[10px] text-noir-foreground/70 mb-1">DOCX link style</span>
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="DOCX link style">
+              {(["hidden", "clickable", "clickable-with-text"] as const).map((value) => (
+                <label key={value} className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="docxLinkStyle"
+                    checked={docxLinkStyle === value}
+                    onChange={() => setDocxLinkStyle(value)}
+                    disabled={disabled}
+                    className="rounded border-noir-border text-neon-cyan focus:ring-neon-cyan"
+                  />
+                  <span className="text-[10px] text-noir-foreground/80">
+                    {value === "hidden" && "Hidden text only (current)"}
+                    {value === "clickable" && "Clickable link (same hidden look)"}
+                    {value === "clickable-with-text" && "Clickable link with custom text"}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {docxLinkStyle === "clickable-with-text" && (
+              <div className="mt-2">
+                <input
+                  type="text"
+                  value={docxDisplayText}
+                  onChange={(e) => setDocxDisplayText(e.target.value)}
+                  placeholder="Verify document integrity"
+                  disabled={disabled}
+                  maxLength={100}
+                  className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
+                  aria-describedby="docx-display-hint"
+                />
+                <p id="docx-display-hint" className="text-[10px] text-noir-foreground/50 mt-1">
+                  This text can increase click-through; use wording you&apos;re comfortable with. FunversarialCV does not provide official verification—this is for detection only.
+                </p>
+              </div>
+            )}
+          </div>
+          <div>
+            <span className="block text-[10px] text-noir-foreground/70 mb-1">PDF link style</span>
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="PDF link style">
+              {(["hidden", "clickable"] as const).map((value) => (
+                <label key={value} className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="pdfLinkStyle"
+                    checked={pdfLinkStyle === value}
+                    onChange={() => setPdfLinkStyle(value)}
+                    disabled={disabled}
+                    className="rounded border-noir-border text-neon-cyan focus:ring-neon-cyan"
+                  />
+                  <span className="text-[10px] text-noir-foreground/80">
+                    {value === "hidden" && "Hidden text only"}
+                    {value === "clickable" && "Clickable link (invisible region)"}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <div>
+            <span className="block text-[10px] text-noir-foreground/70 mb-1">Presets</span>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => { setDocxLinkStyle("hidden"); setPdfLinkStyle("hidden"); setDocxDisplayText(""); }}
+                disabled={disabled}
+                className="rounded border border-noir-border bg-noir-panel px-2 py-1 text-[10px] text-noir-foreground hover:bg-noir-border/50 focus:border-neon-cyan focus:outline-none disabled:opacity-50"
+              >
+                Stealth
+              </button>
+              <button
+                type="button"
+                onClick={() => { setDocxLinkStyle("clickable"); setPdfLinkStyle("clickable"); setDocxDisplayText(""); }}
+                disabled={disabled}
+                className="rounded border border-noir-border bg-noir-panel px-2 py-1 text-[10px] text-noir-foreground hover:bg-noir-border/50 focus:border-neon-cyan focus:outline-none disabled:opacity-50"
+              >
+                Balanced
+              </button>
+              <button
+                type="button"
+                onClick={() => { setDocxLinkStyle("clickable-with-text"); setPdfLinkStyle("clickable"); setDocxDisplayText("Verify document integrity"); }}
+                disabled={disabled}
+                className="rounded border border-noir-border bg-noir-panel px-2 py-1 text-[10px] text-noir-foreground hover:bg-noir-border/50 focus:border-neon-cyan focus:outline-none disabled:opacity-50"
+              >
+                Maximum
+              </button>
+            </div>
+            <p className="text-[10px] text-noir-foreground/50 mt-1">
+              Stealth: hidden only. Balanced: clickable link, no custom text. Maximum: clickable with display text.
+            </p>
+          </div>
+        </div>
+      </fieldset>
 
       <fieldset className="mt-4 pt-4 border-t border-noir-border">
         <legend

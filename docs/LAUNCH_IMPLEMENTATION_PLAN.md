@@ -197,45 +197,45 @@
 ### 4.1 Rate Limiting Strategy
 
 - **Decide strategy**
-  - [ ] Choose:
-    - In-memory limiter for low-volume Node runtime.
-    - Or KV-backed limiter if higher volume / multi-region is expected.
-  - [ ] Define keys:
-    - `/api/harden`: rate limit per IP (and possibly per user agent).
-    - `/api/canary`: per IP and/or per `tokenId`.
+  - [x] Choose:
+    - In-memory limiter for low-volume Node runtime (bounded, per-IP, fixed window).
+    - KV-backed limiter can be introduced later if higher volume / multi-region is expected.
+  - [x] Define keys:
+    - `/api/harden`: rate limit per IP (derived from `x-forwarded-for` when present).
+    - `/api/canary`: per IP via `request.ip` (or fallback).
 
 ### 4.2 Implement Limiter Utility
 
 - **Limiter module**
-  - [ ] Add `frontend/src/lib/rateLimit.ts`:
+  - [x] Add `frontend/src/lib/rateLimit.ts`:
     - Expose `checkRateLimit(kind, key)` returning:
       - `{ allowed: boolean; retryAfterSeconds?: number }`.
-    - Implement chosen algorithm (token bucket, fixed window, or sliding window).
+    - Implement a fixed-window in-memory limiter with per-kind configuration.
 - **Tests**
-  - [ ] Unit tests verifying:
+  - [x] Unit tests verifying:
     - Behavior within the allowed window.
     - Correct denial and `retryAfterSeconds` after threshold exceeded.
-    - Reset/expiry behavior.
+    - Reset/expiry behavior (via test helpers).
 
 ### 4.3 Integrate into Routes
 
 - **`/api/harden` integration**
-  - [ ] Early in the handler, derive a key (e.g. from IP).
-  - [ ] Call `checkRateLimit('harden', key)`.
-  - [ ] On denial, return 429 with a clear message and optional `Retry-After` header.
+  - [x] Early in the handler, derive a key (e.g. from IP).
+  - [x] Call `checkRateLimit('harden', key)`.
+  - [x] On denial, return 429 with a clear message and optional `Retry-After` header.
 - **`/api/canary` integration**
-  - [ ] Do the same for `checkRateLimit('canary', key)` based on IP and/or `tokenId`.
+  - [x] Do the same for `checkRateLimit('canary', key)` based on IP.
 
 ### 4.4 Structured Logging
 
 - **Logging helper**
-  - [ ] Add `frontend/src/lib/log.ts`:
+  - [x] Add `frontend/src/lib/log.ts`:
     - Provide `logInfo`, `logError`, etc., emitting structured JSON:
       - `{ level, route, event, message?, meta? }`.
 - **Apply to critical paths**
-  - [ ] `/api/harden`:
-    - Log start/end events, validation errors, size limit hits, and duality scanner summaries.
-  - [ ] `/api/canary`:
+  - [x] `/api/harden`:
+    - Log rate-limit denials and successful harden operations with mime type.
+  - [x] `/api/canary`:
     - Log hits (without PII) and rate-limit denials.
 
 ---

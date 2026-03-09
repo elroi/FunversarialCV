@@ -78,4 +78,31 @@ describe("GET /api/canary/[...token]", () => {
     expect(body).toEqual({ ok: true });
     expect(res.headers.get("Content-Type")).toContain("application/json");
   });
+
+  it("returns 429 when canary rate limit is exceeded", async () => {
+    process.env.RATE_LIMIT_CANARY_MAX = "1";
+    process.env.RATE_LIMIT_CANARY_WINDOW_MS = "60000";
+
+    const makeReq = async () =>
+      GET(
+        createRequest("https://example.com/api/canary/uuid-123/docx-hidden", {
+          "x-forwarded-for": "198.51.100.5",
+        }) as unknown as NextRequest,
+        {
+          params: Promise.resolve({ token: ["uuid-123", "docx-hidden"] }),
+        }
+      );
+
+    const first = await makeReq();
+    expect(first.status).toBe(200);
+
+    const second = await makeReq();
+    expect(second.status).toBe(429);
+    const body = await second.json();
+    expect(body.ok).toBe(false);
+    expect(body.error).toMatch(/too many canary hits/i);
+
+    delete process.env.RATE_LIMIT_CANARY_MAX;
+    delete process.env.RATE_LIMIT_CANARY_WINDOW_MS;
+  });
 });

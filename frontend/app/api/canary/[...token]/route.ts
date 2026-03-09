@@ -8,6 +8,8 @@
 
 import { NextRequest } from "next/server";
 import { persistCanaryHit } from "@/lib/canaryHits";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { logInfo } from "@/lib/log";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +34,20 @@ export async function GET(
   request: NextRequest,
   context: { params: Promise<{ token: string[] }> }
 ) {
+  const ip = request.ip ?? "unknown";
+  const rate = checkRateLimit("canary", ip);
+  if (!rate.allowed) {
+    logInfo("/api/canary", "rate_limit_denied", {
+      ip,
+      retryAfterSeconds: rate.retryAfterSeconds,
+    });
+    return new Response(JSON.stringify({ ok: false, error: "Too many canary hits from this client." }), {
+      status: 429,
+      headers: rate.retryAfterSeconds
+        ? { "Retry-After": String(rate.retryAfterSeconds) }
+        : undefined,
+    });
+  }
   const { token: tokenSegments } = await context.params;
   const segments = tokenSegments ?? [];
   const { tokenId, variant: pathVariant } = parseTokenAndVariant(segments);
@@ -42,10 +58,11 @@ export async function GET(
   const userAgent = request.headers.get("user-agent") ?? "";
   const referer = request.headers.get("referer") ?? "";
   const variantLabel = variant ?? "legacy";
-  console.info("[CanaryWing] hit", {
+  const ts = new Date().toISOString();
+  logInfo("/api/canary", "hit", {
     tokenId,
     variant: variantLabel,
-    ts: new Date().toISOString(),
+    ts,
     userAgent: userAgent.slice(0, 200),
     referer: referer.slice(0, 500),
   });
@@ -53,7 +70,7 @@ export async function GET(
   persistCanaryHit({
     tokenId,
     variant: variantLabel,
-    ts: new Date().toISOString(),
+    ts,
     userAgent: userAgent || undefined,
     referer: referer || undefined,
   }).catch(() => {});

@@ -106,6 +106,35 @@ describe("POST /api/harden", () => {
     expect(json.error).toBe("File too large. Max size is 4 MB.");
   });
 
+  it("returns 429 when rate limit is exceeded", async () => {
+    // Make the limiter very strict for this test.
+    process.env.RATE_LIMIT_HARDEN_MAX = "1";
+    process.env.RATE_LIMIT_HARDEN_WINDOW_MS = "60000";
+
+    const minimalPdf = await createDocumentWithText("Resume", MIME_PDF);
+    const form = await buildPdfFormData(minimalPdf);
+
+    const makeRequest = async () =>
+      POST(
+        new Request("http://localhost:3000/api/harden", {
+          method: "POST",
+          body: form,
+          headers: { "x-forwarded-for": "203.0.113.1" },
+        }) as never
+      );
+
+    const first = await makeRequest();
+    expect(first.status).not.toBe(429);
+
+    const second = await makeRequest();
+    expect(second.status).toBe(429);
+    const json = await second.json();
+    expect(json.error).toMatch(/too many harden requests/i);
+
+    delete process.env.RATE_LIMIT_HARDEN_MAX;
+    delete process.env.RATE_LIMIT_HARDEN_WINDOW_MS;
+  });
+
   it("returns 400 when file content does not match extension", async () => {
     const minimalDocx = await createDocumentWithText("Resume content", MIME_DOCX);
     const form = new FormData();

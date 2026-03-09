@@ -434,6 +434,7 @@ export default function Home() {
                 <Button
                   variant="secondary"
                   onClick={() => {
+                    clearFile();
                     openFilePickerRef.current?.();
                   }}
                   className="mt-1 min-h-[44px] py-2 px-3 text-[10px] sm:text-xs"

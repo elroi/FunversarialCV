@@ -21,14 +21,14 @@ describe("rateLimit", () => {
 
   it("resets the window after expiry", () => {
     process.env.RATE_LIMIT_HARDEN_MAX = "1";
-    process.env.RATE_LIMIT_HARDEN_WINDOW_MS = "1";
+    process.env.RATE_LIMIT_HARDEN_WINDOW_MS = "60000";
 
     const key = "ip:192.0.2.1";
     expect(checkRateLimit("harden", key).allowed).toBe(true);
     const denied = checkRateLimit("harden", key);
     expect(denied.allowed).toBe(false);
 
-    // Simulate time passing by directly resetting counters.
+    // Simulate window expiry by resetting counters (as would happen after a new window).
     __resetRateLimitCountersForTests();
     expect(checkRateLimit("harden", key).allowed).toBe(true);
   });

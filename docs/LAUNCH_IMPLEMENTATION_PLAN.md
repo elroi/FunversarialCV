@@ -291,10 +291,10 @@
 ### 6.1 Local Verification
 
 - **Fresh install**
-  - [ ] `cd frontend && npm ci`.
+  - [x] `cd frontend && npm ci`.
 - **Automated checks**
-  - [ ] `npm test` (Jest).
-  - [ ] `npm run lint`.
+  - [x] `npm test` (Jest).
+  - [x] `npm run lint`.
   - [ ] `npm run test:e2e` (full suite, or at least smoke + happy-path for quick iteration).
 
 ### 6.2 CI Verification

@@ -247,9 +247,9 @@
 ### 5.1 Vercel Project Configuration
 
 - **Project root**
-  - [ ] Confirm `frontend` is set as the Vercel project root.
+  - [x] Confirm `frontend` is set as the Vercel project root.
 - **Build settings**
-  - [ ] Ensure build command/output directory use the standard Next.js defaults (unless there’s a reason to customize).
+  - [x] Ensure build command/output directory use the standard Next.js defaults (unless there’s a reason to customize).
 - **Preview vs production**
   - [ ] Verify:
     - PR branches deploy to Preview.
@@ -258,10 +258,10 @@
 ### 5.2 Environment Variables
 
 - **Define required env vars**
-  - [ ] `CANARY_BASE_URL` (if used).
-  - [ ] Any KV/rate-limit/logging related env vars.
+  - [x] `CANARY_BASE_URL` (if used).
+  - [x] Any KV/rate-limit/logging related env vars.
 - **Docs**
-  - [ ] Add a short “Deployment env vars” section to `CONTRIBUTING.md` or `docs/IMPLEMENTATION_PLAN.md` describing each variable and defaults.
+  - [x] Add a short “Deployment env vars” section to `CONTRIBUTING.md` or `docs/IMPLEMENTATION_PLAN.md` describing each variable and defaults.
 
 ### 5.3 Branch Protection & CI
 
@@ -277,10 +277,10 @@
 ### 5.4 Hosting & Ops Documentation
 
 - **Add section to docs**
-  - [ ] Runtime (Node vs Edge).
-  - [ ] Effective file size and rate limits.
-  - [ ] What kinds of logs exist and how to access them (e.g. Vercel logs).
-  - [ ] High-level error behavior (what users see, and when to look at logs).
+  - [x] Runtime (Node vs Edge).
+  - [x] Effective file size and rate limits.
+  - [x] What kinds of logs exist and how to access them (e.g. Vercel logs).
+  - [x] High-level error behavior (what users see, and when to look at logs).
 
 ---
 

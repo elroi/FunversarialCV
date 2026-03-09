@@ -54,6 +54,20 @@ For **Canary Wing** specifically, the `/api/canary` endpoint records **ephemeral
 
 ---
 
+## 🛰 Hosting & Ops (Vercel)
+
+FunversarialCV is designed to run as a Next.js 14 app on Vercel:
+
+- **Runtime:** Node / Serverless Functions for `/api/harden` and `/api/canary`, with stateless, in-memory processing only.
+- **File size:** CV uploads are limited to **4 MB** per file to stay safely under Vercel’s Serverless request caps and avoid opaque platform 413 errors.
+- **Rate limiting:** `/api/harden` and `/api/canary` include lightweight, per-IP rate limiting with configurable env vars (`RATE_LIMIT_HARDEN_*`, `RATE_LIMIT_CANARY_*`) suitable for low-to-moderate traffic.
+- **Logging:** Structured JSON logs (route, event, meta) are emitted via `log.ts` and visible in Vercel logs; no PII or CV content is logged, only tokens/variants and operational metadata.
+- **Error behavior:** User-facing errors are explicit but safe (no stack traces or internal paths); 500 responses are generic ("Processing failed. Please try again.") while details are logged server-side only.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the list of deployment environment variables and CI/branch protection expectations.
+
+---
+
 ## 🧩 Extensibility
 The Egg Library is a **Plugin System**. Want to add a new "attack" or a creative "Technical Implementation"? Simply add a new plugin to the `/src/eggs/` folder using our standard `IEgg` interface.
 

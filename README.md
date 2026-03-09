@@ -17,6 +17,8 @@ The service uses a **two-step flow** so you can configure eggs before hardening:
 
 You can upload a different file at any time to replace the armed CV and configure again before hardening.
 
+**Upload size note:** To stay safely under Vercel’s Serverless Function request limits and avoid opaque platform 413 errors, FunversarialCV currently supports CVs up to **4 MB** per upload.
+
 **Note:** Hardening rebuilds the document from extracted text; original PDF or DOCX layout and styling are not preserved in the output.
 
 ---

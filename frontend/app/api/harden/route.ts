@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   const buffer = Buffer.from(await file.arrayBuffer());
   if (buffer.length > MAX_BODY_BYTES) {
     return Response.json(
-      { error: "File too large. Max size is 10 MB." },
+      { error: "File too large. Max size is 4 MB." },
       { status: 413 }
     );
   }

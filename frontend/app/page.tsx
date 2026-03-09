@@ -18,7 +18,7 @@ import { Button } from "../src/components/ui/Button";
 import { Card } from "../src/components/ui/Card";
 
 /** Must match API route MAX_BODY_BYTES so client rejects before sending. */
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
 
 /** localStorage key for persisting checkbox state (Preserve styles + Eggs to run). */
 const CHECKBOX_STORAGE_KEY = "funversarialcv-checkboxes";
@@ -424,7 +424,7 @@ export default function Home() {
             </div>
             <DropZone onFileSelect={onFileSelect} maxSizeBytes={MAX_FILE_SIZE_BYTES} openFilePickerRef={openFilePickerRef} />
             <p className="mt-1 text-[10px] text-noir-foreground/50">
-              Max 10 MB. PDF or DOCX only.
+              Max 4 MB. PDF or DOCX only.
             </p>
             {selectedFileName && (
               <>

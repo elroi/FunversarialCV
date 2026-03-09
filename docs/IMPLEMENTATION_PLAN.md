@@ -34,7 +34,7 @@ The following personas shape acceptance criteria, edge cases, and documentation.
 **New / clarified tasks from personas:**
 
 - **1.1 (API):** Validate `payloads` keys are subset of `AVAILABLE_EGGS.map(e => e.id)`; ignore unknown keys, do not fail. **Detect document type from buffer magic bytes (PDF %PDF, DOCX PK); reject if neither; optionally 400 if extension disagrees with detected type.** Return 400 with clear message for missing `file` or invalid/unsupported content. On 500, return `{ error: "Processing failed. Please try again." }` (or similar); log full error server-side only.
-- **1.2 (Page):** Show a file size hint near DropZone (e.g. “Max 10 MB” if that’s the limit) so Candidate knows before upload. After download, clear or keep `error` state consistent (e.g. clear on new file select).
+-- **1.2 (Page):** Show a file size hint near DropZone (e.g. “Max 4 MB” to match the API limit and Vercel’s request cap) so Candidate knows before upload. After download, clear or keep `error` state consistent (e.g. clear on new file select).
 - **1.4 (Errors):** Ensure 400 messages are safe to show (no paths, no stack). Security reviewer: no internal details in response body.
 - **3.1:** Add one-sentence “Implementation plan: see docs/IMPLEMENTATION_PLAN.md” (or CONTRIBUTING) for Maintainer.
 - **3.3:** Promote API route tests from optional to recommended for Maintainer and Security reviewer confidence.
@@ -92,7 +92,7 @@ The following personas shape acceptance criteria, edge cases, and documentation.
 - **Two-step UX:** Selecting a file only "arms" it (stores in state); the user configures eggs via the config cards, then clicks a **Harden** button to run the pipeline. This allows configuring eggs before processing. See README "Using FunversarialCV."
 - On **Harden** click: set `processingState = "processing"`, `activeStage = "accept"`, log "[ACCEPT] Buffer received...". Build FormData from armed file + current payloads, POST to `/api/harden`. Then: FormData appends `file` and `payloads` JSON; on success decode base64 → blob → trigger download, set duality result and completed log; on error set `error` and processing state.
 
-**Candidate:** Clear `error` when user selects a new file. Optionally show file size limit near DropZone (e.g. “Max 10 MB”) if Next.js limit is known.
+**Candidate:** Clear `error` when user selects a new file. Optionally show file size limit near DropZone (e.g. “Max 4 MB”) if Next.js/Vercel limits are known.
 Auto-trigger download on success; no need to keep buffer in state.
 
 ---

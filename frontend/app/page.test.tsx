@@ -45,6 +45,13 @@ describe("Home page", () => {
     jest.restoreAllMocks();
   });
 
+  it("shows the max file size hint matching the API limit", () => {
+    render(<Home />);
+    expect(
+      screen.getByText(/Max 4 MB\. PDF or DOCX only\./i)
+    ).toBeInTheDocument();
+  });
+
   describe("success message after download", () => {
     it("shows success message with filename and Download button after successful harden", async () => {
       global.fetch = mockFetchSuccess("my-cv.pdf");
@@ -499,3 +506,4 @@ describe("Home page", () => {
     });
   });
 });
+

@@ -48,5 +48,20 @@ describe("DropZone", () => {
     expect(handleSelect).not.toHaveBeenCalled();
     expect(getByText(/only \.pdf and \.docx files are allowed/i)).toBeTruthy();
   });
+
+  it("rejects files larger than maxSizeBytes and shows a size error", () => {
+    const handleSelect = jest.fn();
+    const { getByTestId, getByText } = render(
+      <DropZone onFileSelect={handleSelect} maxSizeBytes={1} />
+    );
+
+    const input = getByTestId("dropzone-input") as HTMLInputElement;
+    const file = createFile("resume.pdf", "application/pdf");
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(handleSelect).not.toHaveBeenCalled();
+    expect(getByText(/file is too large/i)).toBeTruthy();
+  });
 });
 

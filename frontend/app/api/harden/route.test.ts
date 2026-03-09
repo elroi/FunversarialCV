@@ -103,8 +103,7 @@ describe("POST /api/harden", () => {
     const res = await POST(req as never);
     expect(res.status).toBe(413);
     const json = await res.json();
-    expect(json.error).toBeDefined();
-    expect(json.error.toLowerCase()).toMatch(/too large|10 mb/);
+    expect(json.error).toBe("File too large. Max size is 4 MB.");
   });
 
   it("returns 400 when file content does not match extension", async () => {

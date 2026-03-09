@@ -60,7 +60,7 @@
   - [x] Show a clear error when the file is too large (e.g. inline message or toast).
   - [x] Ensure UX does not attempt to call `/api/harden` when the file is already known to be oversize.
 - **E2E**
-  - [ ] Extend Playwright tests to:
+  - [x] Extend Playwright tests to:
     - Attempt an oversize upload.
     - Assert that the user sees a clear error and (if applicable) that the server is not called.
 

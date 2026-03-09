@@ -37,7 +37,7 @@ Every feature in FunversarialCV is an "Egg" mapped to the **OWASP Top 10 for LLM
 As a tool focused on **Security for AI and AI for Security**, we prioritize data integrity:
 
 * **Zero-Retention Architecture:** Files are processed entirely in volatile memory (RAM) and are never written to disk or a database.
-* **PII Sanitization:** Before "hardening," the tool identifies PII patterns (Phone, Address) to help you redact sensitive data before sharing your CV globally.
+* **PII Sanitization:** Before "hardening," the tool identifies PII patterns (Email, Phone, and common Address formats) to help you redact sensitive data before sharing your CV globally. Detection is heuristic and focused on obvious high-risk patterns (e.g. `user@example.com`, `+1 (555) 123-4567`, `123 Main St …`), not full DLP.
 * **Stateless Execution:** Your data exists only for the duration of the request. Once the download is complete, the memory is purged.
 
 For **Canary Wing** specifically, the `/api/canary` endpoint records **ephemeral, token-scoped hits** for analytics:

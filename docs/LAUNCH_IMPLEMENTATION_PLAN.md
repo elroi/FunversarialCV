@@ -143,26 +143,26 @@
 #### 3.1 Pattern Design
 
 - **Design conservative address patterns**
-  - [ ] Create regex/heuristics for common postal addresses:
-    - Street numbers with street-type keywords (Street/St./Ave./Road/etc.).
-    - Optional city/state/ZIP components for common formats.
-  - [ ] Aim for “best-effort helper,” not full DLP.
+  - [x] Create regex/heuristics for common postal addresses:
+    - Street numbers with street-type keywords (initially focusing on `123 Main St` / `123 Main Street`-style patterns).
+    - Optional trailing city/state/ZIP segments on the same line.
+  - [x] Aim for “best-effort helper,” not full DLP.
 
 #### 3.2 Implementation in `vault`
 
 - **Extend tokenization**
-  - [ ] In `frontend/src/lib/vault.ts` (or equivalent):
+  - [x] In `frontend/src/lib/vault.ts`:
     - Add an address token type (e.g. `{{PII_ADDR_0}}`).
     - Extend `dehydrate` to:
       - Identify addresses and replace them with tokens.
       - Store address values in the in-memory map.
 - **Rehydration**
-  - [ ] Extend `rehydrate` to correctly restore address tokens in the final text.
+  - [x] Extend `rehydrate` to correctly restore address tokens in the final text.
 
 #### 3.3 Testing
 
 - **Unit tests**
-  - [ ] Add tests covering:
+  - [x] Add tests covering:
     - Clear address examples that should be tokenized and restored.
     - Non-address text that must not be over-matched.
 - **Integration tests**

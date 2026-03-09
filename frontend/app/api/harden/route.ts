@@ -5,8 +5,40 @@
 
 import { NextRequest } from "next/server";
 import { MAX_BODY_BYTES } from "./constants";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { logInfo, logError } from "@/lib/log";
+
+function getClientIp(req: NextRequest): string {
+  const xff = req.headers.get("x-forwarded-for");
+  if (xff) {
+    const first = xff.split(",")[0]?.trim();
+    if (first) return first;
+  }
+  return req.ip ?? "unknown";
+}
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  const rate = checkRateLimit("harden", ip);
+  if (!rate.allowed) {
+    logInfo("/api/harden", "rate_limit_denied", {
+      ip,
+      retryAfterSeconds: rate.retryAfterSeconds,
+    });
+    return Response.json(
+      {
+        error:
+          "Too many harden requests from this client. Please wait a moment and try again.",
+      },
+      {
+        status: 429,
+        headers: rate.retryAfterSeconds
+          ? { "Retry-After": String(rate.retryAfterSeconds) }
+          : undefined,
+      }
+    );
+  }
+
   const formData = await request.formData();
   const file = formData.get("file");
   if (!file || !(file instanceof File)) {
@@ -107,6 +139,7 @@ export async function POST(request: NextRequest) {
       payloads: payloadsForEggs,
       preserveStyles,
     });
+    logInfo("/api/harden", "success", { mimeType });
     return Response.json({
       bufferBase64: result.buffer.toString("base64"),
       mimeType,
@@ -126,7 +159,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.error("[POST /api/harden]", err);
+    logError("/api/harden", "unhandled_error", message);
     return Response.json(
       { error: "Processing failed. Please try again." },
       { status: 500 }

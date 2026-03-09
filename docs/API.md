@@ -25,6 +25,25 @@ JSON body:
 - `scannerReport` — `{ scan: { hasSuspiciousPatterns, matchedPatterns, details? }, alerts: string[] }`. Pre-hardening scan result (duality check).
 - `originalName` (string) — Original filename from the upload.
 
+---
+
+## Canary analytics (GET /api/canary/[...token])
+
+When a Canary Wing URL is followed, the `/api/canary/[...token]` route:
+
+- Parses a `tokenId` and optional `variant` (e.g. `docx-hidden`, `pdf-clickable`).
+- Logs a structured hit and records it in an in-memory, process-local buffer for **short-lived analytics**.
+
+Stored fields for each hit:
+
+- `tokenId` (string)
+- `variant` (string, e.g. `pdf-text`, `docx-hidden`, or `legacy`)
+- `ts` (ISO timestamp string)
+- `userAgent` (optional, truncated)
+- `referer` (optional, truncated)
+
+No CV content, CV metadata, IP address, or other PII is written by this endpoint; the canary token is the only identifier.
+
 ## Errors
 
 All error responses have a JSON body `{ error: string }`.

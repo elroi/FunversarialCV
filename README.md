@@ -40,6 +40,12 @@ As a tool focused on **Security for AI and AI for Security**, we prioritize data
 * **PII Sanitization:** Before "hardening," the tool identifies PII patterns (Phone, Address) to help you redact sensitive data before sharing your CV globally.
 * **Stateless Execution:** Your data exists only for the duration of the request. Once the download is complete, the memory is purged.
 
+For **Canary Wing** specifically, the `/api/canary` endpoint records **ephemeral, token-scoped hits** for analytics:
+
+- Stored fields: `tokenId`, `variant`, `ts`, and truncated `userAgent` / `referer` strings.
+- No CV content or PII ever reaches this endpoint; the canary token is the only identifier.
+- In the default setup, hits are kept in a small, in-memory ring buffer (process-local, capped at recent activity) and are intended for **debugging and red-teaming**, not long-term tracking.
+
 ---
 
 ## 🚀 For Recruiters & Developers

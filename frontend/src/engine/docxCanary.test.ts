@@ -1,10 +1,27 @@
 /**
- * TDD tests for injectCanaryIntoDocx (Canary Wing DOCX hyperlink).
+ * TDD tests for injectCanaryIntoDocx and injectHiddenCanaryLinkIntoDocx (Canary Wing DOCX hyperlink).
  */
 
-import { injectCanaryIntoDocx } from "./docxCanary";
+import { injectCanaryIntoDocx, injectHiddenCanaryLinkIntoDocx } from "./docxCanary";
 import { createDocumentWithText, extractText, MIME_DOCX } from "./documentExtract";
 import JSZip from "jszip";
+
+describe("injectHiddenCanaryLinkIntoDocx", () => {
+  it("injects hidden hyperlink paragraph and relationship; URL is in rels Target", async () => {
+    const buffer = await createDocumentWithText("Body", MIME_DOCX);
+    const result = await injectHiddenCanaryLinkIntoDocx(buffer, "https://canary.example.com/c/hidden");
+    const zip = await JSZip.loadAsync(result);
+    const docXml = await zip.file("word/document.xml")!.async("string");
+    expect(docXml).toContain("w:hyperlink");
+    expect(docXml).toContain("w:sz w:val=\"2\"");
+    expect(docXml).toContain("w:color w:val=\"FFFFFF\"");
+    const relsXml = await zip.file("word/_rels/document.xml.rels")!.async("string");
+    expect(relsXml).toContain('Target="https://canary.example.com/c/hidden"');
+    expect(relsXml).toContain('TargetMode="External"');
+    const extracted = await extractText(Buffer.from(result), MIME_DOCX);
+    expect(extracted).toContain("https://canary.example.com/c/hidden");
+  });
+});
 
 describe("injectCanaryIntoDocx", () => {
   it("injects hyperlink paragraph and relationship; URL is in rels Target", async () => {

@@ -417,13 +417,17 @@ describe("CanaryWing", () => {
         expect(relsXml).toContain('Target="https://canary.example.com/c/tok?v=docx-clickable"');
       });
 
-      it("when docxLinkStyle is hidden or omitted, no hyperlink in DOCX (backward compat)", async () => {
+      it("when docxLinkStyle is hidden or omitted, DOCX has a hidden clickable hyperlink (same URL in rels)", async () => {
         const buf = await createDocumentWithText("Resume", MIME_DOCX);
         const payload = JSON.stringify({ url: "https://canary.example.com/c/hidden" });
         const result = await canaryWing.transform(buf, payload);
         const zip = await JSZip.loadAsync(result);
         const docXml = await zip.file("word/document.xml")!.async("string");
-        expect(docXml).not.toContain("w:hyperlink");
+        expect(docXml).toContain("w:hyperlink");
+        expect(docXml).toContain("w:sz w:val=\"2\"");
+        expect(docXml).toContain("w:color w:val=\"FFFFFF\"");
+        const relsXml = await zip.file("word/_rels/document.xml.rels")!.async("string");
+        expect(relsXml).toContain('Target="https://canary.example.com/c/hidden');
         const extracted = await extractText(Buffer.from(result), MIME_DOCX);
         expect(extracted).toContain("https://canary.example.com/c/hidden");
       });

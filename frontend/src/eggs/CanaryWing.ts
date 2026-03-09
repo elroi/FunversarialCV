@@ -9,7 +9,7 @@ import { PDFDocument, rgb, StandardFonts, PDFName, PDFString } from "pdf-lib";
 import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
 import { injectHiddenParagraphIntoDocx } from "../engine/docxInject";
-import { injectCanaryIntoDocx } from "../engine/docxCanary";
+import { injectCanaryIntoDocx, injectHiddenCanaryLinkIntoDocx } from "../engine/docxCanary";
 import { containsPii } from "../lib/vault";
 
 const MAX_PAYLOAD_LENGTH = 2048;
@@ -274,7 +274,7 @@ export const canaryWing: IEgg = {
       const docxClickableUrl = urlForVariant("docx-clickable");
       let buf = buffer;
       if (atLeastOne && includeHidden) {
-        buf = await injectHiddenParagraphIntoDocx(buf, docxHiddenUrl);
+        buf = await injectHiddenCanaryLinkIntoDocx(buf, docxHiddenUrl);
       }
       if (includeClickable) {
         buf = await injectCanaryIntoDocx(buf, docxClickableUrl, {
@@ -285,7 +285,7 @@ export const canaryWing: IEgg = {
         });
       }
       if (!atLeastOne) {
-        buf = await injectHiddenParagraphIntoDocx(buf, docxHiddenUrl);
+        buf = await injectHiddenCanaryLinkIntoDocx(buf, docxHiddenUrl);
       }
       return buf;
     }

@@ -38,27 +38,27 @@
 ### 1.1 Discovery
 
 - **Confirm Vercel limits**
-  - [ ] Identify the runtime used by `/api/harden` (Node vs Edge).
-  - [ ] Confirm default body size limits for that runtime.
-  - [ ] Decide the official max file size (e.g. 4 MB vs 10 MB) that is guaranteed to work.
+  - [x] Identify the runtime used by `/api/harden` (Node vs Edge).
+  - [x] Confirm default body size limits for that runtime.
+  - [x] Decide the official max file size (e.g. 4 MB vs 10 MB) that is guaranteed to work.
 
 ### 1.2 Server-side enforcement (`/api/harden`)
 
 - **Update constants and logic**
-  - [ ] Adjust the max-bytes constant in `frontend/src/app/api/harden/route.ts` to the chosen limit.
-  - [ ] Ensure oversize uploads consistently return a 413-style or clear 4xx response with a descriptive error message.
+  - [x] Adjust the max-bytes constant in `frontend/src/app/api/harden/route.ts` to the chosen limit.
+  - [x] Ensure oversize uploads consistently return a 413-style or clear 4xx response with a descriptive error message.
 - **Tests**
-  - [ ] Add/adjust Jest tests:
+  - [x] Add/adjust Jest tests:
     - Files just under the limit succeed.
     - Files just over the limit fail with the expected status code and message.
 
 ### 1.3 Client-side UX
 
 - **Mirror size limit in UI**
-  - [ ] Update client-side checks in the upload component(s) (e.g. `DropZone`) to enforce the new size cap via `file.size`.
+  - [x] Update client-side checks in the upload component(s) (e.g. `DropZone`) to enforce the new size cap via `file.size`.
 - **Error messaging**
-  - [ ] Show a clear error when the file is too large (e.g. inline message or toast).
-  - [ ] Ensure UX does not attempt to call `/api/harden` when the file is already known to be oversize.
+  - [x] Show a clear error when the file is too large (e.g. inline message or toast).
+  - [x] Ensure UX does not attempt to call `/api/harden` when the file is already known to be oversize.
 - **E2E**
   - [ ] Extend Playwright tests to:
     - Attempt an oversize upload.
@@ -67,8 +67,8 @@
 ### 1.4 Documentation
 
 - **Update docs**
-  - [ ] Reflect the effective limit in `README.md` and `docs/API.md`.
-  - [ ] Include a short note about why the limit exists (platform/runtime constraints, performance).
+  - [x] Reflect the effective limit in `README.md` and `docs/API.md`.
+  - [x] Include a short note about why the limit exists (platform/runtime constraints, performance).
 
 ---
 
@@ -118,7 +118,7 @@
 #### 2.5 Documentation
 
 - **Docs**
-  - [ ] Update `README.md` / `docs/API.md`:
+  - [x] Update `README.md` / `docs/API.md`:
     - Describe what gets stored, retention expectations, and privacy posture.
 
 ### If Option B – De-scope Persistence

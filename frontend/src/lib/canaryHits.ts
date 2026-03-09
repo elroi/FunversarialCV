@@ -18,6 +18,17 @@ export interface CanaryHit {
   referer?: string;
 }
 
+// In-memory ring buffer for minimal, process-local analytics.
+// This is intentionally small and ephemeral; for durable, cross-region analytics,
+// a KV-backed implementation can replace this via environment configuration.
+const MAX_HITS = 200;
+let hits: CanaryHit[] = [];
+
+export function getRecentCanaryHits(limit: number = MAX_HITS): CanaryHit[] {
+  const slice = hits.slice(0, limit);
+  return slice;
+}
+
 /**
  * Persist a canary hit for later analysis. No-op when KV is not configured.
  * To enable: add @vercel/kv, set KV_REST_API_URL (and KV_REST_API_TOKEN if required),
@@ -26,5 +37,13 @@ export interface CanaryHit {
 export async function persistCanaryHit(hit: CanaryHit): Promise<void> {
   // Optional: when Vercel KV is available, persist hit for analytics.
   // const kv = await getKV(); await kv.lpush('canary:hits', JSON.stringify(hit)); await kv.incr(`canary:by-variant:${hit.variant}`);
-  await Promise.resolve(hit);
+  hits.unshift(hit);
+  if (hits.length > MAX_HITS) {
+    hits.length = MAX_HITS;
+  }
+}
+
+// Test-only helper to reset in-memory state between tests.
+export function __resetCanaryHitsForTests() {
+  hits = [];
 }

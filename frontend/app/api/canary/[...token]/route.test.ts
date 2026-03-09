@@ -6,6 +6,17 @@
 import { NextRequest } from "next/server";
 import { GET } from "./route";
 
+function parseLastLog(spy: jest.SpyInstance): any | null {
+  const calls = spy.mock.calls;
+  if (!calls.length) return null;
+  const [arg] = calls[calls.length - 1];
+  try {
+    return JSON.parse(String(arg));
+  } catch {
+    return null;
+  }
+}
+
 function createRequest(url: string, headers?: HeadersInit): NextRequest {
   return new NextRequest(url, { method: "GET", headers: headers ?? {} });
 }
@@ -17,41 +28,46 @@ describe("GET /api/canary/[...token]", () => {
       params: Promise.resolve({ token: ["uuid-123", "docx-hidden"] }),
     });
     expect(res.status).toBe(200);
-    const logSpy = jest.spyOn(console, "info").mockImplementation(() => {});
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
     const res2 = await GET(req, {
       params: Promise.resolve({ token: ["uuid-123", "docx-hidden"] }),
     });
     expect(res2.status).toBe(200);
-    expect(logSpy).toHaveBeenCalledWith(
-      "[CanaryWing] hit",
-      expect.objectContaining({
+    const payload = parseLastLog(logSpy);
+    expect(payload).toMatchObject({
+      level: "info",
+      route: "/api/canary",
+      event: "hit",
+      meta: expect.objectContaining({
         tokenId: "uuid-123",
         variant: "docx-hidden",
-        ts: expect.any(String),
-      })
-    );
+      }),
+    });
     logSpy.mockRestore();
   });
 
   it("parses path with single segment as token only (legacy, no variant)", async () => {
-    const logSpy = jest.spyOn(console, "info").mockImplementation(() => {});
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
     const req = createRequest("https://example.com/api/canary/uuid-legacy");
     const res = await GET(req, {
       params: Promise.resolve({ token: ["uuid-legacy"] }),
     });
     expect(res.status).toBe(200);
-    expect(logSpy).toHaveBeenCalledWith(
-      "[CanaryWing] hit",
-      expect.objectContaining({
+    const payload = parseLastLog(logSpy);
+    expect(payload).toMatchObject({
+      level: "info",
+      route: "/api/canary",
+      event: "hit",
+      meta: expect.objectContaining({
         tokenId: "uuid-legacy",
         variant: "legacy",
-      })
-    );
+      }),
+    });
     logSpy.mockRestore();
   });
 
   it("uses query param v= when path has no variant", async () => {
-    const logSpy = jest.spyOn(console, "info").mockImplementation(() => {});
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
     const req = createRequest(
       "https://example.com/api/canary/my-token?v=pdf-clickable"
     );
@@ -59,13 +75,16 @@ describe("GET /api/canary/[...token]", () => {
       params: Promise.resolve({ token: ["my-token"] }),
     });
     expect(res.status).toBe(200);
-    expect(logSpy).toHaveBeenCalledWith(
-      "[CanaryWing] hit",
-      expect.objectContaining({
+    const payload = parseLastLog(logSpy);
+    expect(payload).toMatchObject({
+      level: "info",
+      route: "/api/canary",
+      event: "hit",
+      meta: expect.objectContaining({
         tokenId: "my-token",
         variant: "pdf-clickable",
-      })
-    );
+      }),
+    });
     logSpy.mockRestore();
   });
 

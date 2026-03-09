@@ -1,13 +1,15 @@
-name: E2E Tests
+name: CI
 
 on:
   push:
-    branches: [main]
+    branches-ignore:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  e2e:
+  unit-and-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,12 +25,11 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Install Playwright browsers
+      - name: Run unit tests
         working-directory: frontend
-        run: npx playwright install --with-deps chromium
+        run: npm test
 
-      - name: Run E2E tests
+      - name: Run lint
         working-directory: frontend
-        run: npm run test:e2e
-        env:
-          CI: "true"
+        run: npm run lint
+

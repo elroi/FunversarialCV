@@ -132,6 +132,17 @@ If you add new workflows or change job names, remember to:
 1. Let the new jobs run at least once on a PR into `main`.
 2. Update the branch protection rule in **Settings → Branches** so the correct checks are required.
 
+## Deployment environment variables
+
+When deploying to Vercel (or another platform), configure the following environment variables as needed:
+
+- `CANARY_BASE_URL` (optional): Base URL for Canary Wing links when not using the default derived from `VERCEL_URL`. If unset, the app falls back to the deployed origin.
+- `CANARY_ADMIN_KEY` (optional): Secret key used to gate the internal `/admin/canaries` page. When set, requests must include `?key=<CANARY_ADMIN_KEY>` to view canary analytics.
+- `RATE_LIMIT_HARDEN_MAX` / `RATE_LIMIT_HARDEN_WINDOW_MS` (optional): Override defaults for `/api/harden` rate limiting. Defaults are roughly “30 requests per 60 seconds per IP” when unset.
+- `RATE_LIMIT_CANARY_MAX` / `RATE_LIMIT_CANARY_WINDOW_MS` (optional): Override defaults for `/api/canary` rate limiting. Defaults are roughly “120 requests per 60 seconds per IP” when unset.
+
+These variables are read at runtime; if they are not set, the application falls back to conservative, in-memory defaults suitable for a low-volume Vercel deployment.
+
 ## Where to look
 
 - **Implementation details and phase breakdown:** [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)

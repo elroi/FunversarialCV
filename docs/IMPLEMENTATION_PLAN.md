@@ -136,10 +136,11 @@ Implement the Metadata Shadow egg and UI:
 
 ## Phase 3 — Polish
 
-### 3.1 Format-preservation note
+### 3.1 Format-preservation note and hosting
 
 - README: "Hardening rebuilds the document from extracted text; original layout and styling are not preserved." **Recruiter:** Keeps expectations clear when receiving hardened CVs. Add one sentence: "Implementation plan: see docs/IMPLEMENTATION_PLAN.md" for **Maintainer**.
 - Optional: in-app hint near DropZone or download (**Candidate**).
+- Hosting: add a short “Hosting & Ops” section to the README describing runtime (Node/Serverless on Vercel), file size and rate limits, and where to find logs.
 
 ### 3.2 Egg selection toggles (optional)
 

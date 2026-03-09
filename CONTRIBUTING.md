@@ -9,6 +9,8 @@ cd frontend && npm install && npm run dev
 ```
 
 - **Run tests:** `npm test`
+- **Run E2E tests:** `npm run test:e2e` (starts dev server if needed; requires Playwright: `npx playwright install chromium`). For faster local runs, start the dev server in another terminal and E2E will reuse it.
+- **Generate E2E fixtures:** `npm run gen:e2e-fixtures` (writes `e2e/fixtures/minimal.pdf` and `minimal.docx`)
 - **Lint:** `npm run lint`
 
 ## Practices

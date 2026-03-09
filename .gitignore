@@ -64,6 +64,9 @@ coverage/
 .nyc_output/
 *.lcov
 .jest/
+test-results/
+playwright-report/
+playwright/.cache/
 
 # Misc
 *.local

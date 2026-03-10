@@ -23,6 +23,16 @@ const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
 /** localStorage key for persisting checkbox state (Preserve styles + Eggs to run). */
 const CHECKBOX_STORAGE_KEY = "funversarialcv-checkboxes";
 
+function buildFinalFileName(originalName: string): string {
+  const dot = originalName.lastIndexOf(".");
+  if (dot <= 0 || dot === originalName.length - 1) {
+    return `${originalName}_final`;
+  }
+  const base = originalName.slice(0, dot);
+  const ext = originalName.slice(dot);
+  return `${base}_final${ext}`;
+}
+
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
@@ -346,7 +356,7 @@ export default function Home() {
 
       setProcessingState("completed");
       setActiveStage("rehydration");
-      setSuccessMessage(`hardened-${originalName}`);
+      setSuccessMessage(buildFinalFileName(originalName));
       successMessageRef.current?.focus();
       setLog((prev) => [
         ...prev,

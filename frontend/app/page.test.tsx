@@ -70,7 +70,7 @@ describe("Home page", () => {
       fireEvent.click(hardenBtn);
 
       await waitFor(() => {
-        expect(screen.getByText(/hardened.*my-cv\.pdf/i)).toBeInTheDocument();
+        expect(screen.getByText(/my-cv_final\.pdf/i)).toBeInTheDocument();
       });
 
       const downloadBtn = screen.getByRole("button", { name: /download/i });

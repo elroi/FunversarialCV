@@ -135,13 +135,20 @@ describe("IncidentMailto", () => {
       expect(extracted).toMatch(/\?subject=/);
     });
 
-    it("wraps PII_EMAIL_0 in mailto link for DOCX", async () => {
+    it("wraps PII_EMAIL_0 in mailto link for DOCX (hyperlink relationship)", async () => {
       const text = "Email: {{PII_EMAIL_0}}";
       const buf = await createDocumentWithText(text, MIME_DOCX);
       const result = await incidentMailto.transform(buf, "");
       const extracted = await extractText(Buffer.from(result), MIME_DOCX);
-      expect(extracted).toContain("mailto:");
+      expect(extracted).toContain("Email:");
       expect(extracted).toContain("{{PII_EMAIL_0}}");
+      // mailto: lives in the hyperlink relationship, not visible text.
+      const JSZip = (await import("jszip")).default;
+      const zip = await JSZip.loadAsync(Buffer.from(result));
+      const relsXml = await zip
+        .file("word/_rels/document.xml.rels")!
+        .async("string");
+      expect(relsXml).toContain("mailto:");
     });
 
     it("leaves document unchanged when no email token present", async () => {
@@ -163,9 +170,13 @@ describe("IncidentMailto", () => {
         },
       });
       const result = await incidentMailto.transform(buf, payload);
-      const extracted = await extractText(Buffer.from(result), MIME_DOCX);
-      expect(extracted).toContain("subject=");
-      expect(extracted).toContain("CustomSubjectLine");
+      const JSZip = (await import("jszip")).default;
+      const zip = await JSZip.loadAsync(Buffer.from(result));
+      const relsXml = await zip
+        .file("word/_rels/document.xml.rels")!
+        .async("string");
+      expect(relsXml).toContain("subject=");
+      expect(relsXml).toContain("CustomSubjectLine");
     });
 
     it("throws on unknown buffer format", async () => {
@@ -173,6 +184,34 @@ describe("IncidentMailto", () => {
       await expect(
         incidentMailto.transform(unknown, "")
       ).rejects.toThrow(/unsupported|unknown/i);
+    });
+
+    it("for DOCX with visible email, uses AST helper to attach mailto hyperlink near the email text", async () => {
+      const text = "Email: elroi.luria@gmail.com";
+      const buf = await createDocumentWithText(text, MIME_DOCX);
+
+      // Ensure the buffer has the expected zip layout so AST or append path can run.
+      const JSZip = (await import("jszip")).default;
+      const inputZip = await JSZip.loadAsync(Buffer.from(buf));
+      const docFile = inputZip.file("word/document.xml");
+      const relsFile = inputZip.file("word/_rels/document.xml.rels");
+      expect(docFile).toBeTruthy();
+      expect(relsFile).toBeTruthy();
+
+      const result = await incidentMailto.transform(buf, "");
+
+      const zip = await JSZip.loadAsync(Buffer.from(result));
+      const docXml = await zip
+        .file("word/document.xml")!
+        .async("string");
+      const relsXml = await zip
+        .file("word/_rels/document.xml.rels")!
+        .async("string");
+
+      expect(docXml).toContain("elroi.luria@gmail.com");
+      // Either AST (wrap at email) or append path added a hyperlink; rels must have mailto.
+      expect(relsXml).toContain("mailto:");
+      expect(docXml).toContain("w:hyperlink");
     });
   });
 });

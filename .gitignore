@@ -78,5 +78,9 @@ temp/
 *.bak
 *.backup
 
+# Fixtures: real DOCX/PDF samples (may contain PII); keep structure, ignore binaries
+fixtures/broken/**/*.docx
+fixtures/broken/**/*.pdf
+
 # Optional: keep a minimal .html if it's generated; ignore large or sensitive HTML
 # .html

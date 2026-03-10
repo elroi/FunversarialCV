@@ -19,7 +19,7 @@ You can upload a different file at any time to replace the armed CV and configur
 
 **Upload size note:** To stay safely under Vercel’s Serverless Function request limits and avoid opaque platform 413 errors, FunversarialCV currently supports CVs up to **4 MB** per upload.
 
-**Note:** Hardening rebuilds the document from extracted text; original PDF or DOCX layout and styling are not preserved in the output.
+**Note:** Hardening rebuilds the document from extracted text by default; original PDF or DOCX layout and styling are not preserved in the output unless you enable **Preserve styles** for compatible eggs (Invisible Hand, Canary Wing, Metadata Shadow, and the DOCX path of Incident Mailto).
 
 ---
 
@@ -28,7 +28,7 @@ Every feature in FunversarialCV is an "Egg" mapped to the **OWASP Top 10 for LLM
 
 * **The Invisible Hand (LLM01: Prompt Injection):** Injects white-font "system instructions" (0.5pt) to influence LLM-based ranking systems.
 * **The Metadata Shadow (LLM02: Insecure Output):** Embeds custom key-value pairs in file properties (e.g., `Ranking: Top_1%`).
-* **The Logic Bomb (Creative):** Wraps your email address in a pre-filled `mailto:` link formatted as a system log entry.
+* **The Logic Bomb (Creative):** Wraps your email address in a pre-filled `mailto:` link formatted as a system log entry. For DOCX, when **Preserve styles** is enabled, it attempts a style-preserving insertion by adding a small mailto hyperlink paragraph without altering your existing layout; in complex documents it may fall back to a simplified, rebuilt layout.
 * **The Canary Wing (LLM10: Model Theft):** Embeds trackable tokens to notify you when your CV is processed in specific environments.
 
 ---

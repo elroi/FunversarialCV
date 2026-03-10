@@ -111,8 +111,14 @@ describe("Processor", () => {
         preserveStyles: true,
       });
       const extracted = await extractText(result.buffer, MIME_DOCX);
-      expect(extracted).toContain("mailto:");
+      expect(extracted).toContain("Contact me at john@example.com");
       expect(extracted).toContain("System Note");
+      // mailto: appears in rels (AST/append path) or in body text (rebuild path if style-preserving path fails)
+      const zip = await JSZip.loadAsync(result.buffer);
+      const relsXml = await zip.file("word/_rels/document.xml.rels")?.async("string") ?? "";
+      const mailtoInRels = relsXml.includes("mailto:");
+      const mailtoInBody = extracted.includes("mailto:");
+      expect(mailtoInRels || mailtoInBody).toBe(true);
     }, 15000);
 
     it("when preserveStyles is true and eggs are empty: returns buffer unchanged", async () => {

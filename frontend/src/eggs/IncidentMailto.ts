@@ -13,18 +13,17 @@ import {
   getResolvedTemplateConfigFromConfig,
   buildMailtoUri,
 } from "./templates/incidentMailtoBuild";
-import {
-  extractText,
-  createDocumentWithText,
-  MIME_PDF,
-  MIME_DOCX,
-} from "../engine/documentExtract";
+import { extractText, createDocumentWithText, MIME_PDF, MIME_DOCX } from "../engine/documentExtract";
+import { applyStylePreservingMailto } from "../engine/docxMailto";
+import { applyDocxIncidentMailtoAst, getFirstEmailFromDocxBody } from "../engine/docxMailtoField";
 
 const MAX_SUBJECT_LENGTH = 500;
 const MAX_BODY_LENGTH = 500;
 const MAX_PAYLOAD_LENGTH = 4096;
 const UNSAFE_PATTERN = /[<>]|<\s*script|javascript\s*:/i;
 const EMAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+/** Matches the first email in a string (for raw-email detection in DOCX body text). */
+const EMAIL_IN_TEXT_PATTERN = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
 const PII_EMAIL_TOKEN_REGEX = /\{\{PII_EMAIL_(\d+)\}\}/g;
 
 function isPdfBuffer(buffer: Buffer): boolean {
@@ -151,25 +150,129 @@ export const incidentMailto: IEgg = {
       );
     }
 
-    const text = await extractText(buffer, mimeType);
     const { config } = parsePayload(payload);
     const emailConfig = config.emailConfig ?? {};
     const targetIndex = emailConfig.targetTokenIndex ?? 0;
     const mode = emailConfig.mode ?? "wrap-visible-email";
 
+    const text = await extractText(buffer, mimeType);
     const matches = [...text.matchAll(PII_EMAIL_TOKEN_REGEX)];
     const byIndex = matches.find(
       (m) => parseInt(m[1], 10) === targetIndex
     );
     const token = byIndex ? byIndex[0] : null;
-    if (!token) return buffer;
+
+    // In preserve-styles DOCX path the document may contain the raw email
+    // address instead of a PII token. As a fallback, detect the first email
+    // address and use it as the mailto recipient.
+    let rawEmail: string | null = null;
+    if (!token && mimeType === MIME_DOCX) {
+      const m = text.match(EMAIL_IN_TEXT_PATTERN);
+      if (m) rawEmail = m[0];
+      // If word-extractor did not return the email (e.g. CI/env differences), scan document.xml.
+      if (!rawEmail) {
+        rawEmail = await getFirstEmailFromDocxBody(buffer);
+      }
+    }
+
+    if (!token && !rawEmail) return buffer;
 
     const template = getResolvedTemplateConfigFromConfig(config);
-    const mailtoUri = buildMailtoUri(token, template);
+    const recipient = rawEmail ?? token!;
+    const mailtoUri = buildMailtoUri(recipient, template);
+    const label = template.mailtoLabel ?? "Report incident";
 
-    const label = template.mailtoLabel;
-    const newText = applyMailtoToText(text, token, mailtoUri, mode, label);
+    // #region agent log
+    if (typeof fetch === "function") {
+      fetch("http://127.0.0.1:7449/ingest/0768c635-2444-40d4-9a51-16892d6a03ff", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "1e3930",
+        },
+        body: JSON.stringify({
+          sessionId: "1e3930",
+          runId: "incident-mailto-docx",
+          hypothesisId: "H2",
+          location: "src/eggs/IncidentMailto.ts:173",
+          message: "IncidentMailto transform computed recipient and mailto URI",
+          data: {
+            mimeType,
+            hasToken: !!token,
+            hasRawEmail: !!rawEmail,
+            recipient,
+            mode,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+    }
+    // #endregion agent log
 
+    // PDF: keep existing rebuild behavior (text-based).
+    if (mimeType === MIME_PDF) {
+      const newText = applyMailtoToText(text, token ?? recipient, mailtoUri, mode, label);
+      if (newText === text) return buffer;
+      return createDocumentWithText(newText, mimeType);
+    }
+
+    // DOCX: prefer AST-level helper when we have a visible raw email (preserve-styles path),
+    // then fall back to the existing style-preserving append-at-end helper, and finally
+    // the text-based rebuild if everything else fails.
+    if (mimeType === MIME_DOCX) {
+      try {
+        if (rawEmail) {
+          let applied = false;
+          let astBuf = buffer;
+          try {
+            const result = await applyDocxIncidentMailtoAst(buffer, {
+              mailtoUrl: mailtoUri,
+              label,
+              visibleEmail: rawEmail,
+            });
+            applied = result.applied;
+            astBuf = result.buffer;
+          } catch {
+            // AST helper can throw on malformed or unexpected OOXML; treat as not applied.
+          }
+          if (applied) {
+            return astBuf;
+          }
+        }
+
+        const styled = await applyStylePreservingMailto(buffer, mailtoUri, label);
+
+        // #region agent log
+        if (typeof fetch === "function") {
+          fetch("http://127.0.0.1:7449/ingest/0768c635-2444-40d4-9a51-16892d6a03ff", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Debug-Session-Id": "1e3930",
+            },
+            body: JSON.stringify({
+              sessionId: "1e3930",
+              runId: "incident-mailto-docx",
+              hypothesisId: "H3",
+              location: "src/eggs/IncidentMailto.ts:190",
+              message: "IncidentMailto applied style-preserving mailto",
+              data: {
+                mimeType,
+                recipient,
+              },
+              timestamp: Date.now(),
+            }),
+          }).catch(() => {});
+        }
+        // #endregion agent log
+
+        return styled;
+      } catch {
+        // fall through to rebuild path
+      }
+    }
+
+    const newText = applyMailtoToText(text, recipient, mailtoUri, mode, label);
     if (newText === text) return buffer;
     return createDocumentWithText(newText, mimeType);
   },

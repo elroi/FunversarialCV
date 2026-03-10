@@ -94,8 +94,43 @@ export interface InjectCanaryDocxOptions {
 /**
  * Injects canary into DOCX: when linkStyle is clickable or clickable-with-text,
  * adds a hyperlink paragraph (in body or in footer) and the required relationship(s).
- * Caller should use injectHiddenParagraphIntoDocx for linkStyle "hidden".
+ * Caller should use injectHiddenCanaryLinkIntoDocx for a hidden-but-clickable link.
  */
+export async function injectHiddenCanaryLinkIntoDocx(
+  buffer: Buffer,
+  canaryUrl: string
+): Promise<Buffer> {
+  const zip = await JSZip.loadAsync(buffer);
+  const docFile = zip.file(DOCUMENT_XML_PATH);
+  if (!docFile) {
+    throw new Error("Invalid DOCX: missing word/document.xml");
+  }
+  let docXml = await docFile.async("string");
+
+  const relEscaped = escapeXml(canaryUrl);
+  let relsXml = await getOrCreateRelsXml(zip);
+  const rId = getNextRId(relsXml);
+  const newRel = `<Relationship Id="${rId}" Type="${HYPERLINK_REL_TYPE}" Target="${relEscaped}" TargetMode="External"/>`;
+  relsXml = relsXml.replace("</Relationships>", `  ${newRel}\n</Relationships>`);
+  zip.file(RELS_PATH, relsXml);
+
+  const hyperlinkP = buildHyperlinkParagraphXml(rId, canaryUrl, undefined, false);
+  const bodyClose = "</w:body>";
+  const closeIdx = docXml.indexOf(bodyClose);
+  if (closeIdx === -1) {
+    throw new Error("Invalid DOCX: word/document.xml has no closing w:body");
+  }
+  docXml = docXml.slice(0, closeIdx) + hyperlinkP + docXml.slice(closeIdx);
+  zip.file(DOCUMENT_XML_PATH, docXml);
+
+  const out = await zip.generateAsync({
+    type: "nodebuffer",
+    compression: "DEFLATE",
+    compressionOptions: { level: 6 },
+  });
+  return Buffer.from(out);
+}
+
 export async function injectCanaryIntoDocx(
   buffer: Buffer,
   canaryUrl: string,

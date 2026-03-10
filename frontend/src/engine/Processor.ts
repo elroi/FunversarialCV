@@ -7,11 +7,16 @@ import { dehydrate, rehydrate } from "../lib/vault";
 import type { IEgg } from "../types/egg";
 import { runScan, buildScannerReport } from "../lib/Scanner";
 import type { ScanResult, ScannerReport } from "../lib/Scanner";
-import {
-  extractText,
-  createDocumentWithText,
-  isSupportedMimeType,
-} from "./documentExtract";
+import { extractText, createDocumentWithText, isSupportedMimeType } from "./documentExtract";
+import { injectHiddenCanaryLinkIntoDocx } from "./docxCanary";
+import { DEFAULT_INVISIBLE_HAND_TRAP } from "../eggs";
+
+/** Matches canary URL as embedded in DOCX (our /api/canary/:token/docx-hidden pattern). */
+const DOCX_CANARY_URL_RE =
+  /https?:\/\/[^\s]+\/api\/canary\/[a-f0-9-]+\/docx-hidden(?:\?[^\s]*)?/;
+/** Matches the default Invisible Hand system note so we can strip the visible copy and re-inject it as hidden. */
+const INVISIBLE_HAND_NOTE_RE = /\[System Note:[^\]]+\]/;
+const MIME_DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 /** Egg ids that only add content (no visible body text change). When preserveStyles is true and only these run, we use the original buffer. */
 export const ADD_ONLY_EGG_IDS = new Set([
@@ -95,8 +100,48 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
 
   // —— Stage 5: Rehydration — restore PII only in the final output stream ——
   const finalText = await extractText(currentBuffer, mimeType);
-  const rehydratedText = rehydrate(finalText, store);
-  const outputBuffer = await createDocumentWithText(rehydratedText, mimeType);
+  let rehydratedText = rehydrate(finalText, store);
+
+  // For DOCX, Stage 5 rebuilds the doc from text, which loses hyperlink markup
+  // and the hidden styling for Invisible Hand. Clean the plain text, rebuild,
+  // then re-inject our hidden structures.
+  let outputBuffer: Buffer;
+  if (mimeType === MIME_DOCX) {
+    const canaryUrlMatch = rehydratedText.match(DOCX_CANARY_URL_RE);
+    const hasSystemNote = INVISIBLE_HAND_NOTE_RE.test(rehydratedText);
+
+    if (canaryUrlMatch || hasSystemNote) {
+      const canaryUrl = canaryUrlMatch?.[0]?.trim();
+
+      let cleaned = rehydratedText;
+      if (canaryUrl) {
+        cleaned = cleaned.replace(canaryUrl, "");
+      }
+      cleaned = cleaned.replace(/\s*Verify document integrity\s*/gi, "");
+      if (hasSystemNote) {
+        cleaned = cleaned.replace(INVISIBLE_HAND_NOTE_RE, "");
+      }
+      cleaned = cleaned.replace(/\n\n+/g, "\n").trim();
+
+      outputBuffer = await createDocumentWithText(cleaned, mimeType);
+
+      if (canaryUrl) {
+        outputBuffer = await injectHiddenCanaryLinkIntoDocx(outputBuffer, canaryUrl);
+      }
+      if (hasSystemNote) {
+        // Re-inject the Invisible Hand trap text as a hidden 1pt white paragraph.
+        const { injectHiddenParagraphIntoDocx } = await import("./docxInject");
+        outputBuffer = await injectHiddenParagraphIntoDocx(
+          outputBuffer,
+          DEFAULT_INVISIBLE_HAND_TRAP
+        );
+      }
+    } else {
+      outputBuffer = await createDocumentWithText(rehydratedText, mimeType);
+    }
+  } else {
+    outputBuffer = await createDocumentWithText(rehydratedText, mimeType);
+  }
 
   return { buffer: outputBuffer, dualityCheck: scan, scannerReport };
 }

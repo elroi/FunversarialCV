@@ -146,5 +146,22 @@ describe("Processor", () => {
       expect(extracted).toContain("System Note");
       expect(extracted).toMatch(/\/api\/canary\//);
     }, 15000);
+
+    it("when preserveStyles is false and canary runs: final DOCX has clickable hyperlink (re-injected after rehydration)", async () => {
+      const buffer = await createDocumentWithText("Resume", MIME_DOCX);
+      const result = await process({
+        buffer,
+        mimeType: MIME_DOCX,
+        eggs: [canaryWing],
+        preserveStyles: false,
+      });
+      const zip = await JSZip.loadAsync(result.buffer);
+      const docXml = await zip.file("word/document.xml")?.async("string");
+      const relsXml = await zip.file("word/_rels/document.xml.rels")?.async("string");
+      expect(docXml).toContain("w:hyperlink");
+      expect(relsXml).toMatch(/Target="https?:\/\/[^"]+\/api\/canary\/[a-f0-9-]+\/docx-hidden/);
+      const extracted = await extractText(result.buffer, MIME_DOCX);
+      expect(extracted).toMatch(/\/api\/canary\//);
+    }, 15000);
   });
 });

@@ -320,3 +320,20 @@
 - **Changelog**
   - [ ] Optionally add a short “Release Notes / Changelog” section to `README.md` or a dedicated file summarizing what v1 includes.
 
+---
+
+## Future / Post-launch
+
+**Objective**: Optional improvements once v1 is live; not blocking launch.
+
+### Configure GitHub Code Scanning
+
+- **Enable Code Scanning**
+  - [ ] In repo **Settings → Code security and analysis**, enable **Code scanning**.
+  - [ ] Add a workflow (e.g. `.github/workflows/codeql.yml`) that runs **CodeQL** (or another SARIF-emitting tool) on push/PR for the relevant languages (e.g. JavaScript/TypeScript).
+  - [ ] Optionally add **Dependency review** or **Dependabot** for supply-chain alerts.
+- **Branch protection**
+  - [ ] Once Code Scanning is running and reporting results, re-enable **“Require code scanning results”** in the rule that protects `main` so PRs must have a clean (or accepted) scan before merge.
+- **Docs**
+  - [ ] Note in `CONTRIBUTING.md` or security docs that Code Scanning is required for `main` and how to view/triage alerts in the Security tab.
+

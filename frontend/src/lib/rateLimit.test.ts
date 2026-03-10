@@ -28,7 +28,7 @@ describe("rateLimit", () => {
     const denied = checkRateLimit("harden", key);
     expect(denied.allowed).toBe(false);
 
-    // Simulate window expiry by resetting counters (as would happen after a new window).
+    // Simulate time passing by directly resetting counters (new window).
     __resetRateLimitCountersForTests();
     expect(checkRateLimit("harden", key).allowed).toBe(true);
   });

@@ -94,7 +94,7 @@ export interface InjectCanaryDocxOptions {
 /**
  * Injects canary into DOCX: when linkStyle is clickable or clickable-with-text,
  * adds a hyperlink paragraph (in body or in footer) and the required relationship(s).
- * Caller should use injectHiddenParagraphIntoDocx for linkStyle "hidden".
+ * Caller should use injectHiddenCanaryLinkIntoDocx for a hidden-but-clickable link.
  */
 export async function injectHiddenCanaryLinkIntoDocx(
   buffer: Buffer,

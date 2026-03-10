@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import { createDocumentWithText, MIME_DOCX } from "./documentExtract";
-import { applyDocxIncidentMailtoAst } from "./docxMailtoField";
+import { applyDocxIncidentMailtoAst, getFirstEmailFromDocxBody } from "./docxMailtoField";
 
 const DOCUMENT_XML_PATH = "word/document.xml";
 const RELS_PATH = "word/_rels/document.xml.rels";
@@ -165,5 +165,22 @@ describe("applyDocxIncidentMailtoAst", () => {
 
     expect(docXml).toBe(originalDoc);
     expect(relsXml).toBe(originalRels);
+  });
+});
+
+describe("getFirstEmailFromDocxBody", () => {
+  it("returns first email from document.xml when present", async () => {
+    const buffer = await createDocumentWithText(
+      "Contact me at john@example.com",
+      MIME_DOCX
+    );
+    const email = await getFirstEmailFromDocxBody(buffer);
+    expect(email).toBe("john@example.com");
+  });
+
+  it("returns null when document has no email", async () => {
+    const buffer = await createDocumentWithText("No email here", MIME_DOCX);
+    const email = await getFirstEmailFromDocxBody(buffer);
+    expect(email).toBeNull();
   });
 });

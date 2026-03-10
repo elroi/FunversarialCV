@@ -172,9 +172,9 @@
 #### 3.4 Documentation
 
 - **Update docs**
-  - [ ] Update `README.md` to explicitly list:
-    - Email, phone, and address as covered patterns.
-  - [ ] Add a short “Limitations” note clarifying that detection is heuristic.
+  - [x] Update `README.md` to explicitly list:
+    - Email, phone, and address as covered patterns, and to describe style-preserving behavior for compatible eggs (including Incident Mailto on DOCX).
+  - [x] Add a short “Limitations” note clarifying that detection is heuristic and that style preservation for Incident Mailto may fall back to a rebuilt layout in complex documents.
 
 ### Option B – Narrow Documentation to Current Behavior
 

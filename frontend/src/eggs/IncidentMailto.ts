@@ -15,7 +15,7 @@ import {
 } from "./templates/incidentMailtoBuild";
 import { extractText, createDocumentWithText, MIME_PDF, MIME_DOCX } from "../engine/documentExtract";
 import { applyStylePreservingMailto } from "../engine/docxMailto";
-import { applyDocxIncidentMailtoAst } from "../engine/docxMailtoField";
+import { applyDocxIncidentMailtoAst, getFirstEmailFromDocxBody } from "../engine/docxMailtoField";
 
 const MAX_SUBJECT_LENGTH = 500;
 const MAX_BODY_LENGTH = 500;
@@ -169,6 +169,10 @@ export const incidentMailto: IEgg = {
     if (!token && mimeType === MIME_DOCX) {
       const m = text.match(EMAIL_IN_TEXT_PATTERN);
       if (m) rawEmail = m[0];
+      // If word-extractor did not return the email (e.g. CI/env differences), scan document.xml.
+      if (!rawEmail) {
+        rawEmail = await getFirstEmailFromDocxBody(buffer);
+      }
     }
 
     if (!token && !rawEmail) return buffer;

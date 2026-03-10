@@ -6,6 +6,9 @@ const HYPERLINK_REL_TYPE =
   "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink";
 const RELS_NS = "http://schemas.openxmlformats.org/package/2006/relationships";
 
+/** Matches the first email in a string (for raw-email detection in DOCX body). */
+const EMAIL_IN_TEXT_PATTERN = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+
 function escapeXml(text: string): string {
   return text
     .replace(/&/g, "&amp;")
@@ -266,6 +269,19 @@ function replaceMailtoFieldWithHyperlink(
     break;
   }
   return { docXml, replaced: false };
+}
+
+/**
+ * Extracts the first email address from a DOCX's document body XML.
+ * Used when word-extractor does not return the email (e.g. CI/env differences).
+ */
+export async function getFirstEmailFromDocxBody(buffer: Buffer): Promise<string | null> {
+  const zip = await JSZip.loadAsync(buffer);
+  const docFile = zip.file(DOCUMENT_XML_PATH);
+  if (!docFile) return null;
+  const docXml = await docFile.async("string");
+  const m = docXml.match(EMAIL_IN_TEXT_PATTERN);
+  return m ? m[0] : null;
 }
 
 export interface ApplyDocxIncidentMailtoAstOptions {

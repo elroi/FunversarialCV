@@ -111,8 +111,12 @@ describe("Processor", () => {
         preserveStyles: true,
       });
       const extracted = await extractText(result.buffer, MIME_DOCX);
-      expect(extracted).toContain("mailto:");
+      expect(extracted).toContain("Contact me at john@example.com");
       expect(extracted).toContain("System Note");
+      // mailto: lives in document.xml.rels when using add-only/AST path; word-extractor returns body text only
+      const zip = await JSZip.loadAsync(result.buffer);
+      const relsXml = await zip.file("word/_rels/document.xml.rels")?.async("string") ?? "";
+      expect(relsXml).toContain("mailto:");
     }, 15000);
 
     it("when preserveStyles is true and eggs are empty: returns buffer unchanged", async () => {

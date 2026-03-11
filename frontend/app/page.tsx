@@ -431,6 +431,12 @@ export default function Home() {
     }
   };
 
+  const loadPreset = async (variant: "clean" | "dirty", format: "pdf" | "docx") => {
+    await loadDemoCv(variant, format);
+    setDemoVariant(variant);
+    setDemoFormat(format);
+  };
+
   return (
     <main id="main-content" className="min-h-screen bg-noir-bg text-noir-foreground">
       <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
@@ -466,85 +472,59 @@ export default function Home() {
               <p className="uppercase tracking-[0.2em] text-neon-cyan">
                 Sample CV Preset
               </p>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[9px] uppercase tracking-[0.18em] text-noir-foreground/60">
-                  Variant
-                </span>
+              <div className="grid grid-cols-2 gap-2">
                 <Button
                   type="button"
                   variant="secondary"
-                  aria-pressed={demoVariant === "clean"}
-                  className={`min-h-[32px] px-3 py-1 text-[10px] sm:text-xs rounded-full border font-mono uppercase tracking-[0.18em] ${
-                    demoVariant === "clean"
-                      ? "bg-neon-green text-noir-bg"
-                      : "bg-noir-panel text-noir-foreground border-noir-border/80 hover:border-neon-cyan/60 hover:shadow-neon-cyan/40"
-                  }`}
-                  onClick={() => setDemoVariant("clean")}
+                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-noir-border/80 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                  onClick={() => loadPreset("clean", "pdf")}
                 >
-                  CLEAN
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  aria-pressed={demoVariant === "dirty"}
-                  className={`min-h-[32px] px-3 py-1 text-[10px] sm:text-xs rounded-full border font-mono uppercase tracking-[0.18em] ${
-                    demoVariant === "dirty"
-                      ? "bg-neon-green text-noir-bg"
-                      : "bg-noir-panel text-noir-foreground border-noir-border/80 hover:border-neon-cyan/60 hover:shadow-neon-cyan/40"
-                  }`}
-                  onClick={() => setDemoVariant("dirty")}
-                >
-                  DIRTY
-                </Button>
-                <span className="inline-block h-4 w-px bg-noir-border/60 mx-1" aria-hidden="true" />
-                <span className="text-[9px] uppercase tracking-[0.18em] text-noir-foreground/60">
-                  Format
-                </span>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  aria-pressed={demoFormat === "pdf"}
-                  className={`min-h-[32px] px-3 py-1 text-[10px] sm:text-xs rounded-full border font-mono uppercase tracking-[0.18em] ${
-                    demoFormat === "pdf"
-                      ? "bg-neon-cyan text-noir-bg"
-                      : "bg-noir-panel text-noir-foreground border-noir-border/80 hover:border-neon-cyan/60 hover:shadow-neon-cyan/40"
-                  }`}
-                  onClick={() => setDemoFormat("pdf")}
-                >
-                  PDF
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  aria-pressed={demoFormat === "docx"}
-                  className={`min-h-[32px] px-3 py-1 text-[10px] sm:text-xs rounded-full border font-mono uppercase tracking-[0.18em] ${
-                    demoFormat === "docx"
-                      ? "bg-neon-cyan text-noir-bg"
-                      : "bg-noir-panel text-noir-foreground border-noir-border/80 hover:border-neon-cyan/60 hover:shadow-neon-cyan/40"
-                  }`}
-                  onClick={() => setDemoFormat("docx")}
-                >
-                  DOCX
-                </Button>
-              </div>
-              <div className="flex flex-col gap-1">
-                <p className="text-[10px] text-noir-foreground/60">
-                  &gt; Preset:{" "}
-                  <span className="font-mono text-neon-green">
-                    {demoVariant === "clean" ? "clean" : "dirty"} ·{" "}
-                    {demoFormat.toUpperCase()}
+                  <span className="font-mono text-neon-cyan">Clean · PDF</span>
+                  <span className="text-[9px] text-noir-foreground/60">
+                    Baseline sample
                   </span>
-                </p>
+                </Button>
                 <Button
                   type="button"
                   variant="secondary"
-                  onClick={() => loadDemoCv(demoVariant, demoFormat)}
-                  className="min-h-[40px] w-full px-3 py-2 text-[10px] sm:text-xs flex items-center justify-center gap-2"
-                  aria-label={`Load sample CV (${demoVariant} ${demoFormat.toUpperCase()})`}
+                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-noir-border/80 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                  onClick={() => loadPreset("clean", "docx")}
                 >
-                  Boot sample CV
+                  <span className="font-mono text-neon-cyan">Clean · DOCX</span>
+                  <span className="text-[9px] text-noir-foreground/60">
+                    Baseline sample (Word)
+                  </span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-noir-border/80 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                  onClick={() => loadPreset("dirty", "pdf")}
+                >
+                  <span className="font-mono text-neon-green">Dirty · PDF</span>
+                  <span className="text-[9px] text-noir-foreground/60">
+                    Adversarial sample
+                  </span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-noir-border/80 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                  onClick={() => loadPreset("dirty", "docx")}
+                >
+                  <span className="font-mono text-neon-green">Dirty · DOCX</span>
+                  <span className="text-[9px] text-noir-foreground/60">
+                    Adversarial sample (Word)
+                  </span>
                 </Button>
               </div>
+              <p className="text-[10px] text-noir-foreground/60">
+                &gt; Last preset:{" "}
+                <span className="font-mono text-neon-green">
+                  {demoVariant === "clean" ? "clean" : "dirty"} ·{" "}
+                  {demoFormat.toUpperCase()}
+                </span>
+              </p>
             </div>
             {selectedFileName && (
               <>
@@ -715,7 +695,6 @@ export default function Home() {
                 type="button"
                 onClick={() => setDualityMonitorOpen((o) => !o)}
                 className="flex w-full min-h-[44px] items-center justify-between rounded px-3 py-3 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-cyan focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50"
-                // eslint-disable-next-line jsx-a11y/aria-proptypes
                 aria-expanded={dualityMonitorOpen ? "true" : "false"}
                 aria-controls="duality-monitor-content"
                 id="duality-monitor-toggle"

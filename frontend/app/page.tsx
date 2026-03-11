@@ -65,6 +65,8 @@ export default function Home() {
   const openFilePickerRef = useRef<(() => void) | null>(null);
   /** Skip first persistence run so we don't overwrite localStorage with defaults before hydration. */
   const skipNextPersistRef = useRef(true);
+  const [demoVariant, setDemoVariant] = useState<"clean" | "dirty">("clean");
+  const [demoFormat, setDemoFormat] = useState<"pdf" | "docx">("pdf");
 
   /** Egg metadata from GET /api/eggs (id -> { name, manualCheckAndValidation }). */
   const [eggMetadataById, setEggMetadataById] = useState<Record<string, { name: string; manualCheckAndValidation: string }>>({});
@@ -460,21 +462,83 @@ export default function Home() {
             <p className="mt-1 text-[10px] text-noir-foreground/50">
               Max 4 MB. PDF or DOCX only.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Button
-                variant="secondary"
-                className="min-h-[36px] px-3 py-1 text-[10px] sm:text-xs"
-                onClick={() => loadDemoCv("clean", "pdf")}
-              >
-                Try with sample CV (clean PDF)
-              </Button>
-              <Button
-                variant="secondary"
-                className="min-h-[36px] px-3 py-1 text-[10px] sm:text-xs"
-                onClick={() => loadDemoCv("dirty", "docx")}
-              >
-                Try with sample CV (dirty DOCX)
-              </Button>
+            <div className="mt-3 space-y-2 text-[10px] text-noir-foreground/60">
+              <p className="uppercase tracking-[0.2em] text-neon-cyan">
+                Sample CV Preset
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  aria-pressed={demoVariant === "clean"}
+                  className={`min-h-[32px] px-3 py-1 text-[10px] sm:text-xs rounded-full border border-noir-border/80 ${
+                    demoVariant === "clean"
+                      ? "bg-neon-green text-noir-bg"
+                      : "bg-noir-panel text-noir-foreground/80"
+                  }`}
+                  onClick={() => setDemoVariant("clean")}
+                >
+                  Clean
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  aria-pressed={demoVariant === "dirty"}
+                  className={`min-h-[32px] px-3 py-1 text-[10px] sm:text-xs rounded-full border border-noir-border/80 ${
+                    demoVariant === "dirty"
+                      ? "bg-neon-green text-noir-bg"
+                      : "bg-noir-panel text-noir-foreground/80"
+                  }`}
+                  onClick={() => setDemoVariant("dirty")}
+                >
+                  Dirty
+                </Button>
+                <span className="inline-block h-4 w-px bg-noir-border/60 mx-1" aria-hidden="true" />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  aria-pressed={demoFormat === "pdf"}
+                  className={`min-h-[32px] px-3 py-1 text-[10px] sm:text-xs rounded-full border border-noir-border/80 ${
+                    demoFormat === "pdf"
+                      ? "bg-neon-cyan text-noir-bg"
+                      : "bg-noir-panel text-noir-foreground/80"
+                  }`}
+                  onClick={() => setDemoFormat("pdf")}
+                >
+                  PDF
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  aria-pressed={demoFormat === "docx"}
+                  className={`min-h-[32px] px-3 py-1 text-[10px] sm:text-xs rounded-full border border-noir-border/80 ${
+                    demoFormat === "docx"
+                      ? "bg-neon-cyan text-noir-bg"
+                      : "bg-noir-panel text-noir-foreground/80"
+                  }`}
+                  onClick={() => setDemoFormat("docx")}
+                >
+                  DOCX
+                </Button>
+              </div>
+              <div className="flex flex-col gap-1">
+                <p className="text-[10px] text-noir-foreground/60">
+                  &gt; Preset:{" "}
+                  <span className="font-mono text-neon-green">
+                    {demoVariant === "clean" ? "clean" : "dirty"} ·{" "}
+                    {demoFormat.toUpperCase()}
+                  </span>
+                </p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => loadDemoCv(demoVariant, demoFormat)}
+                  className="min-h-[40px] w-full px-3 py-2 text-[10px] sm:text-xs flex items-center justify-center gap-2"
+                  aria-label={`Load sample CV (${demoVariant} ${demoFormat.toUpperCase()})`}
+                >
+                  Boot sample CV
+                </Button>
+              </div>
             </div>
             {selectedFileName && (
               <>
@@ -645,7 +709,8 @@ export default function Home() {
                 type="button"
                 onClick={() => setDualityMonitorOpen((o) => !o)}
                 className="flex w-full min-h-[44px] items-center justify-between rounded px-3 py-3 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-cyan focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50"
-                aria-expanded={dualityMonitorOpen}
+                // eslint-disable-next-line jsx-a11y/aria-proptypes
+                aria-expanded={dualityMonitorOpen ? "true" : "false"}
                 aria-controls="duality-monitor-content"
                 id="duality-monitor-toggle"
               >

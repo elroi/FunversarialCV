@@ -1,11 +1,9 @@
 import { NextRequest } from "next/server";
-import { buildDemoCvText } from "@/lib/demoCvContent";
 import {
-  createDocumentWithText,
-  MIME_DOCX,
-  MIME_PDF,
-  detectDocumentType,
-} from "@/engine/documentExtract";
+  buildStyledDemoCvDocx,
+  buildStyledDemoCvPdf,
+} from "@/lib/demoCvBuilders";
+import { MIME_DOCX, MIME_PDF, detectDocumentType } from "@/engine/documentExtract";
 
 type Variant = "clean" | "dirty";
 type Format = "pdf" | "docx";
@@ -23,10 +21,11 @@ export async function GET(request: NextRequest) {
   const variant = parseVariant(searchParams.get("variant"));
   const format = parseFormat(searchParams.get("format"));
 
-  const text = buildDemoCvText(variant);
   const mimeType = format === "docx" ? MIME_DOCX : MIME_PDF;
-
-  const buffer = await createDocumentWithText(text, mimeType);
+  const buffer =
+    format === "docx"
+      ? await buildStyledDemoCvDocx(variant)
+      : await buildStyledDemoCvPdf(variant);
   const detected = detectDocumentType(buffer);
   if (!detected || detected !== mimeType) {
     return Response.json(

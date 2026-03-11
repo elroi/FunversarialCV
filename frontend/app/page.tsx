@@ -405,6 +405,30 @@ export default function Home() {
     }
   };
 
+  const loadDemoCv = async (variant: "clean" | "dirty", format: "pdf" | "docx") => {
+    try {
+      setError(null);
+      setSuccessMessage(null);
+      const url = `/api/demo-cv?variant=${variant}&format=${format}`;
+      const res = await fetch(url);
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || typeof data.bufferBase64 !== "string" || typeof data.mimeType !== "string" || typeof data.originalName !== "string") {
+        setError("Failed to fetch demo CV. Please try again.");
+        return;
+      }
+      const binaryString = atob(data.bufferBase64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: data.mimeType });
+      const demoFile = new File([blob], data.originalName, { type: data.mimeType });
+      onFileSelect(demoFile);
+    } catch {
+      setError("Failed to fetch demo CV. Please try again.");
+    }
+  };
+
   return (
     <main id="main-content" className="min-h-screen bg-noir-bg text-noir-foreground">
       <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
@@ -436,6 +460,22 @@ export default function Home() {
             <p className="mt-1 text-[10px] text-noir-foreground/50">
               Max 4 MB. PDF or DOCX only.
             </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                variant="secondary"
+                className="min-h-[36px] px-3 py-1 text-[10px] sm:text-xs"
+                onClick={() => loadDemoCv("clean", "pdf")}
+              >
+                Try with sample CV (clean PDF)
+              </Button>
+              <Button
+                variant="secondary"
+                className="min-h-[36px] px-3 py-1 text-[10px] sm:text-xs"
+                onClick={() => loadDemoCv("dirty", "docx")}
+              >
+                Try with sample CV (dirty DOCX)
+              </Button>
+            </div>
             {selectedFileName && (
               <>
                 <p className="mt-3 text-xs text-neon-green">
@@ -605,7 +645,7 @@ export default function Home() {
                 type="button"
                 onClick={() => setDualityMonitorOpen((o) => !o)}
                 className="flex w-full min-h-[44px] items-center justify-between rounded px-3 py-3 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-cyan focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50"
-                aria-expanded={dualityMonitorOpen ? "true" : "false"}
+                aria-expanded={dualityMonitorOpen}
                 aria-controls="duality-monitor-content"
                 id="duality-monitor-toggle"
               >

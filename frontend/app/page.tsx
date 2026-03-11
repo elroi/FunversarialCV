@@ -55,6 +55,7 @@ export default function Home() {
   const successMessageRef = useRef<HTMLParagraphElement>(null);
   const retryButtonRef = useRef<HTMLButtonElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
+  const armedSectionRef = useRef<HTMLDivElement | null>(null);
   const lastHardenedBlobRef = useRef<Blob | null>(null);
   const lastHardenedConfigRef = useRef<{
     payloads: Record<string, string>;
@@ -98,6 +99,20 @@ export default function Home() {
       retryButtonRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [error]);
+
+  // When a CV (user or demo) is armed, bring the Armed CV + Harden controls into view.
+  useEffect(() => {
+    if (
+      selectedFileName &&
+      armedSectionRef.current &&
+      typeof armedSectionRef.current.scrollIntoView === "function"
+    ) {
+      armedSectionRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [selectedFileName]);
 
   // Hydrate checkbox state from localStorage on mount (client-only).
   useEffect(() => {
@@ -472,6 +487,9 @@ export default function Home() {
               <p className="uppercase tracking-[0.2em] text-neon-cyan">
                 Sample CV Preset
               </p>
+              <p className="text-[10px] text-noir-foreground/60">
+                Load a synthetic demo CV instead of your own — use <span className="text-neon-cyan font-mono">Clean</span> for a safe baseline, or <span className="text-neon-green font-mono">Dirty</span> to explore adversarial content.
+              </p>
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   type="button"
@@ -527,7 +545,7 @@ export default function Home() {
               </p>
             </div>
             {selectedFileName && (
-              <>
+              <div ref={armedSectionRef}>
                 <p className="mt-3 text-xs text-neon-green">
                   &gt; Armed CV: <span className="font-semibold">{selectedFileName}</span>
                 </p>
@@ -604,7 +622,7 @@ export default function Home() {
                   )}
                   {processingState === "processing" ? "Processing…" : "Harden"}
                 </Button>
-              </>
+              </div>
             )}
             {successMessage && (
               <div className="mt-2" role="status" aria-live="polite">

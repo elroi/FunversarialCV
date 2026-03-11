@@ -97,7 +97,10 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
     setDocxDisplayText(config.docxDisplayText ?? "");
     setPdfHiddenText(config.pdfHiddenText ?? (config.pdfLinkStyle !== "clickable"));
     setPdfClickableLink(config.pdfClickableLink ?? (config.pdfLinkStyle === "clickable"));
-  }, [payload]);
+    // We intentionally depend on the parsed config derived from payload rather than
+    // individual fields to keep the effect stable and avoid noisy dependency lists.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config]);
 
   // After mount, use current origin for default canary base so the preview matches what the server would use in dev.
   useEffect(() => {
@@ -127,7 +130,19 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
     next.pdfHiddenText = pdfHiddenText;
     next.pdfClickableLink = pdfClickableLink;
     emit(next);
-  }, [url, baseUrl, token, docxHiddenText, docxClickableLink, docxClickableVisible, docxPlacement, docxDisplayText, pdfHiddenText, pdfClickableLink, emit]);
+  }, [
+    url,
+    baseUrl,
+    token,
+    docxHiddenText,
+    docxClickableLink,
+    docxClickableVisible,
+    docxPlacement,
+    docxDisplayText,
+    pdfHiddenText,
+    pdfClickableLink,
+    emit,
+  ]);
 
   const resultingUrl =
     url.trim() !== ""

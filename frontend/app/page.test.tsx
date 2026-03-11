@@ -84,22 +84,31 @@ describe("Home page", () => {
   describe("retry on error", () => {
     it("shows Retry button when processing fails and calls runHarden when clicked", async () => {
       let hardenCallCount = 0;
-      const fetchMock = jest.fn((input: RequestInfo | URL) => {
-        const url = typeof input === "string" ? input : input instanceof URL ? input.href : (input as Request).url;
-        if (url.includes("/api/eggs")) {
-          return Promise.resolve({
+      const fetchMock: jest.MockedFunction<typeof global.fetch> = jest.fn(
+        async (input: RequestInfo | URL) =>
+          // Minimal Response-like shape for tests; cast for TS compatibility.
+          ({
             ok: true,
             json: async () => ({ eggs: [] }),
-          });
+          } as unknown as Response)
+      );
+
+      fetchMock.mockImplementationOnce(async (input: RequestInfo | URL) => {
+        const url = typeof input === "string" ? input : input instanceof URL ? input.href : (input as Request).url;
+        if (url.includes("/api/eggs")) {
+          return {
+            ok: true,
+            json: async () => ({ eggs: [] }),
+          } as unknown as Response;
         }
         hardenCallCount++;
         if (hardenCallCount === 1) {
-          return Promise.resolve({
+          return {
             ok: false,
             json: async () => ({ error: "Server error" }),
-          });
+          } as unknown as Response;
         }
-        return Promise.resolve({
+        return {
           ok: true,
           json: async () => ({
             bufferBase64: Buffer.from("x").toString("base64"),
@@ -107,7 +116,7 @@ describe("Home page", () => {
             originalName: "resume.pdf",
             scannerReport: { scan: { hasSuspiciousPatterns: false, matchedPatterns: [] } },
           }),
-        });
+        } as unknown as Response;
       });
       global.fetch = fetchMock;
       render(<Home />);
@@ -163,11 +172,13 @@ describe("Home page", () => {
 
   describe("Harden button accessibility", () => {
     it("Harden button has aria-label reflecting state (Harden vs processing)", async () => {
-      let resolveFetch: (value: unknown) => void;
-      const fetchPromise = new Promise<Response>((resolve) => {
+      let resolveFetch: (value: Response) => void;
+      const fetchPromise: Promise<Response> = new Promise((resolve) => {
         resolveFetch = resolve;
       });
-      global.fetch = jest.fn().mockReturnValue(fetchPromise);
+      global.fetch = jest.fn().mockReturnValue(fetchPromise) as jest.MockedFunction<
+        typeof global.fetch
+      >;
       render(<Home />);
 
       const input = screen.getByTestId("dropzone-input");
@@ -197,7 +208,7 @@ describe("Home page", () => {
           originalName: "resume.pdf",
           scannerReport: { scan: { hasSuspiciousPatterns: false, matchedPatterns: [] } },
         }),
-      });
+      } as unknown as Response);
     });
   });
 

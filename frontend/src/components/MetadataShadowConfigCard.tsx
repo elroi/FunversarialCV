@@ -55,7 +55,7 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
       setKey("Ranking");
       setValue("");
     }
-  }, [payload]);
+  }, [payload, config]);
 
   const emit = useCallback(
     (k: string, v: string) => {

@@ -466,42 +466,48 @@ export default function Home() {
               <p className="uppercase tracking-[0.2em] text-neon-cyan">
                 Sample CV Preset
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[9px] uppercase tracking-[0.18em] text-noir-foreground/60">
+                  Variant
+                </span>
                 <Button
                   type="button"
                   variant="secondary"
                   aria-pressed={demoVariant === "clean"}
-                  className={`min-h-[32px] px-3 py-1 text-[10px] sm:text-xs rounded-full border border-noir-border/80 ${
+                  className={`min-h-[32px] px-3 py-1 text-[10px] sm:text-xs rounded-full border font-mono uppercase tracking-[0.18em] ${
                     demoVariant === "clean"
                       ? "bg-neon-green text-noir-bg"
-                      : "bg-noir-panel text-noir-foreground/80"
+                      : "bg-noir-panel text-noir-foreground border-noir-border/80 hover:border-neon-cyan/60 hover:shadow-neon-cyan/40"
                   }`}
                   onClick={() => setDemoVariant("clean")}
                 >
-                  Clean
+                  CLEAN
                 </Button>
                 <Button
                   type="button"
                   variant="secondary"
                   aria-pressed={demoVariant === "dirty"}
-                  className={`min-h-[32px] px-3 py-1 text-[10px] sm:text-xs rounded-full border border-noir-border/80 ${
+                  className={`min-h-[32px] px-3 py-1 text-[10px] sm:text-xs rounded-full border font-mono uppercase tracking-[0.18em] ${
                     demoVariant === "dirty"
                       ? "bg-neon-green text-noir-bg"
-                      : "bg-noir-panel text-noir-foreground/80"
+                      : "bg-noir-panel text-noir-foreground border-noir-border/80 hover:border-neon-cyan/60 hover:shadow-neon-cyan/40"
                   }`}
                   onClick={() => setDemoVariant("dirty")}
                 >
-                  Dirty
+                  DIRTY
                 </Button>
                 <span className="inline-block h-4 w-px bg-noir-border/60 mx-1" aria-hidden="true" />
+                <span className="text-[9px] uppercase tracking-[0.18em] text-noir-foreground/60">
+                  Format
+                </span>
                 <Button
                   type="button"
                   variant="secondary"
                   aria-pressed={demoFormat === "pdf"}
-                  className={`min-h-[32px] px-3 py-1 text-[10px] sm:text-xs rounded-full border border-noir-border/80 ${
+                  className={`min-h-[32px] px-3 py-1 text-[10px] sm:text-xs rounded-full border font-mono uppercase tracking-[0.18em] ${
                     demoFormat === "pdf"
                       ? "bg-neon-cyan text-noir-bg"
-                      : "bg-noir-panel text-noir-foreground/80"
+                      : "bg-noir-panel text-noir-foreground border-noir-border/80 hover:border-neon-cyan/60 hover:shadow-neon-cyan/40"
                   }`}
                   onClick={() => setDemoFormat("pdf")}
                 >
@@ -511,10 +517,10 @@ export default function Home() {
                   type="button"
                   variant="secondary"
                   aria-pressed={demoFormat === "docx"}
-                  className={`min-h-[32px] px-3 py-1 text-[10px] sm:text-xs rounded-full border border-noir-border/80 ${
+                  className={`min-h-[32px] px-3 py-1 text-[10px] sm:text-xs rounded-full border font-mono uppercase tracking-[0.18em] ${
                     demoFormat === "docx"
                       ? "bg-neon-cyan text-noir-bg"
-                      : "bg-noir-panel text-noir-foreground/80"
+                      : "bg-noir-panel text-noir-foreground border-noir-border/80 hover:border-neon-cyan/60 hover:shadow-neon-cyan/40"
                   }`}
                   onClick={() => setDemoFormat("docx")}
                 >

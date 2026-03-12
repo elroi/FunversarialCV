@@ -50,7 +50,7 @@ export default function Home() {
   const [canaryWingPayload, setCanaryWingPayload] = useState<string>("");
   const [metadataShadowPayload, setMetadataShadowPayload] = useState<string>("");
   const [enabledEggIds, setEnabledEggIds] = useState<Set<string>>(() => new Set(DEFAULT_ENABLED_EGG_IDS));
-  const [preserveStyles, setPreserveStyles] = useState(false);
+  const [preserveStyles, setPreserveStyles] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const successMessageRef = useRef<HTMLParagraphElement>(null);
   const retryButtonRef = useRef<HTMLButtonElement>(null);
@@ -91,7 +91,7 @@ export default function Home() {
   // Scroll focused success/error targets into view after render (refs are set post-commit).
   useEffect(() => {
     if (successMessage && successMessageRef.current && typeof successMessageRef.current.scrollIntoView === "function") {
-      successMessageRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      successMessageRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [successMessage]);
   useEffect(() => {
@@ -107,10 +107,7 @@ export default function Home() {
       armedSectionRef.current &&
       typeof armedSectionRef.current.scrollIntoView === "function"
     ) {
-      armedSectionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-      });
+      armedSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [selectedFileName]);
 
@@ -247,6 +244,20 @@ export default function Home() {
 
   const startPipelineForFile = async (file: File) => {
     const name = file.name;
+    if (file.size === 0) {
+      setError("Document is empty. Please choose a valid PDF or DOCX file.");
+      setProcessingState("error");
+      setActiveStage("accept");
+      setLog([
+        {
+          id: "accept-empty",
+          stage: "accept",
+          level: "error",
+          message: `[ACCEPT] Refusing empty file "${name}".`,
+        },
+      ]);
+      return;
+    }
     setError(null);
     setSuccessMessage(null);
     lastHardenedBlobRef.current = null;
@@ -373,7 +384,8 @@ export default function Home() {
 
       setProcessingState("completed");
       setActiveStage("rehydration");
-      setSuccessMessage(buildFinalFileName(originalName));
+      const noEggsApplied = enabledEggIds.size === 0;
+      setSuccessMessage(noEggsApplied ? originalName : buildFinalFileName(originalName));
       successMessageRef.current?.focus();
       setLog((prev) => [
         ...prev,
@@ -433,13 +445,16 @@ export default function Home() {
         setError("Failed to fetch demo CV. Please try again.");
         return;
       }
-      const binaryString = atob(data.bufferBase64);
+      const binaryString = atob(data.bufferBase64.trim());
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
-      const blob = new Blob([bytes], { type: data.mimeType });
-      const demoFile = new File([blob], data.originalName, { type: data.mimeType });
+      if (bytes.length === 0) {
+        setError("Demo CV document was empty. Please try again.");
+        return;
+      }
+      const demoFile = new File([bytes], data.originalName, { type: data.mimeType });
       onFileSelect(demoFile);
     } catch {
       setError("Failed to fetch demo CV. Please try again.");
@@ -631,7 +646,11 @@ export default function Home() {
                   tabIndex={-1}
                   className="text-xs text-neon-green"
                 >
-                  &gt; Hardened CV ready: <span className="font-mono">{successMessage}</span>
+                  &gt;{" "}
+                  {lastHardenedConfigRef.current?.eggIds?.length === 0
+                    ? "Scan complete (no eggs applied — document unchanged):"
+                    : "Hardened CV ready:"}{" "}
+                  <span className="font-mono">{successMessage}</span>
                 </p>
                 <div className="mt-1 flex flex-wrap gap-2">
                   <Button

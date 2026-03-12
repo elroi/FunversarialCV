@@ -36,6 +36,45 @@ export const MIME_PDF = "application/pdf";
 export const MIME_DOCX =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
+/** Page and layout constants for PDF created by createDocumentWithText (must match usage below). */
+const PDF_FONT_SIZE = 11;
+const PDF_LINE_HEIGHT = PDF_FONT_SIZE * 1.3;
+const PDF_MARGIN = 40;
+const PDF_PAGE_WIDTH = 595;
+const PDF_PAGE_HEIGHT = 842;
+const PDF_CONTENT_WIDTH = PDF_PAGE_WIDTH - 2 * PDF_MARGIN;
+// Leave extra breathing room on the right to avoid any visual clipping
+const PDF_CONTENT_SAFE_WIDTH = PDF_CONTENT_WIDTH * 0.9;
+
+/**
+ * Wraps a single line of text into multiple lines that fit within maxWidth when rendered with the given font and size.
+ * Returns an array of strings to draw (each fits on one line).
+ */
+function wrapLine(
+  line: string,
+  maxWidth: number,
+  font: { widthOfTextAtSize: (text: string, size: number) => number },
+  fontSize: number
+): string[] {
+  if (!line.trim()) return [line || " "];
+  const result: string[] = [];
+  const words = line.split(/\s+/);
+  let current = "";
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    const w = font.widthOfTextAtSize(candidate, fontSize);
+    if (w <= maxWidth) {
+      current = candidate;
+    } else {
+      if (current) result.push(current);
+      // Single word longer than maxWidth: put on its own line (may overflow but won't hang).
+      current = word;
+    }
+  }
+  if (current) result.push(current);
+  return result;
+}
+
 export type SupportedMimeType = typeof MIME_PDF | typeof MIME_DOCX;
 
 /**
@@ -72,27 +111,24 @@ export async function createDocumentWithText(
     const doc = await PDFDocument.create();
     const font = await doc.embedFont(StandardFonts.Helvetica);
     const lines = text.split(/\r?\n/);
-    const fontSize = 11;
-    const lineHeight = fontSize * 1.3;
-    const margin = 40;
-    const pageWidth = 595;
-    const pageHeight = 842;
     let currentPage = doc.addPage();
-    let y = pageHeight - margin;
+    let y = PDF_PAGE_HEIGHT - PDF_MARGIN;
     for (const line of lines) {
-      if (y < margin) {
-        currentPage = doc.addPage();
-        y = pageHeight - margin;
+      const wrapped = wrapLine(line, PDF_CONTENT_SAFE_WIDTH, font, PDF_FONT_SIZE);
+      for (const toDraw of wrapped) {
+        if (y - PDF_LINE_HEIGHT < PDF_MARGIN) {
+          currentPage = doc.addPage();
+          y = PDF_PAGE_HEIGHT - PDF_MARGIN;
+        }
+        currentPage.drawText(toDraw || " ", {
+          x: PDF_MARGIN,
+          y,
+          size: PDF_FONT_SIZE,
+          font,
+          color: rgb(0, 0, 0),
+        });
+        y -= PDF_LINE_HEIGHT;
       }
-      const toDraw = line || " ";
-      currentPage.drawText(toDraw, {
-        x: margin,
-        y,
-        size: fontSize,
-        font,
-        color: rgb(0, 0, 0),
-      });
-      y -= lineHeight;
     }
     const pdfBytes = await doc.save();
     return Buffer.from(pdfBytes);

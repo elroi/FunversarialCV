@@ -130,6 +130,32 @@ const PDF_MARGIN = 40;
 const PDF_PAGE_WIDTH = 595;
 const PDF_PAGE_HEIGHT = 842;
 const PDF_BULLET = "• ";
+const PDF_CONTENT_WIDTH = PDF_PAGE_WIDTH - 2 * PDF_MARGIN;
+const PDF_CONTENT_SAFE_WIDTH = PDF_CONTENT_WIDTH * 0.9;
+
+function wrapPdfLine(
+  text: string,
+  font: { widthOfTextAtSize: (t: string, size: number) => number },
+  fontSize: number,
+  maxWidth: number
+): string[] {
+  if (!text.trim()) return [text || " "];
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let current = "";
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    const width = font.widthOfTextAtSize(candidate, fontSize);
+    if (width <= maxWidth) {
+      current = candidate;
+    } else {
+      if (current) lines.push(current);
+      current = word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
 
 /**
  * Builds a styled PDF buffer for the demo CV (title/heading sizes, bullet prefix).
@@ -163,15 +189,19 @@ export async function buildStyledDemoCvPdf(
     const useBold = opts.bold ?? false;
     const indent = opts.indent ?? 0;
     const x = PDF_MARGIN + indent;
-    checkNewPage(lineHeight(size));
-    currentPage.drawText(text || " ", {
-      x,
-      y,
-      size,
-      font: useBold ? fontBold : font,
-      color: rgb(0, 0, 0),
-    });
-    y -= lineHeight(size);
+    const baseFont = useBold ? fontBold : font;
+    const wrapped = wrapPdfLine(text, baseFont, size, PDF_CONTENT_SAFE_WIDTH);
+    for (const segment of wrapped) {
+      checkNewPage(lineHeight(size));
+      currentPage.drawText(segment || " ", {
+        x,
+        y,
+        size,
+        font: baseFont,
+        color: rgb(0, 0, 0),
+      });
+      y -= lineHeight(size);
+    }
   }
 
   for (const section of DEMO_CV_SECTIONS) {

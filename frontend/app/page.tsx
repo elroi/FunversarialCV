@@ -590,26 +590,26 @@ export default function Home() {
                   {demoFormat.toUpperCase()}
                 </span>
               </p>
-              <button
-                type="button"
-                className={`mt-1 px-0 text-[10px] underline underline-offset-2 ${
-                  hasDemoLoaded
-                    ? "text-neon-cyan hover:text-neon-green"
-                    : "text-noir-foreground/40 cursor-not-allowed"
-                }`}
-                onClick={hasDemoLoaded ? downloadCurrentDemo : undefined}
-                disabled={!hasDemoLoaded}
-              >
-                {hasDemoLoaded
-                  ? "View current demo as-is"
-                  : "Select demo document and click here to view as-is"}
-              </button>
             </div>
             {selectedFileName && (
               <div ref={armedSectionRef}>
                 <p className="mt-3 text-xs text-neon-green">
                   &gt; Armed CV: <span className="font-semibold">{selectedFileName}</span>
                 </p>
+                <button
+                  type="button"
+                  className={`mt-1 px-0 text-[10px] underline underline-offset-2 ${
+                    hasDemoLoaded
+                      ? "text-neon-cyan hover:text-neon-green"
+                      : "text-noir-foreground/40 cursor-not-allowed"
+                  }`}
+                  onClick={hasDemoLoaded ? downloadCurrentDemo : undefined}
+                  disabled={!hasDemoLoaded}
+                >
+                  {hasDemoLoaded
+                    ? "View current demo as-is"
+                    : "Select demo document and click here to view as-is"}
+                </button>
                 <Button
                   variant="secondary"
                   onClick={() => {

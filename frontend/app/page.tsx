@@ -596,31 +596,33 @@ export default function Home() {
                 <p className="mt-3 text-xs text-neon-green">
                   &gt; Armed CV: <span className="font-semibold">{selectedFileName}</span>
                 </p>
-                <button
-                  type="button"
-                  className={`mt-1 px-0 text-[10px] underline underline-offset-2 ${
-                    hasDemoLoaded
-                      ? "text-neon-cyan hover:text-neon-green"
-                      : "text-noir-foreground/40 cursor-not-allowed"
-                  }`}
-                  onClick={hasDemoLoaded ? downloadCurrentDemo : undefined}
-                  disabled={!hasDemoLoaded}
-                >
-                  {hasDemoLoaded
-                    ? "View current demo as-is"
-                    : "Select demo document and click here to view as-is"}
-                </button>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    clearFile();
-                    openFilePickerRef.current?.();
-                  }}
-                  className="mt-1 min-h-[44px] py-2 px-3 text-[10px] sm:text-xs"
-                  aria-label="Change file"
-                >
-                  Change file
-                </Button>
+                <div className="mt-1 flex flex-col items-start gap-1">
+                  <button
+                    type="button"
+                    className={`px-0 text-[10px] underline underline-offset-2 ${
+                      hasDemoLoaded
+                        ? "text-neon-cyan hover:text-neon-green"
+                        : "text-noir-foreground/40 cursor-not-allowed"
+                    }`}
+                    onClick={hasDemoLoaded ? downloadCurrentDemo : undefined}
+                    disabled={!hasDemoLoaded}
+                  >
+                    {hasDemoLoaded
+                      ? "View current demo as-is"
+                      : "Select demo document and click here to view as-is"}
+                  </button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      clearFile();
+                      openFilePickerRef.current?.();
+                    }}
+                    className="min-h-[44px] py-2 px-3 text-[10px] sm:text-xs"
+                    aria-label="Change file"
+                  >
+                    Change file
+                  </Button>
+                </div>
                 <p className="mt-1 text-[10px] text-noir-foreground/60">
                   Configure eggs below, then click Harden.
                 </p>

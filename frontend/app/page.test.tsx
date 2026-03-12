@@ -40,6 +40,26 @@ describe("Home page", () => {
     global.URL.revokeObjectURL = revokeObjectURL;
   });
 
+  describe("intro and resources nav", () => {
+    it("renders a short intro paragraph explaining FunversarialCV and its stateless, OWASP-aligned model", () => {
+      render(<Home />);
+      expect(
+        screen.getByText(/FunversarialCV is an educational tool/i)
+      ).toBeInTheDocument();
+      // The phrase \"processed in-memory only\" appears in multiple hints; we only
+      // assert that at least one such explanation is present.
+      const matches = screen.getAllByText(/processed in-memory only/i);
+      expect(matches.length).toBeGreaterThan(0);
+    });
+
+    it("includes a Resources link in the header that points to \\/resources", () => {
+      render(<Home />);
+      const link = screen.getByRole("link", { name: /resources/i });
+      expect(link).toBeInTheDocument();
+      expect((link as HTMLAnchorElement).getAttribute("href")).toBe("/resources");
+    });
+  });
+
   afterEach(() => {
     global.fetch = originalFetch;
     jest.restoreAllMocks();

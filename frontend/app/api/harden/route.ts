@@ -94,13 +94,11 @@ export async function POST(request: NextRequest) {
 
   const mimeType = detectDocumentType(buffer);
   if (!mimeType) {
-    return Response.json(
-      {
-        error:
-          "Unsupported or invalid document: file must be a valid PDF or DOCX.",
-      },
-      { status: 400 }
-    );
+    const detail =
+      buffer.length === 0
+        ? "Document is empty. Please upload a valid PDF or DOCX file."
+        : "Unsupported or invalid document: file must be a valid PDF or DOCX.";
+    return Response.json({ error: detail }, { status: 400 });
   }
 
   const ext = file.name.toLowerCase();

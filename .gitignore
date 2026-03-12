@@ -82,5 +82,8 @@ temp/
 fixtures/broken/**/*.docx
 fixtures/broken/**/*.pdf
 
+# One-time demo CV output (generated for inspection)
+frontend/demo-output/
+
 # Optional: keep a minimal .html if it's generated; ignore large or sensitive HTML
 # .html

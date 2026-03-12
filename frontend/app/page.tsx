@@ -50,11 +50,12 @@ export default function Home() {
   const [canaryWingPayload, setCanaryWingPayload] = useState<string>("");
   const [metadataShadowPayload, setMetadataShadowPayload] = useState<string>("");
   const [enabledEggIds, setEnabledEggIds] = useState<Set<string>>(() => new Set(DEFAULT_ENABLED_EGG_IDS));
-  const [preserveStyles, setPreserveStyles] = useState(false);
+  const [preserveStyles, setPreserveStyles] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const successMessageRef = useRef<HTMLParagraphElement>(null);
   const retryButtonRef = useRef<HTMLButtonElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
+  const armedSectionRef = useRef<HTMLDivElement | null>(null);
   const lastHardenedBlobRef = useRef<Blob | null>(null);
   const lastHardenedConfigRef = useRef<{
     payloads: Record<string, string>;
@@ -65,6 +66,9 @@ export default function Home() {
   const openFilePickerRef = useRef<(() => void) | null>(null);
   /** Skip first persistence run so we don't overwrite localStorage with defaults before hydration. */
   const skipNextPersistRef = useRef(true);
+  const [demoVariant, setDemoVariant] = useState<"clean" | "dirty">("clean");
+  const [demoFormat, setDemoFormat] = useState<"pdf" | "docx">("pdf");
+  const [hasDemoLoaded, setHasDemoLoaded] = useState(false);
 
   /** Egg metadata from GET /api/eggs (id -> { name, manualCheckAndValidation }). */
   const [eggMetadataById, setEggMetadataById] = useState<Record<string, { name: string; manualCheckAndValidation: string }>>({});
@@ -88,7 +92,7 @@ export default function Home() {
   // Scroll focused success/error targets into view after render (refs are set post-commit).
   useEffect(() => {
     if (successMessage && successMessageRef.current && typeof successMessageRef.current.scrollIntoView === "function") {
-      successMessageRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      successMessageRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [successMessage]);
   useEffect(() => {
@@ -96,6 +100,17 @@ export default function Home() {
       retryButtonRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [error]);
+
+  // When a CV (user or demo) is armed, bring the Armed CV + Harden controls into view.
+  useEffect(() => {
+    if (
+      selectedFileName &&
+      armedSectionRef.current &&
+      typeof armedSectionRef.current.scrollIntoView === "function"
+    ) {
+      armedSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedFileName]);
 
   // Hydrate checkbox state from localStorage on mount (client-only).
   useEffect(() => {
@@ -230,6 +245,20 @@ export default function Home() {
 
   const startPipelineForFile = async (file: File) => {
     const name = file.name;
+    if (file.size === 0) {
+      setError("Document is empty. Please choose a valid PDF or DOCX file.");
+      setProcessingState("error");
+      setActiveStage("accept");
+      setLog([
+        {
+          id: "accept-empty",
+          stage: "accept",
+          level: "error",
+          message: `[ACCEPT] Refusing empty file "${name}".`,
+        },
+      ]);
+      return;
+    }
     setError(null);
     setSuccessMessage(null);
     lastHardenedBlobRef.current = null;
@@ -356,7 +385,8 @@ export default function Home() {
 
       setProcessingState("completed");
       setActiveStage("rehydration");
-      setSuccessMessage(buildFinalFileName(originalName));
+      const noEggsApplied = enabledEggIds.size === 0;
+      setSuccessMessage(noEggsApplied ? originalName : buildFinalFileName(originalName));
       successMessageRef.current?.focus();
       setLog((prev) => [
         ...prev,
@@ -405,6 +435,70 @@ export default function Home() {
     }
   };
 
+  const loadDemoCv = async (variant: "clean" | "dirty", format: "pdf" | "docx") => {
+    try {
+      setError(null);
+      setSuccessMessage(null);
+      const url = `/api/demo-cv?variant=${variant}&format=${format}`;
+      const res = await fetch(url);
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || typeof data.bufferBase64 !== "string" || typeof data.mimeType !== "string" || typeof data.originalName !== "string") {
+        setError("Failed to fetch demo CV. Please try again.");
+        return;
+      }
+      const binaryString = atob(data.bufferBase64.trim());
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      if (bytes.length === 0) {
+        setError("Demo CV document was empty. Please try again.");
+        return;
+      }
+      const demoFile = new File([bytes], data.originalName, { type: data.mimeType });
+      onFileSelect(demoFile);
+    } catch {
+      setError("Failed to fetch demo CV. Please try again.");
+    }
+  };
+
+  const downloadCurrentDemo = useCallback(async () => {
+    try {
+      const url = `/api/demo-cv?variant=${demoVariant}&format=${demoFormat}`;
+      const res = await fetch(url);
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || typeof data.bufferBase64 !== "string" || typeof data.mimeType !== "string" || typeof data.originalName !== "string") {
+        setError("Failed to download demo CV. Please try again.");
+        return;
+      }
+      const binaryString = atob(data.bufferBase64.trim());
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      if (bytes.length === 0) {
+        setError("Demo CV document was empty. Please try again.");
+        return;
+      }
+      const blob = new Blob([bytes], { type: data.mimeType });
+      const urlObj = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = urlObj;
+      a.download = data.originalName;
+      a.click();
+      URL.revokeObjectURL(urlObj);
+    } catch {
+      setError("Failed to download demo CV. Please try again.");
+    }
+  }, [demoFormat, demoVariant]);
+
+  const loadPreset = async (variant: "clean" | "dirty", format: "pdf" | "docx") => {
+    await loadDemoCv(variant, format);
+    setDemoVariant(variant);
+    setDemoFormat(format);
+    setHasDemoLoaded(true);
+  };
+
   return (
     <main id="main-content" className="min-h-screen bg-noir-bg text-noir-foreground">
       <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
@@ -436,22 +530,99 @@ export default function Home() {
             <p className="mt-1 text-[10px] text-noir-foreground/50">
               Max 4 MB. PDF or DOCX only.
             </p>
+            <div className="mt-3 space-y-2 text-[10px] text-noir-foreground/60">
+              <p className="uppercase tracking-[0.2em] text-neon-cyan">
+                Sample CV Preset
+              </p>
+              <p className="text-[10px] text-noir-foreground/60">
+                Load a synthetic demo CV instead of your own — use <span className="text-neon-cyan font-mono">Clean</span> for a safe baseline, or <span className="text-neon-green font-mono">Dirty</span> to explore adversarial content.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-noir-border/80 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                  onClick={() => loadPreset("clean", "pdf")}
+                >
+                  <span className="font-mono text-neon-cyan">Clean · PDF</span>
+                  <span className="text-[9px] text-noir-foreground/60">
+                    Baseline sample
+                  </span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-noir-border/80 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                  onClick={() => loadPreset("clean", "docx")}
+                >
+                  <span className="font-mono text-neon-cyan">Clean · DOCX</span>
+                  <span className="text-[9px] text-noir-foreground/60">
+                    Baseline sample (Word)
+                  </span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-noir-border/80 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                  onClick={() => loadPreset("dirty", "pdf")}
+                >
+                  <span className="font-mono text-neon-green">Dirty · PDF</span>
+                  <span className="text-[9px] text-noir-foreground/60">
+                    Adversarial sample
+                  </span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-noir-border/80 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                  onClick={() => loadPreset("dirty", "docx")}
+                >
+                  <span className="font-mono text-neon-green">Dirty · DOCX</span>
+                  <span className="text-[9px] text-noir-foreground/60">
+                    Adversarial sample (Word)
+                  </span>
+                </Button>
+              </div>
+              <p className="text-[10px] text-noir-foreground/60">
+                &gt; Last preset:{" "}
+                <span className="font-mono text-neon-green">
+                  {demoVariant === "clean" ? "clean" : "dirty"} ·{" "}
+                  {demoFormat.toUpperCase()}
+                </span>
+              </p>
+            </div>
             {selectedFileName && (
-              <>
+              <div ref={armedSectionRef}>
                 <p className="mt-3 text-xs text-neon-green">
                   &gt; Armed CV: <span className="font-semibold">{selectedFileName}</span>
                 </p>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    clearFile();
-                    openFilePickerRef.current?.();
-                  }}
-                  className="mt-1 min-h-[44px] py-2 px-3 text-[10px] sm:text-xs"
-                  aria-label="Change file"
-                >
-                  Change file
-                </Button>
+                <div className="mt-1 flex flex-col items-start gap-1">
+                  <button
+                    type="button"
+                    className={`px-0 text-[10px] underline underline-offset-2 ${
+                      hasDemoLoaded
+                        ? "text-neon-cyan hover:text-neon-green"
+                        : "text-noir-foreground/40 cursor-not-allowed"
+                    }`}
+                    onClick={hasDemoLoaded ? downloadCurrentDemo : undefined}
+                    disabled={!hasDemoLoaded}
+                  >
+                    {hasDemoLoaded
+                      ? "View current demo as-is"
+                      : "Select demo document and click here to view as-is"}
+                  </button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      clearFile();
+                      openFilePickerRef.current?.();
+                    }}
+                    className="min-h-[44px] py-2 px-3 text-[10px] sm:text-xs"
+                    aria-label="Change file"
+                  >
+                    Change file
+                  </Button>
+                </div>
                 <p className="mt-1 text-[10px] text-noir-foreground/60">
                   Configure eggs below, then click Harden.
                 </p>
@@ -514,7 +685,7 @@ export default function Home() {
                   )}
                   {processingState === "processing" ? "Processing…" : "Harden"}
                 </Button>
-              </>
+              </div>
             )}
             {successMessage && (
               <div className="mt-2" role="status" aria-live="polite">
@@ -523,7 +694,11 @@ export default function Home() {
                   tabIndex={-1}
                   className="text-xs text-neon-green"
                 >
-                  &gt; Hardened CV ready: <span className="font-mono">{successMessage}</span>
+                  &gt;{" "}
+                  {lastHardenedConfigRef.current?.eggIds?.length === 0
+                    ? "Scan complete (no eggs applied — document unchanged):"
+                    : "Hardened CV ready:"}{" "}
+                  <span className="font-mono">{successMessage}</span>
                 </p>
                 <div className="mt-1 flex flex-wrap gap-2">
                   <Button

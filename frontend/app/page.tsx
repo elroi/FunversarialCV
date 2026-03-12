@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import Link from "next/link";
 import { DropZone } from "../src/components/DropZone";
 import {
   DualityMonitor,
@@ -502,7 +503,7 @@ export default function Home() {
   return (
     <main id="main-content" className="min-h-screen bg-noir-bg text-noir-foreground">
       <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
-        <header className="mb-10 flex flex-wrap items-start justify-between gap-2 border-b border-noir-border pb-4">
+        <header className="mb-4 flex flex-wrap items-start justify-between gap-2 border-b border-noir-border pb-4">
           <div>
             <h1 className="text-2xl font-semibold">
               <span className="bg-gradient-to-r from-neon-green via-neon-cyan to-neon-green bg-clip-text text-transparent">
@@ -512,14 +513,32 @@ export default function Home() {
             <p className="text-xs text-noir-foreground/70">
               Adversarial CV hardening console for hungry LLMs.
             </p>
-            <p className="mt-1 text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-neon-cyan/80">
-              PII Mode: Stateless &amp; Volatile
-            </p>
           </div>
-          <span className="shrink-0 rounded-full border border-neon-green/60 bg-noir-panel px-3 py-1 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-green engine-online-pulse">
-            Engine Online
-          </span>
         </header>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-neon-cyan/80">
+            PII Mode: Stateless &amp; Volatile
+          </p>
+          <div className="flex items-center gap-2">
+            <span className="shrink-0 rounded-full border border-neon-green/60 bg-noir-panel px-3 py-1 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-green engine-online-pulse">
+              Engine Online
+            </span>
+            <Link
+              href="/resources"
+              className="rounded-full border border-neon-cyan/70 px-3 py-1 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-cyan hover:border-neon-green hover:text-neon-green focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+            >
+              Resources
+            </Link>
+          </div>
+        </div>
+        <p className="mb-6 text-xs text-noir-foreground/80">
+          FunversarialCV is an educational tool for exploring how CVs behave in
+          AI-heavy hiring flows. It hardens documents with OWASP-aligned,
+          LLM-targeted easter eggs while keeping your data inside a Stateless
+          &amp; Volatile vault model: documents are processed in-memory only –
+          with PII dehydration, adversarial layers, and rehydration into a final
+          stream – so nothing is retained after your hardened CV is generated.
+        </p>
 
         <section className="flex flex-1 flex-col gap-8 md:flex-row">
           <div className="flex-1">
@@ -780,7 +799,7 @@ export default function Home() {
                 type="button"
                 onClick={() => setDualityMonitorOpen((o) => !o)}
                 className="flex w-full min-h-[44px] items-center justify-between rounded px-3 py-3 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-cyan focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50"
-                aria-expanded={dualityMonitorOpen ? "true" : "false"}
+                aria-expanded={dualityMonitorOpen}
                 aria-controls="duality-monitor-content"
                 id="duality-monitor-toggle"
               >

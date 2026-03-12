@@ -68,6 +68,7 @@ export default function Home() {
   const skipNextPersistRef = useRef(true);
   const [demoVariant, setDemoVariant] = useState<"clean" | "dirty">("clean");
   const [demoFormat, setDemoFormat] = useState<"pdf" | "docx">("pdf");
+  const [hasDemoLoaded, setHasDemoLoaded] = useState(false);
 
   /** Egg metadata from GET /api/eggs (id -> { name, manualCheckAndValidation }). */
   const [eggMetadataById, setEggMetadataById] = useState<Record<string, { name: string; manualCheckAndValidation: string }>>({});
@@ -495,6 +496,7 @@ export default function Home() {
     await loadDemoCv(variant, format);
     setDemoVariant(variant);
     setDemoFormat(format);
+    setHasDemoLoaded(true);
   };
 
   return (
@@ -590,10 +592,17 @@ export default function Home() {
               </p>
               <button
                 type="button"
-                className="mt-1 px-0 text-[10px] text-neon-cyan hover:text-neon-green underline underline-offset-2"
-                onClick={downloadCurrentDemo}
+                className={`mt-1 px-0 text-[10px] underline underline-offset-2 ${
+                  hasDemoLoaded
+                    ? "text-neon-cyan hover:text-neon-green"
+                    : "text-noir-foreground/40 cursor-not-allowed"
+                }`}
+                onClick={hasDemoLoaded ? downloadCurrentDemo : undefined}
+                disabled={!hasDemoLoaded}
               >
-                View current demo as-is
+                {hasDemoLoaded
+                  ? "View current demo as-is"
+                  : "Select demo document and click here to view as-is"}
               </button>
             </div>
             {selectedFileName && (

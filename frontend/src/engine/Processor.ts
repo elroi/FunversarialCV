@@ -62,6 +62,14 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
     throw new Error(`Unsupported document type: ${mimeType}. Use PDF or DOCX.`);
   }
 
+  // When no eggs are selected, run scan only and return the original buffer unchanged.
+  if (eggs.length === 0) {
+    const rawText = await extractText(buffer, mimeType);
+    const scan = await runScan({ text: rawText, buffer, mimeType });
+    const scannerReport = buildScannerReport(scan);
+    return { buffer, dualityCheck: scan, scannerReport };
+  }
+
   const allAddOnly =
     preserveStyles &&
     eggs.every((egg) => ADD_ONLY_EGG_IDS.has(egg.id));

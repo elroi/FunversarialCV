@@ -26,6 +26,12 @@ export async function GET(request: NextRequest) {
     format === "docx"
       ? await buildStyledDemoCvDocx(variant)
       : await buildStyledDemoCvPdf(variant);
+  if (!buffer || buffer.length === 0) {
+    return Response.json(
+      { error: "Failed to generate demo CV document." },
+      { status: 500 }
+    );
+  }
   const detected = detectDocumentType(buffer);
   if (!detected || detected !== mimeType) {
     return Response.json(

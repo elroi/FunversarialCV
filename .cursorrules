@@ -20,6 +20,13 @@ You are an expert Fullstack Security Engineer and AI Architect. You are assistin
 - Ensure all transformations are "Funversarial"—sneaky, creative, but technically robust.
 - Use low-level parsers that do not execute document macros or scripts to prevent server-side vulnerabilities.
 
+## 🧠 Planning & Personas
+- For any non-trivial **plan** (architecture, roadmap, implementation plan, experiment plan, or similar), always:
+  - Identify the relevant personas for the task (e.g., Security Architect, Hiring Manager, Candidate, LLM/Agent, DevOps/Platform, Privacy/Compliance).
+  - Explicitly review the plan from each persona’s perspective, calling out risks, trade-offs, and constraints.
+  - Incorporate that feedback into the plan before proceeding to implementation.
+  - Treat “plan first, then implement” as the default workflow unless the user explicitly asks for a quick-and-dirty change.
+
 ## 🎨 Design & Aesthetic
 - Theme: "Hacker-Chic" / Terminal style. Dark mode by default.
 - Tone: Professional, adaptive, and witty.
@@ -31,5 +38,5 @@ You are an expert Fullstack Security Engineer and AI Architect. You are assistin
 - Ensure the "LLM-Trap" (Invisible Prompt Injection) is rendered at 0.5pt font in white to ensure invisibility to humans but readability for parsers.
 
 ## 🔧 Development Practices
-- **TDD:** Always write code in TDD: write tests first, then implement to make them pass.
-- **Feature branches:** Always make changes in feature branches; never commit directly to `main`. Create a branch (e.g. `feature/...` or `fix/...`), implement and test there, then merge to `main` via PR or after review.
+- **TDD (hard requirement):** For any non-trivial code change, follow TDD: write or describe tests first (using the project’s existing testing stack and conventions where possible), then implement only the minimal code required to make those tests pass.
+- **Branching (never on `main`):** Always assume work happens on a dedicated branch; never commit directly to `main`. If the user does not specify a branch, propose and conceptually use a `feature/...` or `fix/...` branch name, and describe changes as if they are applied there and merged via PR or review.

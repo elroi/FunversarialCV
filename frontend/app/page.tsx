@@ -461,6 +461,36 @@ export default function Home() {
     }
   };
 
+  const downloadCurrentDemo = useCallback(async () => {
+    try {
+      const url = `/api/demo-cv?variant=${demoVariant}&format=${demoFormat}`;
+      const res = await fetch(url);
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || typeof data.bufferBase64 !== "string" || typeof data.mimeType !== "string" || typeof data.originalName !== "string") {
+        setError("Failed to download demo CV. Please try again.");
+        return;
+      }
+      const binaryString = atob(data.bufferBase64.trim());
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      if (bytes.length === 0) {
+        setError("Demo CV document was empty. Please try again.");
+        return;
+      }
+      const blob = new Blob([bytes], { type: data.mimeType });
+      const urlObj = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = urlObj;
+      a.download = data.originalName;
+      a.click();
+      URL.revokeObjectURL(urlObj);
+    } catch {
+      setError("Failed to download demo CV. Please try again.");
+    }
+  }, [demoFormat, demoVariant]);
+
   const loadPreset = async (variant: "clean" | "dirty", format: "pdf" | "docx") => {
     await loadDemoCv(variant, format);
     setDemoVariant(variant);
@@ -558,6 +588,13 @@ export default function Home() {
                   {demoFormat.toUpperCase()}
                 </span>
               </p>
+              <button
+                type="button"
+                className="mt-1 px-0 text-[10px] text-neon-cyan hover:text-neon-green underline underline-offset-2"
+                onClick={downloadCurrentDemo}
+              >
+                View current demo as-is
+              </button>
             </div>
             {selectedFileName && (
               <div ref={armedSectionRef}>

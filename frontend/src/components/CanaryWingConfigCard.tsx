@@ -161,7 +161,14 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
 
   return (
     <CollapsibleCard
-      title="The Canary Wing (LLM10)"
+      title={
+        <span className="flex flex-col gap-0.5">
+          <span>The Canary Wing (LLM10)</span>
+          <span className="text-[9px] font-mono text-noir-foreground/60">
+            STYLE-AFFECTING
+          </span>
+        </span>
+      }
       titleId="canary-wing-card-title"
       contentId="canary-wing-card-content"
       ariaLabel="Expand Canary Wing config"

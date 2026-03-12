@@ -112,5 +112,60 @@ describe("DualityMonitor", () => {
       screen.getByText(/\[DUALITY] Scan completed\./i)
     ).toBeInTheDocument();
   });
+
+  it("describes what Duality means in the pre-hardening scan header and tooltip", () => {
+    render(
+      <DualityMonitor
+        processingState="idle"
+        log={[]}
+        dualityResult={baseDualityResult}
+      />
+    );
+
+    const heading = screen.getByText(
+      /Pre-hardening scan \(Duality – original vs\. funversarial layer\)/i
+    );
+    expect(heading).toBeInTheDocument();
+    expect(heading).toHaveAttribute(
+      "title",
+      expect.stringMatching(/original adversarial surface.*additional patterns introduced by eggs/i)
+    );
+  });
+
+  it("copies terminal log text to clipboard when Copy Log is clicked", async () => {
+    const writeText = jest.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, {
+      clipboard: { writeText },
+    });
+
+    render(
+      <DualityMonitor
+        processingState="completed"
+        log={[
+          {
+            id: "1",
+            stage: "accept",
+            level: "info",
+            message: "[ACCEPT] Buffer received.",
+          },
+          {
+            id: "2",
+            stage: "duality-check",
+            level: "success",
+            message: "[DUALITY] Scan completed.",
+          },
+        ]}
+        dualityResult={baseDualityResult}
+      />
+    );
+
+    const btn = screen.getByRole("button", { name: /copy log to clipboard/i });
+    await btn.click();
+
+    expect(writeText).toHaveBeenCalled();
+    const copied = (writeText.mock.calls[0][0] as string) || "";
+    expect(copied).toMatch(/\[ACCEPT] Buffer received\./i);
+    expect(copied).toMatch(/\[DUALITY] Scan completed\./i);
+  });
 });
 

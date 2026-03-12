@@ -42,7 +42,14 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
 
   return (
     <CollapsibleCard
-      title="The Invisible Hand (LLM01)"
+      title={
+        <span className="flex flex-col gap-0.5">
+          <span>The Invisible Hand (LLM01)</span>
+          <span className="text-[9px] font-mono text-noir-foreground/60">
+            STYLE-AFFECTING
+          </span>
+        </span>
+      }
       titleId="invisible-hand-card-title"
       contentId="invisible-hand-card-content"
       ariaLabel="Expand The Invisible Hand config"

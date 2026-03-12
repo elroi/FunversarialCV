@@ -421,6 +421,56 @@ describe("Home page", () => {
     });
   });
 
+  describe("demo presets visual distinction", () => {
+    it("styles Dirty presets with a distinct hazard accent compared to Clean presets", () => {
+      render(<Home />);
+      const cleanPdf = screen.getByRole("button", { name: /clean · pdf/i });
+      const dirtyPdf = screen.getByRole("button", { name: /dirty · pdf/i });
+
+      expect(cleanPdf).not.toHaveClass("border-amber-300/70");
+      expect(dirtyPdf).toHaveClass("border-amber-300/70");
+      expect(dirtyPdf).toHaveClass("border-dashed");
+    });
+  });
+
+  describe("demo presets loading state", () => {
+    it("shows a generating hint and disables preset buttons while a demo CV is loading", async () => {
+      let resolveFetch: (value: Response) => void;
+      const fetchPromise: Promise<Response> = new Promise((resolve) => {
+        resolveFetch = resolve;
+      });
+
+      global.fetch = jest.fn().mockReturnValue(fetchPromise) as jest.MockedFunction<
+        typeof global.fetch
+      >;
+
+      render(<Home />);
+      const cleanPdf = screen.getByRole("button", { name: /clean · pdf/i });
+      fireEvent.click(cleanPdf);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/Generating demo CV/i)
+        ).toBeInTheDocument();
+      });
+
+      const buttons = screen.getAllByRole("button", { name: /clean · pdf|clean · docx|dirty · pdf|dirty · docx/i });
+      buttons.forEach((btn) => {
+        expect(btn).toBeDisabled();
+      });
+
+      // Resolve fetch to avoid unhandled promise rejections in the test
+      resolveFetch!({
+        ok: true,
+        json: async () => ({
+          bufferBase64: Buffer.from("x").toString("base64"),
+          mimeType: "application/pdf",
+          originalName: "demo.pdf",
+        }),
+      } as unknown as Response);
+    });
+  });
+
   describe("Manual test list (automated coverage)", () => {
     describe("1. Layout and viewport", () => {
       it("main wrapper has max-width constraint to avoid horizontal scroll", () => {

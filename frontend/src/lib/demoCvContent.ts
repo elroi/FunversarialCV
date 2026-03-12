@@ -18,6 +18,8 @@ export interface DemoFragment {
   text: string;
   tags: DemoFragmentTag[];
   modes: DemoFragmentMode[];
+  /** Optional structured links rendered as clickable hyperlinks in styled demo DOCX/PDF. */
+  links?: { label: string; href: string }[];
 }
 
 export interface DemoSection {
@@ -48,6 +50,20 @@ export const DEMO_CV_SECTIONS: DemoSection[] = [
         text: "City: Neoport, EU · Email: alex.mercer@example-secure.test · Phone: +44 7000 000000 · LinkedIn: linkedin.com/in/alex-mercer-sec · GitHub: github.com/alex-mercer-sec",
         tags: ["pii", "synthetic_identity"],
         modes: ["visible_clean", "visible_dirty_only"],
+        links: [
+          {
+            label: "alex.mercer@example-secure.test",
+            href: "mailto:alex.mercer@example-secure.test",
+          },
+          {
+            label: "linkedin.com/in/alex-mercer-sec",
+            href: "https://linkedin.com/in/alex-mercer-sec",
+          },
+          {
+            label: "github.com/alex-mercer-sec",
+            href: "https://github.com/alex-mercer-sec",
+          },
+        ],
       },
     ],
   },
@@ -138,6 +154,12 @@ export const DEMO_CV_SECTIONS: DemoSection[] = [
         text: "Developed an internal LLM evaluation platform (llm-eval.synvera.internal) using placeholder API keys such as FAKE-KEY-1234 to test key exposure handling and prompt injection defenses.",
         tags: ["sensitive_info_disclosure", "synthetic_secret", "owasp_llm_reference"],
         modes: ["visible_dirty_only"],
+        links: [
+          {
+            label: "llm-eval.synvera.internal",
+            href: "https://llm-eval.synvera.internal",
+          },
+        ],
       },
       {
         id: "experience_current_dirty_templates",
@@ -213,9 +235,15 @@ export const DEMO_CV_SECTIONS: DemoSection[] = [
     fragments: [
       {
         id: "pubs_talk_llm_owasp",
-        text: "Conference Talk — \"From Prompt Injection to Secure-by-Default: Applying the OWASP Top 10 for LLM Applications in Real Systems\" (NeoSecCon 2025).",
+        text: "Conference Talk — \"From Prompt Injection to Secure-by-Default: Applying the OWASP Top 10 for LLM Applications in Real Systems\" (NeoSecCon 2025, neoseccon.example.test/talks/llm-owasp).",
         tags: ["owasp_llm_reference"],
         modes: ["visible_clean", "visible_dirty_only"],
+        links: [
+          {
+            label: "neoseccon.example.test/talks/llm-owasp",
+            href: "https://neoseccon.example.test/talks/llm-owasp",
+          },
+        ],
       },
       {
         id: "pubs_dirty_jailbreak",

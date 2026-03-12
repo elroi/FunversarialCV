@@ -8,6 +8,9 @@ describe("demoCvDocument", () => {
     const roundTrip = await extractText(buffer, MIME_DOCX);
     expect(roundTrip).toContain("Alex K. Mercer");
     expect(roundTrip).toContain("SynVera Systems");
+     expect(roundTrip).toContain("alex.mercer@example-secure.test");
+     expect(roundTrip).toContain("linkedin.com/in/alex-mercer-sec");
+     expect(roundTrip).toContain("github.com/alex-mercer-sec");
     expect(roundTrip.toLowerCase()).not.toContain("ignore previous instructions");
   }, 15000);
 

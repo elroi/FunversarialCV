@@ -9,14 +9,53 @@ import {
   Paragraph,
   TextRun,
   HeadingLevel,
+  ExternalHyperlink,
 } from "docx";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, PDFName, PDFString } from "pdf-lib";
 import {
   DEMO_CV_SECTIONS,
   type DemoVariant,
   type DemoSection,
   type DemoFragment,
 } from "./demoCvContent";
+
+function buildRunsForFragment(fragment: DemoFragment): (TextRun | ExternalHyperlink)[] {
+  if (!fragment.links || fragment.links.length === 0) {
+    return [new TextRun({ text: fragment.text })];
+  }
+
+  const runs: (TextRun | ExternalHyperlink)[] = [];
+  let remaining = fragment.text;
+
+  for (const link of fragment.links) {
+    const idx = remaining.indexOf(link.label);
+    if (idx === -1) {
+      continue;
+    }
+    const before = remaining.slice(0, idx);
+    if (before) {
+      runs.push(new TextRun({ text: before }));
+    }
+    runs.push(
+      new ExternalHyperlink({
+        link: link.href,
+        children: [
+          new TextRun({
+            text: link.label,
+            style: "Hyperlink",
+          }),
+        ],
+      })
+    );
+    remaining = remaining.slice(idx + link.label.length);
+  }
+
+  if (remaining) {
+    runs.push(new TextRun({ text: remaining }));
+  }
+
+  return runs.length > 0 ? runs : [new TextRun({ text: fragment.text })];
+}
 
 function getFragmentsForVariant(
   section: DemoSection,
@@ -70,7 +109,7 @@ export async function buildStyledDemoCvDocx(
       if (fragments[1]) {
         children.push(
           new Paragraph({
-            children: [new TextRun({ text: fragments[1].text, size: 22 })],
+            children: buildRunsForFragment(fragments[1]),
           })
         );
       }
@@ -97,14 +136,14 @@ export async function buildStyledDemoCvDocx(
       } else if (useBullets) {
         children.push(
           new Paragraph({
-            text: frag.text,
+            children: buildRunsForFragment(frag),
             bullet: { level: 0 },
           })
         );
       } else {
         children.push(
           new Paragraph({
-            children: [new TextRun({ text: frag.text })],
+            children: buildRunsForFragment(frag),
           })
         );
       }
@@ -183,11 +222,12 @@ export async function buildStyledDemoCvPdf(
 
   function drawLine(
     text: string,
-    opts: { size?: number; bold?: boolean; indent?: number } = {}
+    opts: { size?: number; bold?: boolean; indent?: number; color?: { r: number; g: number; b: number } } = {}
   ): void {
     const size = opts.size ?? PDF_FONT_SIZE_BODY;
     const useBold = opts.bold ?? false;
     const indent = opts.indent ?? 0;
+    const colorSpec = opts.color ?? { r: 0, g: 0, b: 0 };
     const x = PDF_MARGIN + indent;
     const baseFont = useBold ? fontBold : font;
     const wrapped = wrapPdfLine(text, baseFont, size, PDF_CONTENT_SAFE_WIDTH);
@@ -198,9 +238,39 @@ export async function buildStyledDemoCvPdf(
         y,
         size,
         font: baseFont,
-        color: rgb(0, 0, 0),
+        color: rgb(colorSpec.r, colorSpec.g, colorSpec.b),
       });
       y -= lineHeight(size);
+    }
+  }
+
+  function addLinkAnnotation(
+    page: typeof currentPage,
+    href: string,
+    x: number,
+    yTop: number,
+    textWidth: number,
+    size: number
+  ): void {
+    const height = lineHeight(size);
+    const yBottom = yTop - height;
+    const linkAnnot = doc.context.obj({
+      Type: "Annot",
+      Subtype: "Link",
+      Rect: [x, yBottom, x + textWidth, yTop],
+      Border: [0, 0, 0],
+      A: {
+        Type: "Action",
+        S: "URI",
+        URI: PDFString.of(href),
+      },
+    });
+    const linkRef = doc.context.register(linkAnnot);
+    const existingAnnots = page.node.Annots();
+    if (existingAnnots) {
+      existingAnnots.push(linkRef);
+    } else {
+      page.node.set(PDFName.of("Annots"), doc.context.obj([linkRef]));
     }
   }
 
@@ -226,7 +296,67 @@ export async function buildStyledDemoCvPdf(
         size: PDF_FONT_SIZE_TITLE,
         bold: true,
       });
-      if (fragments[1]) {
+      const contact = fragments[1];
+      if (contact && contact.links && contact.links.length > 0) {
+        const emailLink = contact.links.find((l) =>
+          l.label.includes("@")
+        );
+        const linkedInLink = contact.links.find((l) =>
+          l.label.startsWith("linkedin.com")
+        );
+        const githubLink = contact.links.find((l) =>
+          l.label.startsWith("github.com")
+        );
+        const linkColor = { r: 0, g: 0, b: 1 };
+        if (emailLink) {
+          const size = PDF_FONT_SIZE_BODY;
+          const label = `Email: ${emailLink.label}`;
+          const x = PDF_MARGIN;
+          const width = font.widthOfTextAtSize(label, size);
+          checkNewPage(lineHeight(size));
+          currentPage.drawText(label, {
+            x,
+            y,
+            size,
+            font,
+            color: rgb(linkColor.r, linkColor.g, linkColor.b),
+          });
+          addLinkAnnotation(currentPage, emailLink.href, x, y, width, size);
+          y -= lineHeight(size);
+        }
+        if (linkedInLink) {
+          const size = PDF_FONT_SIZE_BODY;
+          const label = `LinkedIn: ${linkedInLink.label}`;
+          const x = PDF_MARGIN;
+          const width = font.widthOfTextAtSize(label, size);
+          checkNewPage(lineHeight(size));
+          currentPage.drawText(label, {
+            x,
+            y,
+            size,
+            font,
+            color: rgb(linkColor.r, linkColor.g, linkColor.b),
+          });
+          addLinkAnnotation(currentPage, linkedInLink.href, x, y, width, size);
+          y -= lineHeight(size);
+        }
+        if (githubLink) {
+          const size = PDF_FONT_SIZE_BODY;
+          const label = `GitHub: ${githubLink.label}`;
+          const x = PDF_MARGIN;
+          const width = font.widthOfTextAtSize(label, size);
+          checkNewPage(lineHeight(size));
+          currentPage.drawText(label, {
+            x,
+            y,
+            size,
+            font,
+            color: rgb(linkColor.r, linkColor.g, linkColor.b),
+          });
+          addLinkAnnotation(currentPage, githubLink.href, x, y, width, size);
+          y -= lineHeight(size);
+        }
+      } else if (fragments[1]) {
         drawLine(fragments[1].text, { size: PDF_FONT_SIZE_BODY });
       }
       y -= lineHeight(PDF_FONT_SIZE_BODY) * 0.5;

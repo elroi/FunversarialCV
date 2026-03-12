@@ -16,6 +16,9 @@ describe("demoCvBuilders", () => {
       expect(text).toContain("Alex K. Mercer");
       expect(text).toContain("Professional Summary");
       expect(text).toContain("SynVera Systems");
+      expect(text).toContain("alex.mercer@example-secure.test");
+      expect(text).toContain("linkedin.com/in/alex-mercer-sec");
+      expect(text).toContain("github.com/alex-mercer-sec");
     });
 
     it("produces valid DOCX with dirty content when variant is dirty", async () => {
@@ -35,6 +38,11 @@ describe("demoCvBuilders", () => {
       expect(buffer[3]).toBe(0x46);
       const doc = await PDFDocument.load(new Uint8Array(buffer));
       expect(doc.getPageCount()).toBeGreaterThanOrEqual(1);
+      const page = doc.getPage(0);
+      const annotations = (page.node.Annots && page.node.Annots()) || undefined;
+      if (annotations) {
+        expect(annotations.size()).toBeGreaterThan(0);
+      }
     });
   });
 });

@@ -82,10 +82,10 @@ test.describe("Happy path", () => {
     expect(bytes[1]).toBe(0x4b);
   });
 
-  test("Client PII dehydration: text/plain payload to /api/harden contains tokens, not raw PII", async ({
+  test("Client PII dehydration: payload to /api/harden contains tokens, not raw PII", async ({
     page,
   }) => {
-    const fixturesText = path.join(fixturesDir, "pii-sample.txt");
+    const piiPdfPath = path.join(fixturesDir, "pii-sample.pdf");
 
     let capturedBody: string | null = null;
 
@@ -94,7 +94,6 @@ test.describe("Happy path", () => {
         return route.continue();
       }
       const req = route.request();
-      // For multipart/form-data, Playwright exposes the raw body via postData() or postDataBuffer().
       const postData = req.postData();
       if (postData != null) {
         capturedBody = postData;
@@ -104,8 +103,8 @@ test.describe("Happy path", () => {
       }
       const body = JSON.stringify({
         bufferBase64: Buffer.from("Hello {{PII_EMAIL_0}}").toString("base64"),
-        mimeType: "text/plain",
-        originalName: "pii-sample.txt",
+        mimeType: "application/pdf",
+        originalName: "pii-sample.pdf",
         scannerReport: {
           scan: { hasSuspiciousPatterns: false, matchedPatterns: [] },
           alerts: [],
@@ -121,7 +120,7 @@ test.describe("Happy path", () => {
     await page.goto("/");
 
     const fileInput = page.getByTestId("dropzone-input");
-    await fileInput.setInputFiles(fixturesText);
+    await fileInput.setInputFiles(piiPdfPath);
 
     await expect(page.getByText(/Armed CV:/i)).toBeVisible();
     await page.getByRole("button", { name: /harden/i }).click();

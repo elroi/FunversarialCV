@@ -75,10 +75,9 @@ export async function createDocumentWithTextInBrowser(
       }
     }
     const pdfBytes = await doc.save();
-    return pdfBytes.buffer.slice(
-      pdfBytes.byteOffset,
-      pdfBytes.byteOffset + pdfBytes.byteLength
-    );
+    const copy = new ArrayBuffer(pdfBytes.byteLength);
+    new Uint8Array(copy).set(pdfBytes);
+    return copy;
   }
   if (mimeType === MIME_DOCX) {
     const paragraphs = text.split(/\r?\n/).map(

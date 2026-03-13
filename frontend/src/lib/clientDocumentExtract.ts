@@ -35,11 +35,24 @@ export async function extractTextFromFileInBrowser(
   );
 }
 
+/** Minimal type for pdfjs-dist getDocument result (avoids pulling in full typings). */
+interface PdfPageTextItem {
+  str?: string;
+}
+
 async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
   // pdfjs-dist is browser-capable; we use a dynamic import so it never runs on the server.
-  const pdfjsLib = await import("pdfjs-dist/build/pdf.js");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const pdfjs: any = pdfjsLib;
+  const pdfjsLib = await import("pdfjs-dist");
+  const pdfjs = pdfjsLib as {
+    getDocument(opts: { data: ArrayBuffer }): {
+      promise: Promise<{
+        numPages: number;
+        getPage(n: number): Promise<{
+          getTextContent(): Promise<{ items: PdfPageTextItem[] }>;
+        }>;
+      }>;
+    };
+  };
 
   const loadingTask = pdfjs.getDocument({ data: buffer });
   const pdf = await loadingTask.promise;
@@ -50,8 +63,7 @@ async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
     const page = await pdf.getPage(pageNum);
     const content = await page.getTextContent();
     const pageText = content.items
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((item: any) => ("str" in item ? (item as { str: string }).str : ""))
+      .map((item: PdfPageTextItem) => (item.str ?? ""))
       .join(" ");
     text += pageText + "\n";
   }
@@ -62,9 +74,7 @@ async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
 async function extractDocxText(buffer: ArrayBuffer): Promise<string> {
   const mammoth = await import("mammoth");
   const result = await mammoth.extractRawText({ arrayBuffer: buffer });
-  // result.value contains the extracted text.
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  return (result && (result as { value?: string }).value) || "";
+  return (result as { value?: string }).value ?? "";
 }
 
 /**

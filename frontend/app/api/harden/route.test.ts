@@ -157,6 +157,25 @@ describe("POST /api/harden", () => {
     expect(json.error.toLowerCase()).toMatch(/content|extension/);
   });
 
+  it("returns 400 when document text still contains obvious PII (PII-guard)", async () => {
+    const minimalDocxWithPii = await createDocumentWithText(
+      "Name: Test User\nEmail: test.user@example.com\nPhone: (415) 555-1234\n123 Main Street",
+      MIME_DOCX
+    );
+    const form = await buildDocxFormData(minimalDocxWithPii, "resume.docx");
+    const req = new Request("http://localhost:3000/api/harden", {
+      method: "POST",
+      body: form,
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toBe(
+      "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored."
+    );
+    expect(Processor.process).not.toHaveBeenCalled();
+  });
+
   it("returns 200 with bufferBase64 and scannerReport for valid PDF (mocked process — pdf-parse fails on pdf-lib output in Node)", async () => {
     const minimalPdf = await createDocumentWithText("Resume content", MIME_PDF);
     (Processor.process as jest.Mock).mockResolvedValueOnce({

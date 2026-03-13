@@ -4,6 +4,7 @@
  */
 
 import { PII_REGEX } from "./vault";
+import { extractTextFromFileInBrowser } from "./clientDocumentExtract";
 import type { PiiMap } from "./clientVaultTypes";
 import type { DehydrateResult, DehydrateInBrowserResult } from "./clientVaultTypes";
 
@@ -81,24 +82,18 @@ export function rehydrateInBrowser(
 }
 
 /**
- * Dehydrates a File (or Blob) in the browser. Phase 1: only text/plain is supported.
- * PDF/DOCX will throw; support can be added in a later phase.
+ * Dehydrates a File (or Blob) in the browser.
+ * Phase 2: supports text/plain, PDF, and DOCX via browser-side text extraction.
  */
 export async function dehydrateInBrowser(
   file: File | Blob
 ): Promise<DehydrateInBrowserResult> {
-  if (file.type !== "text/plain") {
-    throw new Error(
-      `dehydrateInBrowser: only text/plain is supported in this version; got ${file.type}. PDF/DOCX not yet supported.`
-    );
-  }
-  const buf = await file.arrayBuffer();
-  const text = new TextDecoder().decode(buf);
+  const { text, mimeType } = await extractTextFromFileInBrowser(file);
   const { tokenizedText, piiMap } = dehydrateTextForBrowser(text);
   const tokenizedBuffer = new TextEncoder().encode(tokenizedText).buffer;
   return {
     tokenizedBuffer,
-    mimeType: "text/plain",
+    mimeType,
     piiMap,
   };
 }

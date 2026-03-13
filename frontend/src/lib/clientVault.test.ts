@@ -93,11 +93,18 @@ describe("clientVault", () => {
       expect(decoded).toContain("{{PII_EMAIL_0}}");
     });
 
-    it("for non-text/plain File throws with clear message (Phase 1: PDF/DOCX not yet supported)", async () => {
-      const file = new File(["fake pdf"], "cv.pdf", {
+    it("for PDF File extracts text, tokenizes PII, and returns buffer without raw PII", async () => {
+      const content = "Email: secret@example.com";
+      const file = {
         type: "application/pdf",
-      });
-      await expect(dehydrateInBrowser(file)).rejects.toThrow(/not yet supported|unsupported/i);
+        arrayBuffer: () =>
+          Promise.resolve(new TextEncoder().encode(content).buffer),
+      } as File;
+      const result = await dehydrateInBrowser(file);
+      expect(result.mimeType).toBe("application/pdf");
+      const decoded = new TextDecoder().decode(result.tokenizedBuffer);
+      expect(decoded).not.toContain("secret@example.com");
+      expect(decoded).toMatch(/\{\{PII_EMAIL_0\}\}/);
     });
   });
 });

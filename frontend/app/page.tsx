@@ -13,6 +13,8 @@ import { IncidentMailtoConfigCard } from "../src/components/IncidentMailtoConfig
 import { CanaryWingConfigCard } from "../src/components/CanaryWingConfigCard";
 import { InvisibleHandConfigCard } from "../src/components/InvisibleHandConfigCard";
 import { MetadataShadowConfigCard } from "../src/components/MetadataShadowConfigCard";
+import { dehydrateInBrowser, rehydrateInBrowser } from "../src/lib/clientVault";
+import type { PiiMap } from "../src/lib/clientVaultTypes";
 import type { DualityCheckResult } from "../src/engine/dualityCheck";
 import { EGG_OPTIONS, DEFAULT_ENABLED_EGG_IDS } from "../src/eggs/eggMetadata";
 import { Button } from "../src/components/ui/Button";
@@ -71,6 +73,7 @@ export default function Home() {
   const [demoFormat, setDemoFormat] = useState<"pdf" | "docx">("pdf");
   const [hasDemoLoaded, setHasDemoLoaded] = useState(false);
   const [isDemoLoading, setIsDemoLoading] = useState(false);
+  const [clientPiiMap, setClientPiiMap] = useState<PiiMap | null>(null);
 
   /** Egg metadata from GET /api/eggs (id -> { name, manualCheckAndValidation }). */
   const [eggMetadataById, setEggMetadataById] = useState<Record<string, { name: string; manualCheckAndValidation: string }>>({});
@@ -171,6 +174,7 @@ export default function Home() {
     setLog([]);
     setProcessingState("idle");
     setActiveStage(undefined);
+    setClientPiiMap(null);
   };
 
   const clearFile = useCallback(() => {
@@ -265,6 +269,7 @@ export default function Home() {
     setSuccessMessage(null);
     lastHardenedBlobRef.current = null;
     lastHardenedConfigRef.current = null;
+    setClientPiiMap(null);
     setProcessingState("processing");
     setActiveStage("accept");
     setLog([
@@ -289,7 +294,46 @@ export default function Home() {
       }
     }
     const formData = new FormData();
-    formData.append("file", file);
+
+    // Phase 1: only run client-side dehydration when we know we can rehydrate (text/plain).
+    // PDF/DOCX continue to use the existing server-side dehydration path.
+    let fileForUpload: File | Blob = file;
+    let rehydrateMimeType: string | null = null;
+    try {
+      if (file.type === "text/plain") {
+        const { tokenizedBuffer, mimeType, piiMap } = await dehydrateInBrowser(file);
+        const tokenizedBlob = new Blob([tokenizedBuffer], { type: mimeType });
+        fileForUpload = tokenizedBlob;
+        rehydrateMimeType = mimeType;
+        setClientPiiMap(piiMap);
+        setLog((prev) => [
+          ...prev,
+          {
+            id: "client-dehydrate",
+            stage: "dehydration",
+            level: "info",
+            message:
+              "[CLIENT] Dehydrated PII in-browser into short-lived tokens before upload.",
+          },
+        ]);
+      }
+    } catch (e) {
+      const msg =
+        e instanceof Error
+          ? e.message
+          : "Client-side dehydration failed. Falling back to server path.";
+      setLog((prev) => [
+        ...prev,
+        {
+          id: "client-dehydrate-error",
+          stage: "dehydration",
+          level: "error",
+          message: `[CLIENT] Dehydration error: ${msg}`,
+        },
+      ]);
+    }
+
+    formData.append("file", fileForUpload);
     formData.append("payloads", JSON.stringify(payloadsForEnabled));
     formData.append("eggIds", JSON.stringify([...enabledEggIds]));
     if (preserveStyles) {
@@ -337,7 +381,7 @@ export default function Home() {
         return;
       }
 
-      const mimeType = data.mimeType as string;
+      const mimeTypeFromServer = data.mimeType as string;
       const originalName = (data.originalName as string) || name;
       const scannerScan = data.scannerReport?.scan;
 
@@ -348,7 +392,33 @@ export default function Home() {
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
-        blob = new Blob([bytes], { type: mimeType });
+
+        // If we dehydrated on the client and held a PiiMap, rehydrate in-browser before download.
+        if (clientPiiMap && rehydrateMimeType) {
+          const tokenizedBuffer = bytes.buffer.slice(
+            bytes.byteOffset,
+            bytes.byteOffset + bytes.byteLength
+          );
+          const rehydratedBuffer = rehydrateInBrowser(
+            tokenizedBuffer,
+            rehydrateMimeType,
+            clientPiiMap
+          );
+          const rehydratedBytes = new Uint8Array(rehydratedBuffer);
+          blob = new Blob([rehydratedBytes], { type: rehydrateMimeType });
+          setLog((prev) => [
+            ...prev,
+            {
+              id: "client-rehydrate",
+              stage: "rehydration",
+              level: "success",
+              message:
+                "[CLIENT] Rehydrated tokens back into original PII in-browser; server only saw tokenized content.",
+            },
+          ]);
+        } else {
+          blob = new Blob([bytes], { type: mimeTypeFromServer });
+        }
       } catch {
         setError("Invalid response from server: invalid document data.");
         setProcessingState("error");

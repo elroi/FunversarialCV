@@ -5,6 +5,7 @@
 
 import { NextRequest } from "next/server";
 import { MAX_BODY_BYTES } from "./constants";
+import { containsPii } from "@/lib/vault";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { logInfo, logError } from "@/lib/log";
 
@@ -90,6 +91,7 @@ export async function POST(request: NextRequest) {
     detectDocumentType,
     MIME_PDF,
     MIME_DOCX,
+    extractText,
   } = await import("@/engine/documentExtract");
 
   const mimeType = detectDocumentType(buffer);
@@ -110,6 +112,23 @@ export async function POST(request: NextRequest) {
       { error: "File content does not match extension." },
       { status: 400 }
     );
+  }
+
+  // PII-guard: reject documents that still contain obvious PII.
+  try {
+    const text = await extractText(buffer, mimeType);
+    if (text && containsPii(text)) {
+      logInfo("/api/harden", "pii_guard_rejected", { mimeType, ip });
+      return Response.json(
+        {
+          error:
+            "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored.",
+        },
+        { status: 400 }
+      );
+    }
+  } catch {
+    // If text extraction fails, skip PII-guard rather than breaking valid requests.
   }
 
   const knownIds = new Set(AVAILABLE_EGGS.map((e) => e.id));

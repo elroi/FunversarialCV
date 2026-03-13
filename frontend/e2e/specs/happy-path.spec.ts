@@ -81,4 +81,56 @@ test.describe("Happy path", () => {
     expect(bytes[0]).toBe(0x50); // PK (ZIP/DOCX)
     expect(bytes[1]).toBe(0x4b);
   });
+
+  test("Client PII dehydration: text/plain payload to /api/harden contains tokens, not raw PII", async ({
+    page,
+  }) => {
+    const fixturesText = path.join(fixturesDir, "pii-sample.txt");
+
+    let capturedBody: string | null = null;
+
+    await page.route("**/api/harden", async (route) => {
+      if (route.request().method() !== "POST") {
+        return route.continue();
+      }
+      const req = route.request();
+      // For multipart/form-data, Playwright exposes the raw body via postData() or postDataBuffer().
+      const postData = req.postData();
+      if (postData != null) {
+        capturedBody = postData;
+      } else {
+        const buf = req.postDataBuffer();
+        capturedBody = buf ? buf.toString("utf8") : null;
+      }
+      const body = JSON.stringify({
+        bufferBase64: Buffer.from("Hello {{PII_EMAIL_0}}").toString("base64"),
+        mimeType: "text/plain",
+        originalName: "pii-sample.txt",
+        scannerReport: {
+          scan: { hasSuspiciousPatterns: false, matchedPatterns: [] },
+          alerts: [],
+        },
+      });
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body,
+      });
+    });
+
+    await page.goto("/");
+
+    const fileInput = page.getByTestId("dropzone-input");
+    await fileInput.setInputFiles(fixturesText);
+
+    await expect(page.getByText(/Armed CV:/i)).toBeVisible();
+    await page.getByRole("button", { name: /harden/i }).click();
+
+    await expect(
+      page.getByRole("button", { name: /download/i })
+    ).toBeVisible({ timeout: 30_000 });
+
+    expect(capturedBody).toContain("{{PII_EMAIL_0}}");
+    expect(capturedBody).not.toContain("user@example.com");
+  });
 });

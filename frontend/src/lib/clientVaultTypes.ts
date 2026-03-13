@@ -26,4 +26,5 @@ export interface DehydrateInBrowserResult {
   tokenizedBuffer: ArrayBuffer;
   mimeType: string;
   piiMap: PiiMap;
+  tokenizedText: string;
 }

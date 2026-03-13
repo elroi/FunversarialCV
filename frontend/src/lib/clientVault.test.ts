@@ -4,6 +4,20 @@ import {
   rehydrateInBrowser,
 } from "./clientVault";
 import type { PiiMap } from "./clientVaultTypes";
+import * as clientDocumentExtract from "./clientDocumentExtract";
+
+jest.mock("./clientDocumentExtract", () => {
+  const actual =
+    jest.requireActual<typeof import("./clientDocumentExtract")>(
+      "./clientDocumentExtract"
+    );
+  return {
+    ...actual,
+    extractTextFromFileInBrowser: jest.fn(
+      (file: File | Blob) => actual.extractTextFromFileInBrowser(file)
+    ),
+  };
+});
 
 describe("clientVault", () => {
   describe("dehydrateTextForBrowser", () => {
@@ -38,19 +52,19 @@ describe("clientVault", () => {
       expect(Object.keys(piiMap.byToken)).toHaveLength(0);
     });
 
-    it("round-trips with rehydrateInBrowser for text/plain", () => {
+    it("round-trips with rehydrateInBrowser for text/plain", async () => {
       const original =
         "Email user@example.com and phone (555) 123-4567.";
       const { tokenizedText, piiMap } = dehydrateTextForBrowser(original);
-      const buf = new TextEncoder().encode(tokenizedText);
-      const out = rehydrateInBrowser(buf, "text/plain", piiMap);
+      const buf = new TextEncoder().encode(tokenizedText).buffer;
+      const out = await rehydrateInBrowser(buf, "text/plain", piiMap);
       const decoded = new TextDecoder().decode(out);
       expect(decoded).toBe(original);
     });
   });
 
   describe("rehydrateInBrowser", () => {
-    it("restores PII from tokenized text/plain buffer using PiiMap", () => {
+    it("restores PII from tokenized text/plain buffer using PiiMap", async () => {
       const tokenized = "Contact: {{PII_EMAIL_0}}";
       const piiMap: PiiMap = {
         byToken: {
@@ -61,22 +75,24 @@ describe("clientVault", () => {
           },
         },
       };
-      const buffer = new TextEncoder().encode(tokenized);
-      const out = rehydrateInBrowser(buffer, "text/plain", piiMap);
+      const buffer = new TextEncoder().encode(tokenized).buffer;
+      const out = await rehydrateInBrowser(buffer, "text/plain", piiMap);
       const result = new TextDecoder().decode(out);
       expect(result).toBe("Contact: alice@test.com");
     });
 
-    it("throws if token in content is missing from PiiMap", () => {
+    it("throws if token in content is missing from PiiMap", async () => {
       const tokenized = "Contact: {{PII_EMAIL_0}}";
       const piiMap: PiiMap = { byToken: {} };
-      const buffer = new TextEncoder().encode(tokenized);
-      expect(() => rehydrateInBrowser(buffer, "text/plain", piiMap)).toThrow();
+      const buffer = new TextEncoder().encode(tokenized).buffer;
+      await expect(
+        rehydrateInBrowser(buffer, "text/plain", piiMap)
+      ).rejects.toThrow();
     });
   });
 
   describe("dehydrateInBrowser", () => {
-    it("for text/plain File returns tokenized buffer and piiMap with no raw PII in buffer", async () => {
+    it("for text/plain File returns tokenized buffer, text, and piiMap with no raw PII in buffer", async () => {
       const content = "Email: secret@example.com";
       const file = {
         type: "text/plain",
@@ -85,6 +101,7 @@ describe("clientVault", () => {
       } as File;
       const result = await dehydrateInBrowser(file);
       expect(result.mimeType).toBe("text/plain");
+      expect(result.tokenizedText).toContain("{{PII_EMAIL_0}}");
       expect(result.piiMap.byToken["{{PII_EMAIL_0}}"]?.value).toBe(
         "secret@example.com"
       );
@@ -94,6 +111,11 @@ describe("clientVault", () => {
     });
 
     it("for PDF File extracts text, tokenizes PII, and returns buffer without raw PII", async () => {
+      (clientDocumentExtract.extractTextFromFileInBrowser as jest.Mock)
+        .mockResolvedValueOnce({
+          text: "Email: secret@example.com",
+          mimeType: "application/pdf",
+        });
       const content = "Email: secret@example.com";
       const file = {
         type: "application/pdf",

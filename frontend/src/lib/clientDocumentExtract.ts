@@ -67,3 +67,24 @@ async function extractDocxText(buffer: ArrayBuffer): Promise<string> {
   return (result && (result as { value?: string }).value) || "";
 }
 
+/**
+ * Extract plain text from a buffer (e.g. server response). Used for rehydration.
+ */
+export async function extractTextFromBuffer(
+  buffer: ArrayBuffer,
+  mimeType: string
+): Promise<string> {
+  if (mimeType === "text/plain") {
+    return new TextDecoder().decode(buffer);
+  }
+  if (mimeType === MIME_PDF) {
+    return extractPdfText(buffer);
+  }
+  if (mimeType === MIME_DOCX) {
+    return extractDocxText(buffer);
+  }
+  throw new Error(
+    `extractTextFromBuffer: unsupported mimeType ${mimeType}`
+  );
+}
+

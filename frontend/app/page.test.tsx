@@ -122,15 +122,15 @@ describe("Home page", () => {
 
       const spyRehydrate = jest
         .spyOn(ClientVault, "rehydrateInBrowser")
-        .mockImplementation((buf, mime, map) => buf);
+        .mockResolvedValue(new ArrayBuffer(0));
 
-      global.fetch = mockFetchSuccess("my-cv.txt");
+      global.fetch = mockFetchSuccess("my-cv.pdf");
 
       render(<Home />);
 
       const input = screen.getByTestId("dropzone-input");
-      const textFile = createFile("my-cv.txt", "text/plain");
-      fireEvent.change(input, { target: { files: [textFile] } });
+      const pdfFile = createFile("my-cv.pdf", "application/pdf");
+      fireEvent.change(input, { target: { files: [pdfFile] } });
 
       await waitFor(() => {
         expect(screen.getByText(/Armed CV:/i)).toBeInTheDocument();

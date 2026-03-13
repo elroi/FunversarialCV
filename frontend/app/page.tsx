@@ -295,28 +295,29 @@ export default function Home() {
     }
     const formData = new FormData();
 
-    // Phase 1: only run client-side dehydration when we know we can rehydrate (text/plain).
-    // PDF/DOCX continue to use the existing server-side dehydration path.
-    let fileForUpload: File | Blob = file;
     let rehydrateMimeType: string | null = null;
+    let piiMapForRehydrate: PiiMap | null = null;
+    let useTextMode = false;
+    let originalMimeType: string | null = null;
+    let tokenizedText: string | null = null;
     try {
-      if (file.type === "text/plain") {
-        const { tokenizedBuffer, mimeType, piiMap } = await dehydrateInBrowser(file);
-        const tokenizedBlob = new Blob([tokenizedBuffer], { type: mimeType });
-        fileForUpload = tokenizedBlob;
-        rehydrateMimeType = mimeType;
-        setClientPiiMap(piiMap);
-        setLog((prev) => [
-          ...prev,
-          {
-            id: "client-dehydrate",
-            stage: "dehydration",
-            level: "info",
-            message:
-              "[CLIENT] Dehydrated PII in-browser into short-lived tokens before upload.",
-          },
-        ]);
-      }
+      const result = await dehydrateInBrowser(file);
+      rehydrateMimeType = result.mimeType;
+      piiMapForRehydrate = result.piiMap;
+      originalMimeType = result.mimeType;
+      tokenizedText = result.tokenizedText;
+      useTextMode = true;
+      setClientPiiMap(result.piiMap);
+      setLog((prev) => [
+        ...prev,
+        {
+          id: "client-dehydrate",
+          stage: "dehydration",
+          level: "info",
+          message:
+            "[CLIENT] Dehydrated PII in-browser into short-lived tokens before upload.",
+        },
+      ]);
     } catch (e) {
       const msg =
         e instanceof Error
@@ -333,7 +334,13 @@ export default function Home() {
       ]);
     }
 
-    formData.append("file", fileForUpload);
+    if (useTextMode && tokenizedText && originalMimeType) {
+      formData.append("tokenizedText", tokenizedText);
+      formData.append("originalMimeType", originalMimeType);
+      formData.append("originalName", name);
+    } else {
+      formData.append("file", file);
+    }
     formData.append("payloads", JSON.stringify(payloadsForEnabled));
     formData.append("eggIds", JSON.stringify([...enabledEggIds]));
     if (preserveStyles) {
@@ -394,15 +401,15 @@ export default function Home() {
         }
 
         // If we dehydrated on the client and held a PiiMap, rehydrate in-browser before download.
-        if (clientPiiMap && rehydrateMimeType) {
+        if (piiMapForRehydrate && rehydrateMimeType) {
           const tokenizedBuffer = bytes.buffer.slice(
             bytes.byteOffset,
             bytes.byteOffset + bytes.byteLength
           );
-          const rehydratedBuffer = rehydrateInBrowser(
+          const rehydratedBuffer = await rehydrateInBrowser(
             tokenizedBuffer,
             rehydrateMimeType,
-            clientPiiMap
+            piiMapForRehydrate
           );
           const rehydratedBytes = new Uint8Array(rehydratedBuffer);
           blob = new Blob([rehydratedBytes], { type: rehydrateMimeType });

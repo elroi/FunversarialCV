@@ -14,6 +14,8 @@ import { CanaryWingConfigCard } from "../src/components/CanaryWingConfigCard";
 import { InvisibleHandConfigCard } from "../src/components/InvisibleHandConfigCard";
 import { MetadataShadowConfigCard } from "../src/components/MetadataShadowConfigCard";
 import { dehydrateInBrowser, rehydrateInBrowser } from "../src/lib/clientVault";
+import { createDocumentWithTextInBrowser } from "../src/lib/clientDocumentCreate";
+import { replacePiiWithTokensInCopy } from "../src/lib/clientTokenReplaceInCopy";
 import type { PiiMap } from "../src/lib/clientVaultTypes";
 import type { DualityCheckResult } from "../src/engine/dualityCheck";
 import { EGG_OPTIONS, DEFAULT_ENABLED_EGG_IDS } from "../src/eggs/eggMetadata";
@@ -67,8 +69,8 @@ export default function Home() {
   } | null>(null);
   const [dualityMonitorOpen, setDualityMonitorOpen] = useState(false);
   const openFilePickerRef = useRef<(() => void) | null>(null);
-  /** Skip first persistence run so we don't overwrite localStorage with defaults before hydration. */
-  const skipNextPersistRef = useRef(true);
+  /** True once the user has toggled an egg or preserve-styles; we only persist after that so we never overwrite saved state on load. */
+  const userHasChangedCheckboxesRef = useRef(false);
   const [demoVariant, setDemoVariant] = useState<"clean" | "dirty">("clean");
   const [demoFormat, setDemoFormat] = useState<"pdf" | "docx">("pdf");
   const [hasDemoLoaded, setHasDemoLoaded] = useState(false);
@@ -122,28 +124,25 @@ export default function Home() {
     if (typeof window === "undefined") return;
     try {
       const raw = window.localStorage.getItem(CHECKBOX_STORAGE_KEY);
-      if (raw == null) return;
-      const parsed = JSON.parse(raw) as { enabledEggIds?: unknown; preserveStyles?: unknown };
-      const validEggIds = new Set<string>(EGG_OPTIONS.map((o) => o.id));
-      if (Array.isArray(parsed.enabledEggIds)) {
-        const filtered = parsed.enabledEggIds.filter((id): id is string => typeof id === "string" && validEggIds.has(id));
-        setEnabledEggIds(filtered.length > 0 ? new Set(filtered) : new Set(DEFAULT_ENABLED_EGG_IDS));
-      }
-      if (typeof parsed.preserveStyles === "boolean") {
-        setPreserveStyles(parsed.preserveStyles);
+      if (raw != null) {
+        const parsed = JSON.parse(raw) as { enabledEggIds?: unknown; preserveStyles?: unknown };
+        const validEggIds = new Set<string>(EGG_OPTIONS.map((o) => o.id));
+        if (Array.isArray(parsed.enabledEggIds)) {
+          const filtered = parsed.enabledEggIds.filter((id): id is string => typeof id === "string" && validEggIds.has(id));
+          setEnabledEggIds(filtered.length > 0 ? new Set(filtered) : new Set(DEFAULT_ENABLED_EGG_IDS));
+        }
+        if (typeof parsed.preserveStyles === "boolean") {
+          setPreserveStyles(parsed.preserveStyles);
+        }
       }
     } catch {
       // Corrupt or invalid JSON; keep defaults.
     }
   }, []);
 
-  // Persist checkbox state to localStorage whenever it changes (skip first run to avoid overwriting saved state with defaults).
+  // Persist checkbox state to localStorage only after the user has changed it (avoids overwriting saved state on reload / Strict Mode).
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (skipNextPersistRef.current) {
-      skipNextPersistRef.current = false;
-      return;
-    }
+    if (typeof window === "undefined" || !userHasChangedCheckboxesRef.current) return;
     try {
       window.localStorage.setItem(
         CHECKBOX_STORAGE_KEY,
@@ -155,6 +154,7 @@ export default function Home() {
   }, [enabledEggIds, preserveStyles]);
 
   const toggleEgg = (id: string) => {
+    userHasChangedCheckboxesRef.current = true;
     setEnabledEggIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -297,50 +297,65 @@ export default function Home() {
 
     let rehydrateMimeType: string | null = null;
     let piiMapForRehydrate: PiiMap | null = null;
-    let useTextMode = false;
-    let originalMimeType: string | null = null;
-    let tokenizedText: string | null = null;
+    let fileToSend: File = file;
     try {
       const result = await dehydrateInBrowser(file);
       rehydrateMimeType = result.mimeType;
       piiMapForRehydrate = result.piiMap;
-      originalMimeType = result.mimeType;
-      tokenizedText = result.tokenizedText;
-      useTextMode = true;
       setClientPiiMap(result.piiMap);
-      setLog((prev) => [
-        ...prev,
-        {
-          id: "client-dehydrate",
-          stage: "dehydration",
-          level: "info",
-          message:
-            "[CLIENT] Dehydrated PII in-browser into short-lived tokens before upload.",
-        },
-      ]);
+      const tokenizedCopy = await replacePiiWithTokensInCopy(file, result.piiMap);
+      if (tokenizedCopy) {
+        fileToSend = tokenizedCopy.file;
+        setLog((prev) => [
+          ...prev,
+          {
+            id: "client-dehydrate",
+            stage: "dehydration",
+            level: "info",
+            message:
+              "[CLIENT] Dehydrated PII in-browser, tokenized copy (layout preserved), sending to server.",
+          },
+        ]);
+      } else {
+        const tokenizedDocBuffer = await createDocumentWithTextInBrowser(
+          result.tokenizedText,
+          result.mimeType
+        );
+        fileToSend = new File([tokenizedDocBuffer], name, {
+          type: result.mimeType,
+        });
+        setLog((prev) => [
+          ...prev,
+          {
+            id: "client-dehydrate",
+            stage: "dehydration",
+            level: "info",
+            message:
+              "[CLIENT] Dehydrated PII in-browser, rebuilt tokenized file, sending to server.",
+          },
+        ]);
+      }
     } catch (e) {
       const msg =
         e instanceof Error
           ? e.message
           : "Client-side dehydration failed. Falling back to server path.";
+      const friendly =
+        /defineProperty|non-object/i.test(msg)
+          ? "PDF could not be read in the browser; file was sent to the server for processing instead."
+          : msg;
       setLog((prev) => [
         ...prev,
         {
           id: "client-dehydrate-error",
           stage: "dehydration",
           level: "error",
-          message: `[CLIENT] Dehydration error: ${msg}`,
+          message: `[CLIENT] ${friendly}`,
         },
       ]);
     }
 
-    if (useTextMode && tokenizedText && originalMimeType) {
-      formData.append("tokenizedText", tokenizedText);
-      formData.append("originalMimeType", originalMimeType);
-      formData.append("originalName", name);
-    } else {
-      formData.append("file", file);
-    }
+    formData.append("file", fileToSend);
     formData.append("payloads", JSON.stringify(payloadsForEnabled));
     formData.append("eggIds", JSON.stringify([...enabledEggIds]));
     if (preserveStyles) {
@@ -621,6 +636,14 @@ export default function Home() {
           &amp; Volatile vault model: documents are processed in-memory only –
           with PII dehydration, adversarial layers, and rehydration into a final
           stream – so nothing is retained after your hardened CV is generated.
+          When <strong>Preserve styles</strong> is on, we keep your layout where
+          possible; when that isn’t possible we fall back to a rebuild path and
+          explain it in the UI.
+        </p>
+        <p className="mb-4 text-[11px] text-neon-cyan/90 border-l-2 border-neon-cyan/50 pl-3 py-1">
+          Your CV is processed in your browser first. Before anything leaves your device,
+          we replace email, phone, and other identifiers with short-lived tokens. Our
+          server only sees tokens, never your raw contact details.
         </p>
 
         <section className="flex flex-1 flex-col gap-8 md:flex-row">
@@ -631,6 +654,9 @@ export default function Home() {
             <DropZone onFileSelect={onFileSelect} maxSizeBytes={MAX_FILE_SIZE_BYTES} openFilePickerRef={openFilePickerRef} />
             <p className="mt-1 text-[10px] text-noir-foreground/50">
               Max 4 MB. PDF or DOCX only.
+            </p>
+            <p className="mt-1.5 text-[10px] text-noir-foreground/50 font-mono" title="Open DevTools → Network, trigger Harden, inspect the POST to /api/harden; payload should contain tokens like {{PII_EMAIL_0}}, not raw email or phone.">
+              Verify: DevTools → Network → inspect <code className="text-[9px]">POST /api/harden</code> — payload has tokens only, no raw PII.
             </p>
             <div className="mt-3 space-y-2 text-[10px] text-noir-foreground/60">
               <p className="uppercase tracking-[0.2em] text-neon-cyan">
@@ -748,18 +774,17 @@ export default function Home() {
                     <input
                       type="checkbox"
                       checked={preserveStyles}
-                      onChange={() => setPreserveStyles((p) => !p)}
+                      onChange={() => {
+                        userHasChangedCheckboxesRef.current = true;
+                        setPreserveStyles((p) => !p);
+                      }}
                       className="rounded border-noir-border text-neon-cyan focus:ring-neon-cyan/50"
                       aria-describedby="preserve-styles-desc"
                     />
                     <span>Preserve styles</span>
                   </label>
                   <p id="preserve-styles-desc" className="text-[10px] text-noir-foreground/50 ml-6 -mt-1">
-                    Note: Hardening may strip some decorative formatting to optimize for AI parsers. Use
-                    {" "}
-                    <span className="font-semibold">Preserve styles</span>
-                    {" "}
-                    to keep your original layout where possible.
+                    DOCX: we keep layout via in-place structure edits when possible. PDF: we rebuild from text so layout may change. If an egg changes body text we rebuild and styles may not be preserved; the log will indicate which path was used.
                   </p>
                 </div>
                 <div className="mt-3">

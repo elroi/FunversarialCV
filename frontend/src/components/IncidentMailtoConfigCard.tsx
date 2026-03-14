@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import clsx from "clsx";
 import { CollapsibleCard } from "./ui/CollapsibleCard";
+import { CheckAndValidateBlock } from "./CheckAndValidateBlock";
 import {
   INCIDENT_MAILTO_TEMPLATES,
   DEFAULT_INCIDENT_MAILTO_TEMPLATE_ID,
@@ -78,11 +79,8 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
   const displaySubject = subject || (selectedTemplate?.config.subjectTemplate ?? "");
   const displayBody = body || (selectedTemplate?.config.bodyTemplate ?? "");
 
-  /** Card title reflects selected template for quick visual feedback. */
-  const cardTitle =
-    templateId === CUSTOM_TEMPLATE_ID
-      ? "Incident Report Mailto"
-      : selectedTemplate?.name ?? "Incident Report Mailto";
+  /** Card header is always the egg name (Mailto Surprise); template is shown inside the card. */
+  const cardTitle = "Mailto Surprise";
 
   const emit = useCallback(
     (next: IncidentMailtoConfig) => {
@@ -161,7 +159,7 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
       }
       titleId="incident-mailto-card-title"
       contentId="incident-mailto-card-content"
-      ariaLabel="Expand Incident Report Mailto config"
+      ariaLabel="Expand Mailto Surprise config"
       defaultExpanded={false}
       disabled={disabled}
       className={className}
@@ -246,6 +244,9 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
               Append link
             </label>
           </div>
+          <p className="text-[10px] text-noir-foreground/50 mt-1">
+            We try to wrap the email in a link (structure-level edit). If the document structure doesn’t allow it, we append a separate link instead; your choice is respected when possible.
+          </p>
           <div className="flex items-center gap-2">
             <label
               className="text-[10px] text-noir-foreground/70"
@@ -437,9 +438,14 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
           How to check &amp; validate
         </h4>
         {manualCheckAndValidation ? (
-          <p className="text-[10px] sm:text-xs text-noir-foreground/70">
-            {manualCheckAndValidation}
-          </p>
+          <CheckAndValidateBlock
+            content={manualCheckAndValidation}
+            fallback={
+              <p className="text-[10px] sm:text-xs text-noir-foreground/50 italic">
+                Instructions not available. Ensure the app can reach /api/eggs.
+              </p>
+            }
+          />
         ) : (
           <p className="text-[10px] sm:text-xs text-noir-foreground/50 italic">
             Instructions not available. Ensure the app can reach /api/eggs.

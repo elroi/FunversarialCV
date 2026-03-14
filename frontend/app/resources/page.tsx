@@ -78,6 +78,25 @@ export default function ResourcesPage() {
 
           <section>
             <h2 className="text-base font-semibold text-neon-green mb-2">
+              Preserve styles and document structure (AST)
+            </h2>
+            <p className="text-noir-foreground/80 mb-2">
+              When you enable <strong>Preserve styles</strong>, we try to keep
+              your original layout and formatting by editing the document at the
+              structure level instead of rebuilding it from plain text. That
+              structure is often called an <strong>AST</strong> (abstract syntax
+              tree): a tree representation of the document (e.g. for DOCX, the
+              XML in <code className="font-mono text-[10px] bg-noir-panel px-1 rounded">word/document.xml</code>).
+              We modify specific nodes (e.g. wrapping the email run in a
+              hyperlink) so styles and layout stay intact. When AST-level edits
+              aren’t possible – for example with some PDFs or when an egg
+              changes body text – we fall back to a rebuild path; the UI and log
+              indicate which path was used.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-base font-semibold text-neon-green mb-2">
               What are eggs?
             </h2>
             <p className="text-noir-foreground/80 mb-2">
@@ -149,56 +168,101 @@ export default function ResourcesPage() {
             <p className="text-noir-foreground/80 mb-2">
               FunversarialCV follows a Stateless Vault model: documents are
               processed in-memory only and are never persisted to disk or long
-              term storage. Before any hardening, the engine performs{" "}
-              <strong>PII dehydration</strong> – replacing sensitive elements
-              like email addresses, phone numbers, or postal addresses with
-              short-lived tokens.
+              term storage. <strong>Dehydration and rehydration occur in your
+              browser.</strong> Before any data leaves your device, the client
+              performs <strong>PII dehydration</strong> – replacing sensitive
+              elements like email addresses, phone numbers, or postal addresses
+              with short-lived tokens. Only the tokenized text (and metadata like
+              original MIME type) is sent to the server; the server never sees
+              your raw contact details.
             </p>
             <p className="text-noir-foreground/80 mb-2">
               All eggs and adversarial patterns operate only on this dehydrated
-              document. Once the transformations are complete, PII is{" "}
-              <strong>rehydrated</strong> into the outgoing stream, which is
-              then returned to the browser as a base64-encoded buffer. The
-              hardened document is never stored server-side; the system is
-              designed for <strong>zero-retention</strong> after response
-              completion.
+              document on the server. The server returns a tokenized buffer; the
+              browser <strong>rehydrates</strong> PII back into the final
+              document and streams it to you as a download. The hardened document
+              is never stored server-side; the system is designed for{" "}
+              <strong>zero-retention</strong> after response completion.
             </p>
-            <p className="text-noir-foreground/80">
+            <p className="text-noir-foreground/80 mb-2">
               Low-level parsers such as pdf-lib and docx are used strictly as
               data manipulators – no macros, scripts, or embedded code are
               executed during processing.
             </p>
-            <div className="mt-3 space-y-1 text-noir-foreground/80">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-neon-cyan">
-                Processing flow (Stateless Vault)
-              </h3>
-              <ul className="space-y-1 text-xs sm:text-sm font-mono">
-                <li>
-                  &gt; [1] Accept — CV is uploaded and held in memory only.
-                </li>
-                <li>
-                  &gt; [2] Dehydrate PII — emails, phone numbers, and similar
-                  identifiers are replaced with short-lived vault tokens.
-                </li>
-                <li>
-                  &gt; [3] Analyze duality — the original CV is scanned for
-                  existing prompt-injection or other adversarial patterns.
-                </li>
-                <li>
-                  &gt; [4] Apply eggs — selected adversarial eggs are layered
-                  onto the dehydrated document only (no macros or scripts
-                  executed).
-                </li>
-                <li>
-                  &gt; [5] Rehydrate PII — tokens are replaced with the original
-                  PII in the outgoing buffer.
-                </li>
-                <li>
-                  &gt; [6] Stream &amp; purge — the hardened CV is streamed back
-                  as a base64 buffer and in-memory data is discarded, with
-                  nothing persisted server-side.
-                </li>
-              </ul>
+            <p className="text-noir-foreground/80 mb-2">
+              <strong>For security reviewers:</strong> To verify that only tokens
+              leave the browser, open DevTools → Network, trigger &quot;Harden
+              CV&quot;, and inspect the <code className="font-mono text-[10px] bg-noir-panel px-1 rounded">POST /api/harden</code> request.
+              The payload should contain placeholders like{" "}
+              <code className="font-mono text-[10px] bg-noir-panel px-1 rounded">{`{{PII_EMAIL_0}}`}</code> and must
+              not contain raw email, phone, or address strings. E2E tests in{" "}
+              <code className="font-mono text-[10px] bg-noir-panel px-1 rounded">frontend/e2e/specs/happy-path.spec.ts</code> assert
+              this; key client logic lives in <code className="font-mono text-[10px] bg-noir-panel px-1 rounded">frontend/src/lib/clientVault.ts</code> and{" "}
+              <code className="font-mono text-[10px] bg-noir-panel px-1 rounded">frontend/app/api/harden/route.ts</code> for the server.
+            </p>
+            <div className="mt-3 grid gap-4 text-noir-foreground/80 md:grid-cols-2">
+              <div className="space-y-1">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-neon-cyan">
+                  Processing flow (Stateless Vault)
+                </h3>
+                <ul className="space-y-1 text-xs sm:text-sm font-mono">
+                  <li>
+                    &gt; [1] Load — CV is uploaded from the browser and held in
+                    memory only.
+                  </li>
+                  <li>
+                    &gt; [2] Dehydrate PII — emails, phone numbers, and similar
+                    identifiers are replaced with short-lived vault tokens.
+                  </li>
+                  <li>
+                    &gt; [3] Analyze duality — the original CV is scanned for
+                    existing prompt-injection or other adversarial patterns.
+                  </li>
+                  <li>
+                    &gt; [4] Apply eggs — selected adversarial eggs are layered
+                    onto the dehydrated document only (no macros or scripts
+                    executed).
+                  </li>
+                  <li>
+                    &gt; [5] Rehydrate PII — tokens are replaced with the original
+                    PII in the outgoing buffer.
+                  </li>
+                  <li>
+                    &gt; [6] Stream &amp; purge — the hardened CV is streamed back
+                    as a base64 buffer and in-memory data is discarded, with
+                    nothing persisted server-side.
+                  </li>
+                </ul>
+              </div>
+              <section
+                aria-label="Stateless Vault data flow diagram"
+                className="rounded-lg border border-noir-border bg-noir-panel/60 p-3"
+              >
+                <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-neon-cyan">
+                  System diagram
+                </h3>
+                <pre className="font-mono text-[10px] sm:text-xs whitespace-pre leading-relaxed text-noir-foreground/80">
+{`+------------------------------------------------------------+
+|                      Browser client                        |
+|                                                            |
+|  [1] Load (in-memory only; CV uploaded from browser)       |
+|  [2] Dehydrate PII (Vault: raw PII -> short-lived tokens)  |
+|                                                            |
+|    +----------------------------------------------------+  |
+|    |         Transformation Engine (tokens only)        |  |
+|    |                                                    |  |
+|    |  [3] Analyze duality (scan tokenized CV            |  |
+|    |      for existing adversarial patterns)            |  |
+|    |  [4] Apply eggs (Funversarial layers added         |  |
+|    |      on tokens, no raw PII)                        |  |
+|    +----------------------------------------------------+  |
+|                                                            |
+|  [5] Rehydrate PII (tokens -> original PII in buffer)      |
+|  [6] Stream & purge (send hardened CV back to browser;     |
+|      server memory cleared, nothing persisted)             |
++------------------------------------------------------------+`}
+                </pre>
+              </section>
             </div>
           </section>
 

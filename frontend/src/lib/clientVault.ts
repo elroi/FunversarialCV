@@ -11,6 +11,7 @@ import {
   MIME_DOCX,
 } from "./clientDocumentExtract";
 import { createDocumentWithTextInBrowser } from "./clientDocumentCreate";
+import { rehydrateDocxBufferInPlace } from "./clientTokenReplaceInCopy";
 import type { PiiMap } from "./clientVaultTypes";
 import type { DehydrateResult, DehydrateInBrowserResult } from "./clientVaultTypes";
 
@@ -60,24 +61,33 @@ export function dehydrateTextForBrowser(text: string): DehydrateResult {
 /**
  * Rehydrates a tokenized buffer using the client-held PiiMap.
  * text/plain: decode → replace tokens → re-encode.
- * PDF/DOCX: extract text → replace tokens → rebuild document in browser.
+ * DOCX: in-place token → PII replacement in word/document.xml (preserves styles).
+ * PDF: extract text → replace tokens → rebuild document (no in-place path yet).
  */
 export async function rehydrateInBrowser(
   tokenizedBuffer: ArrayBuffer,
   mimeType: string,
   piiMap: PiiMap
 ): Promise<ArrayBuffer> {
-  let text: string;
   if (mimeType === "text/plain") {
-    text = new TextDecoder().decode(tokenizedBuffer);
-  } else if (mimeType === MIME_PDF || mimeType === MIME_DOCX) {
-    text = await extractTextFromBuffer(tokenizedBuffer, mimeType);
-  } else {
-    throw new Error(
-      `rehydrateInBrowser: unsupported mimeType ${mimeType}`
-    );
+    const text = new TextDecoder().decode(tokenizedBuffer);
+    const rehydratedText = applyRehydrationToText(text, piiMap);
+    return new TextEncoder().encode(rehydratedText).buffer;
   }
+  if (mimeType === MIME_DOCX) {
+    return rehydrateDocxBufferInPlace(tokenizedBuffer, piiMap);
+  }
+  if (mimeType === MIME_PDF) {
+    const text = await extractTextFromBuffer(tokenizedBuffer, mimeType);
+    const rehydratedText = applyRehydrationToText(text, piiMap);
+    return createDocumentWithTextInBrowser(rehydratedText, mimeType);
+  }
+  throw new Error(
+    `rehydrateInBrowser: unsupported mimeType ${mimeType}`
+  );
+}
 
+function applyRehydrationToText(text: string, piiMap: PiiMap): string {
   const tokensInText = text.match(TOKEN_PATTERN) ?? [];
   const missing = [...new Set(tokensInText)].filter((t) => !piiMap.byToken[t]);
   if (missing.length > 0) {
@@ -85,15 +95,11 @@ export async function rehydrateInBrowser(
       `rehydrateInBrowser: token(s) not in PiiMap: ${missing.join(", ")}`
     );
   }
-  let rehydratedText = text;
+  let rehydrated = text;
   for (const [token, entry] of Object.entries(piiMap.byToken)) {
-    rehydratedText = rehydratedText.split(token).join(entry.value);
+    rehydrated = rehydrated.split(token).join(entry.value);
   }
-
-  if (mimeType === "text/plain") {
-    return new TextEncoder().encode(rehydratedText).buffer;
-  }
-  return createDocumentWithTextInBrowser(rehydratedText, mimeType);
+  return rehydrated;
 }
 
 /**

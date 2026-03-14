@@ -7,7 +7,7 @@
 
 export const EGG_OPTIONS = [
   { id: "invisible-hand", name: "Invisible Hand" },
-  { id: "incident-mailto", name: "Incident Mailto" },
+  { id: "incident-mailto", name: "Mailto Surprise" },
   { id: "canary-wing", name: "Canary Wing" },
   { id: "metadata-shadow", name: "Metadata Shadow" },
 ] as const;

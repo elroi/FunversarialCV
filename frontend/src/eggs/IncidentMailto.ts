@@ -90,13 +90,13 @@ function applyMailtoToText(
 
 export const incidentMailto: IEgg = {
   id: "incident-mailto",
-  name: "Incident Report Mailto",
+  name: "Mailto Surprise",
   description:
     "OWASP LLM02: Wraps the candidate email in a pre-filled mailto: link for incident reporting. Tests whether downstream systems follow structured output (links) insecurely.",
   owaspMapping: OwaspMapping.LLM02_Insecure_Output,
 
   manualCheckAndValidation:
-    "Manual check: Open the hardened PDF or DOCX and locate the candidate email; confirm it is wrapped in a mailto link (e.g. 'email (mailto:...)' or has an appended 'Report incident' link). Validation: Run the transform on text containing {{PII_EMAIL_0}}; assert the output contains a mailto URI and, if configured, the expected subject/body or label.",
+    "Quick check: Open the hardened document and find your email; it should be a clickable mailto link or have an appended 'Report incident' (or custom) link next to it. Manual check: Open the hardened PDF or DOCX and locate the candidate email; confirm it is wrapped in a mailto link (e.g. 'email (mailto:...)' or has an appended 'Report incident' link). Validation: Run the transform on text containing {{PII_EMAIL_0}}; assert the output contains a mailto URI and, if configured, the expected subject/body or label.",
 
   validatePayload(payload: string): boolean {
     if (payload.length > MAX_PAYLOAD_LENGTH) return false;
@@ -216,19 +216,19 @@ export const incidentMailto: IEgg = {
       return createDocumentWithText(newText, mimeType);
     }
 
-    // DOCX: prefer AST-level helper when we have a visible raw email (preserve-styles path),
-    // then fall back to the existing style-preserving append-at-end helper, and finally
-    // the text-based rebuild if everything else fails.
+    // DOCX: prefer AST-level helper to wrap the visible email or token in a hyperlink
+    // (wrap-visible-email mode), then fall back to append-at-end, then text-based rebuild.
     if (mimeType === MIME_DOCX) {
       try {
-        if (rawEmail) {
+        const visibleCandidate = rawEmail ?? (mode === "wrap-visible-email" ? token : null);
+        if (visibleCandidate) {
           let applied = false;
           let astBuf = buffer;
           try {
             const result = await applyDocxIncidentMailtoAst(buffer, {
               mailtoUrl: mailtoUri,
               label,
-              visibleEmail: rawEmail,
+              visibleEmail: visibleCandidate,
             });
             applied = result.applied;
             astBuf = result.buffer;

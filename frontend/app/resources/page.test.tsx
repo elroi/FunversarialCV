@@ -67,6 +67,19 @@ describe("Resources page", () => {
     ).toBeInTheDocument();
   });
 
+  it("states that dehydration and rehydration occur in the browser and gives verification steps for security reviewers", () => {
+    render(<ResourcesPage />);
+    expect(
+      screen.getByText(/dehydration and rehydration occur in your browser/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/for security reviewers/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/POST \/api\/harden/i)
+    ).toBeInTheDocument();
+  });
+
   it("links out to OWASP Top 10 for LLM Applications and a recommended talk", () => {
     render(<ResourcesPage />);
     expect(
@@ -82,10 +95,21 @@ describe("Resources page", () => {
     expect(
       screen.getByText(/processing flow \(stateless vault\)/i)
     ).toBeInTheDocument();
-    expect(screen.getByText(/accept/i)).toBeInTheDocument();
-    expect(screen.getByText(/dehydrate pii/i)).toBeInTheDocument();
-    expect(screen.getByText(/apply eggs/i)).toBeInTheDocument();
-    expect(screen.getByText(/stream & purge/i)).toBeInTheDocument();
+    const steps = screen.getAllByText(/load|dehydrate pii|apply eggs|stream & purge/i);
+    expect(steps.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("renders a simple system diagram that matches the Stateless Vault flow", () => {
+    render(<ResourcesPage />);
+    const heading = screen.getByText(/system diagram/i);
+    expect(heading).toBeInTheDocument();
+    const asciiBlock = heading
+      .closest("section")
+      ?.querySelector("pre");
+    expect(asciiBlock).not.toBeNull();
+    expect(asciiBlock?.textContent || "").toMatch(/\[1] Load/i);
+    expect(asciiBlock?.textContent || "").toMatch(/\[4] Apply eggs/i);
+    expect(asciiBlock?.textContent || "").toMatch(/\[6] Stream & purge/i);
   });
 
   it("explains what eggs are and references easter eggs", () => {

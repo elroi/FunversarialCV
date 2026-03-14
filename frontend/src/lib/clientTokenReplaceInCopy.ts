@@ -9,6 +9,7 @@ import { MIME_DOCX } from "./clientDocumentExtract";
 import type { PiiMap } from "./clientVaultTypes";
 
 const DOCUMENT_XML_PATH = "word/document.xml";
+const DOCUMENT_RELS_PATH = "word/_rels/document.xml.rels";
 
 export type TokenizedCopyResult = { file: File; buffer: ArrayBuffer };
 
@@ -66,7 +67,8 @@ export async function replacePiiWithTokensInCopy(
 
 /**
  * Rehydrates a tokenized DOCX buffer in-place: replaces tokens with PII in
- * word/document.xml. Preserves all styles and layout (no rebuild from text).
+ * word/document.xml and word/_rels/document.xml.rels (e.g. mailto:{{PII_EMAIL_0}}).
+ * Preserves all styles and layout (no rebuild from text).
  */
 export async function rehydrateDocxBufferInPlace(
   tokenizedBuffer: ArrayBuffer,
@@ -77,11 +79,22 @@ export async function rehydrateDocxBufferInPlace(
   if (!docFile) {
     throw new Error("Invalid DOCX: missing word/document.xml");
   }
+  const replaceTokens = (str: string): string => {
+    let out = str;
+    for (const [token, entry] of Object.entries(piiMap.byToken)) {
+      out = out.split(token).join(entry.value);
+    }
+    return out;
+  };
   let xml = await docFile.async("string");
-  for (const [token, entry] of Object.entries(piiMap.byToken)) {
-    xml = xml.split(token).join(entry.value);
+  zip.file(DOCUMENT_XML_PATH, replaceTokens(xml));
+
+  const relsFile = zip.file(DOCUMENT_RELS_PATH);
+  if (relsFile) {
+    const relsXml = await relsFile.async("string");
+    zip.file(DOCUMENT_RELS_PATH, replaceTokens(relsXml));
   }
-  zip.file(DOCUMENT_XML_PATH, xml);
+
   const outBuffer = await zip.generateAsync({
     type: "arraybuffer",
     compression: "DEFLATE",

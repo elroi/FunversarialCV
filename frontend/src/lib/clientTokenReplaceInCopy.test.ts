@@ -277,4 +277,39 @@ describe("rehydrateDocxBufferInPlace", () => {
     expect(docXml).toContain("(555) 111-2222");
     expect(docXml).not.toMatch(/\{\{PII_/);
   });
+
+  it("rehydrates tokens in word/_rels/document.xml.rels (e.g. mailto link targets)", async () => {
+    const zip = new JSZip();
+    zip.file(
+      "word/document.xml",
+      `<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Contact {{PII_EMAIL_0}}</w:t></w:r></w:p></w:body></w:document>`
+    );
+    zip.file(
+      "word/_rels/document.xml.rels",
+      `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="mailto:{{PII_EMAIL_0}}?subject=Test"/></Relationships>`
+    );
+    zip.file("[Content_Types].xml", minimalContentTypes);
+    zip.file("_rels/.rels", minimalRels);
+    zip.file("docProps/app.xml", minimalApp);
+    zip.file("docProps/core.xml", minimalCore);
+    const buf = await zip.generateAsync({
+      type: "arraybuffer",
+      compression: "DEFLATE",
+      compressionOptions: { level: 6 },
+    });
+    const piiMap: PiiMap = {
+      byToken: {
+        "{{PII_EMAIL_0}}": {
+          token: "{{PII_EMAIL_0}}",
+          type: "EMAIL",
+          value: "user@example.com",
+        },
+      },
+    };
+    const rehydrated = await rehydrateDocxBufferInPlace(buf, piiMap);
+    const outZip = await JSZip.loadAsync(rehydrated);
+    const relsXml = await outZip.file("word/_rels/document.xml.rels")!.async("string");
+    expect(relsXml).toContain("mailto:user@example.com?subject=Test");
+    expect(relsXml).not.toContain("{{PII_EMAIL_0}}");
+  });
 });

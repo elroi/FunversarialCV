@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import clsx from "clsx";
 import { CollapsibleCard } from "./ui/CollapsibleCard";
+import { CheckAndValidateBlock } from "./CheckAndValidateBlock";
 
 export interface CanaryWingConfig {
   url?: string;
@@ -476,9 +477,14 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
           How to check &amp; validate
         </h4>
         {manualCheckAndValidation ? (
-          <p className="text-[10px] sm:text-xs text-noir-foreground/70">
-            {manualCheckAndValidation}
-          </p>
+          <CheckAndValidateBlock
+            content={manualCheckAndValidation}
+            fallback={
+              <p className="text-[10px] sm:text-xs text-noir-foreground/50 italic">
+                Instructions not available. Ensure the app can reach /api/eggs.
+              </p>
+            }
+          />
         ) : (
           <p className="text-[10px] sm:text-xs text-noir-foreground/50 italic">
             Instructions not available. Ensure the app can reach /api/eggs.

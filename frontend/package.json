@@ -4,9 +4,9 @@
     "private": true,
     "description": "Adversarial CV hardening tool for security professionals.",
     "scripts": {
-        "dev": "next dev",
+        "dev": "NODE_OPTIONS='--no-deprecation' next dev",
         "build": "next build",
-        "start": "next start",
+        "start": "NODE_OPTIONS='--no-deprecation' next start",
         "lint": "next lint",
         "test": "jest",
         "test:manual-list": "jest app/page.test.tsx --testNamePattern=\"Manual test list\"",

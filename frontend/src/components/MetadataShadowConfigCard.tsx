@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import clsx from "clsx";
 import { CollapsibleCard } from "./ui/CollapsibleCard";
+import { CheckAndValidateBlock } from "./CheckAndValidateBlock";
 
 const KEY_PATTERN = /^[a-zA-Z0-9_]*$/;
 const MAX_VALUE_LENGTH = 200;
@@ -157,9 +158,15 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
           How to check &amp; validate
         </h4>
         {manualCheckAndValidation ? (
-          <p className="text-[10px] text-noir-foreground/70">
-            {manualCheckAndValidation}
-          </p>
+          <CheckAndValidateBlock
+            content={manualCheckAndValidation}
+            className="text-[10px] text-noir-foreground/70"
+            fallback={
+              <p className="text-[10px] text-noir-foreground/50 italic">
+                Instructions not available. Ensure the app can reach /api/eggs.
+              </p>
+            }
+          />
         ) : (
           <p className="text-[10px] text-noir-foreground/50 italic">
             Instructions not available. Ensure the app can reach /api/eggs.

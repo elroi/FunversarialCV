@@ -363,4 +363,25 @@ describe("POST /api/harden", () => {
       })
     );
   }, 15000);
+
+  it("runs no eggs when client sends eggIds: [] (all eggs unchecked)", async () => {
+    const minimalDocx = await createDocumentWithText("Resume content", MIME_DOCX);
+    const form = await buildDocxFormData(minimalDocx);
+    form.append("eggIds", JSON.stringify([]));
+    const req = new Request("http://localhost:3000/api/harden", {
+      method: "POST",
+      body: form,
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(200);
+    expect(Processor.process).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eggs: [],
+      })
+    );
+    const json = await res.json();
+    const decoded = Buffer.from(json.bufferBase64, "base64");
+    expect(decoded[0]).toBe(0x50);
+    expect(decoded[1]).toBe(0x4b);
+  }, 15000);
 });

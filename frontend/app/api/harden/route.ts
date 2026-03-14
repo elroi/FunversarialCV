@@ -199,10 +199,11 @@ export async function POST(request: NextRequest) {
     if (knownIds.has(id)) filteredPayloads[id] = value;
   }
 
+  // When client sends eggIds: [] (no eggs selected), run none; when missing/invalid, default to all.
   const eggs =
-    eggIds && eggIds.length > 0
-      ? AVAILABLE_EGGS.filter((e) => eggIds!.includes(e.id))
-      : AVAILABLE_EGGS;
+    eggIds === null
+      ? AVAILABLE_EGGS
+      : AVAILABLE_EGGS.filter((e) => eggIds.includes(e.id));
   const payloadsForEggs: Record<string, string> = {};
   for (const e of eggs) {
     if (filteredPayloads[e.id] !== undefined) {

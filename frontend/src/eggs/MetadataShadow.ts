@@ -53,7 +53,7 @@ export const metadataShadow: IEgg = {
   owaspMapping: OwaspMapping.LLM02_Insecure_Output,
 
   manualCheckAndValidation:
-    "Manual check: In a PDF open File → Properties → Keywords (or your viewer's metadata panel). In Word open File → Info → Properties → Advanced Properties → Custom and check for your key-value. Validation: Run the transform with a known key-value payload, then read the document properties and assert the keys and values match.",
+    "Quick check: Open File → Properties (PDF) or File → Info → Properties → Advanced Properties → Custom (Word) and look for your custom key (e.g. Ranking) and value. Manual check: In a PDF open File → Properties → Keywords (or your viewer's metadata panel). In Word open File → Info → Properties → Advanced Properties → Custom and check for your key-value. Validation: Run the transform with a known key-value payload, then read the document properties and assert the keys and values match.",
 
   validatePayload(payload: string): boolean {
     const trimmed = payload.trim();

@@ -130,7 +130,7 @@ export const canaryWing: IEgg = {
   owaspMapping: OwaspMapping.LLM10_Model_Theft,
 
   manualCheckAndValidation:
-    "Manual check: In a PDF use Select All or search for a URL; in DOCX inspect the hidden paragraph or enable showing hidden content to find the canary URL. When clickable link is enabled (DOCX or PDF), the canary is a real hyperlink: in Word click the hidden link or use Show Hidden; in PDF the invisible region is clickable. Validation: Run the transform and verify the canary URL appears in the output; optionally GET the URL to confirm the canary endpoint logs the hit.",
+    "Quick check: Open the hardened PDF or DOCX and press Ctrl/Cmd+A (or search for a URL); the canary link appears as highlighted text. Manual check: In a PDF use Select All or search for a URL; in DOCX inspect the hidden paragraph or enable showing hidden content to find the canary URL. When clickable link is enabled (DOCX or PDF), the canary is a real hyperlink: in Word click the hidden link or use Show Hidden; in PDF the invisible region is clickable. Validation: Run the transform and verify the canary URL appears in the output; optionally GET the URL to confirm the canary endpoint logs the hit.",
 
   validatePayload(payload: string): boolean {
     if (payload.length > MAX_PAYLOAD_LENGTH) return false;

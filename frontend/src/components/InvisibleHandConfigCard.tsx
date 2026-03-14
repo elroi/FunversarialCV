@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { CollapsibleCard } from "./ui/CollapsibleCard";
+import { CheckAndValidateBlock } from "./CheckAndValidateBlock";
 
 const MAX_PAYLOAD_LENGTH = 500;
 
@@ -94,12 +95,14 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
           How to check &amp; validate
         </h4>
         {manualCheckAndValidation ? (
-          <p
-            className="text-[10px] sm:text-xs text-noir-foreground/70"
-            title="How to manually check for this egg and validate it was implemented."
-          >
-            {manualCheckAndValidation}
-          </p>
+          <CheckAndValidateBlock
+            content={manualCheckAndValidation}
+            fallback={
+              <p className="text-[10px] sm:text-xs text-noir-foreground/50 italic">
+                Instructions not available. Ensure the app can reach /api/eggs.
+              </p>
+            }
+          />
         ) : (
           <p className="text-[10px] sm:text-xs text-noir-foreground/50 italic">
             Instructions not available. Ensure the app can reach /api/eggs.

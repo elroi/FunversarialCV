@@ -13,6 +13,8 @@ import { IncidentMailtoConfigCard } from "../src/components/IncidentMailtoConfig
 import { CanaryWingConfigCard } from "../src/components/CanaryWingConfigCard";
 import { InvisibleHandConfigCard } from "../src/components/InvisibleHandConfigCard";
 import { MetadataShadowConfigCard } from "../src/components/MetadataShadowConfigCard";
+import { dehydrateInBrowser, rehydrateInBrowser } from "../src/lib/clientVault";
+import type { PiiMap } from "../src/lib/clientVaultTypes";
 import type { DualityCheckResult } from "../src/engine/dualityCheck";
 import { EGG_OPTIONS, DEFAULT_ENABLED_EGG_IDS } from "../src/eggs/eggMetadata";
 import { Button } from "../src/components/ui/Button";
@@ -70,6 +72,8 @@ export default function Home() {
   const [demoVariant, setDemoVariant] = useState<"clean" | "dirty">("clean");
   const [demoFormat, setDemoFormat] = useState<"pdf" | "docx">("pdf");
   const [hasDemoLoaded, setHasDemoLoaded] = useState(false);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
+  const [clientPiiMap, setClientPiiMap] = useState<PiiMap | null>(null);
 
   /** Egg metadata from GET /api/eggs (id -> { name, manualCheckAndValidation }). */
   const [eggMetadataById, setEggMetadataById] = useState<Record<string, { name: string; manualCheckAndValidation: string }>>({});
@@ -170,6 +174,7 @@ export default function Home() {
     setLog([]);
     setProcessingState("idle");
     setActiveStage(undefined);
+    setClientPiiMap(null);
   };
 
   const clearFile = useCallback(() => {
@@ -264,6 +269,7 @@ export default function Home() {
     setSuccessMessage(null);
     lastHardenedBlobRef.current = null;
     lastHardenedConfigRef.current = null;
+    setClientPiiMap(null);
     setProcessingState("processing");
     setActiveStage("accept");
     setLog([
@@ -288,7 +294,53 @@ export default function Home() {
       }
     }
     const formData = new FormData();
-    formData.append("file", file);
+
+    let rehydrateMimeType: string | null = null;
+    let piiMapForRehydrate: PiiMap | null = null;
+    let useTextMode = false;
+    let originalMimeType: string | null = null;
+    let tokenizedText: string | null = null;
+    try {
+      const result = await dehydrateInBrowser(file);
+      rehydrateMimeType = result.mimeType;
+      piiMapForRehydrate = result.piiMap;
+      originalMimeType = result.mimeType;
+      tokenizedText = result.tokenizedText;
+      useTextMode = true;
+      setClientPiiMap(result.piiMap);
+      setLog((prev) => [
+        ...prev,
+        {
+          id: "client-dehydrate",
+          stage: "dehydration",
+          level: "info",
+          message:
+            "[CLIENT] Dehydrated PII in-browser into short-lived tokens before upload.",
+        },
+      ]);
+    } catch (e) {
+      const msg =
+        e instanceof Error
+          ? e.message
+          : "Client-side dehydration failed. Falling back to server path.";
+      setLog((prev) => [
+        ...prev,
+        {
+          id: "client-dehydrate-error",
+          stage: "dehydration",
+          level: "error",
+          message: `[CLIENT] Dehydration error: ${msg}`,
+        },
+      ]);
+    }
+
+    if (useTextMode && tokenizedText && originalMimeType) {
+      formData.append("tokenizedText", tokenizedText);
+      formData.append("originalMimeType", originalMimeType);
+      formData.append("originalName", name);
+    } else {
+      formData.append("file", file);
+    }
     formData.append("payloads", JSON.stringify(payloadsForEnabled));
     formData.append("eggIds", JSON.stringify([...enabledEggIds]));
     if (preserveStyles) {
@@ -336,7 +388,7 @@ export default function Home() {
         return;
       }
 
-      const mimeType = data.mimeType as string;
+      const mimeTypeFromServer = data.mimeType as string;
       const originalName = (data.originalName as string) || name;
       const scannerScan = data.scannerReport?.scan;
 
@@ -347,7 +399,33 @@ export default function Home() {
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
-        blob = new Blob([bytes], { type: mimeType });
+
+        // If we dehydrated on the client and held a PiiMap, rehydrate in-browser before download.
+        if (piiMapForRehydrate && rehydrateMimeType) {
+          const tokenizedBuffer = bytes.buffer.slice(
+            bytes.byteOffset,
+            bytes.byteOffset + bytes.byteLength
+          );
+          const rehydratedBuffer = await rehydrateInBrowser(
+            tokenizedBuffer,
+            rehydrateMimeType,
+            piiMapForRehydrate
+          );
+          const rehydratedBytes = new Uint8Array(rehydratedBuffer);
+          blob = new Blob([rehydratedBytes], { type: rehydrateMimeType });
+          setLog((prev) => [
+            ...prev,
+            {
+              id: "client-rehydrate",
+              stage: "rehydration",
+              level: "success",
+              message:
+                "[CLIENT] Rehydrated tokens back into original PII in-browser; server only saw tokenized content.",
+            },
+          ]);
+        } else {
+          blob = new Blob([bytes], { type: mimeTypeFromServer });
+        }
       } catch {
         setError("Invalid response from server: invalid document data.");
         setProcessingState("error");
@@ -494,10 +572,15 @@ export default function Home() {
   }, [demoFormat, demoVariant]);
 
   const loadPreset = async (variant: "clean" | "dirty", format: "pdf" | "docx") => {
-    await loadDemoCv(variant, format);
-    setDemoVariant(variant);
-    setDemoFormat(format);
-    setHasDemoLoaded(true);
+    setIsDemoLoading(true);
+    try {
+      await loadDemoCv(variant, format);
+      setDemoVariant(variant);
+      setDemoFormat(format);
+      setHasDemoLoaded(true);
+    } finally {
+      setIsDemoLoading(false);
+    }
   };
 
   return (
@@ -560,7 +643,8 @@ export default function Home() {
                 <Button
                   type="button"
                   variant="secondary"
-                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-noir-border/80 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-neon-cyan/30 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                  disabled={isDemoLoading}
                   onClick={() => loadPreset("clean", "pdf")}
                 >
                   <span className="font-mono text-neon-cyan">Clean · PDF</span>
@@ -571,7 +655,8 @@ export default function Home() {
                 <Button
                   type="button"
                   variant="secondary"
-                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-noir-border/80 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-neon-cyan/30 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                  disabled={isDemoLoading}
                   onClick={() => loadPreset("clean", "docx")}
                 >
                   <span className="font-mono text-neon-cyan">Clean · DOCX</span>
@@ -582,7 +667,8 @@ export default function Home() {
                 <Button
                   type="button"
                   variant="secondary"
-                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-noir-border/80 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-amber-300/70 border-dashed bg-noir-panel text-noir-foreground hover:border-amber-400/80 flex flex-col items-start"
+                  disabled={isDemoLoading}
                   onClick={() => loadPreset("dirty", "pdf")}
                 >
                   <span className="font-mono text-neon-green">Dirty · PDF</span>
@@ -593,7 +679,8 @@ export default function Home() {
                 <Button
                   type="button"
                   variant="secondary"
-                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-noir-border/80 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-amber-300/70 border-dashed bg-noir-panel text-noir-foreground hover:border-amber-400/80 flex flex-col items-start"
+                  disabled={isDemoLoading}
                   onClick={() => loadPreset("dirty", "docx")}
                 >
                   <span className="font-mono text-neon-green">Dirty · DOCX</span>
@@ -602,6 +689,14 @@ export default function Home() {
                   </span>
                 </Button>
               </div>
+              {isDemoLoading && (
+                <p
+                  className="text-[10px] text-neon-cyan/80 font-mono"
+                  aria-live="polite"
+                >
+                  &gt; Generating demo CV… this may take a few seconds.
+                </p>
+              )}
               <p className="text-[10px] text-noir-foreground/60">
                 &gt; Last preset:{" "}
                 <span className="font-mono text-neon-green">
@@ -660,7 +755,11 @@ export default function Home() {
                     <span>Preserve styles</span>
                   </label>
                   <p id="preserve-styles-desc" className="text-[10px] text-noir-foreground/50 ml-6 -mt-1">
-                    Keeps original formatting when only Invisible Hand, Canary Wing, and/or Metadata Shadow are used.
+                    Note: Hardening may strip some decorative formatting to optimize for AI parsers. Use
+                    {" "}
+                    <span className="font-semibold">Preserve styles</span>
+                    {" "}
+                    to keep your original layout where possible.
                   </p>
                 </div>
                 <div className="mt-3">
@@ -680,7 +779,14 @@ export default function Home() {
                           onChange={() => toggleEgg(egg.id)}
                           className="rounded border-noir-border text-neon-cyan focus:ring-neon-cyan/50"
                         />
-                        <span>{egg.name}</span>
+                        <span className="flex flex-col leading-tight">
+                          <span>{egg.name}</span>
+                          <span className="text-[9px] font-mono text-noir-foreground/50">
+                            {egg.id === "invisible-hand" || egg.id === "canary-wing"
+                              ? "STYLE-AFFECTING"
+                              : "STYLE-SAFE"}
+                          </span>
+                        </span>
                       </label>
                     ))}
                     </div>

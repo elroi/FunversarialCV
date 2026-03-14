@@ -151,7 +151,14 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
 
   return (
     <CollapsibleCard
-      title={cardTitle}
+      title={
+        <span className="flex flex-col gap-0.5">
+          <span>{cardTitle}</span>
+          <span className="text-[9px] font-mono text-noir-foreground/60">
+            STYLE-SAFE
+          </span>
+        </span>
+      }
       titleId="incident-mailto-card-title"
       contentId="incident-mailto-card-content"
       ariaLabel="Expand Incident Report Mailto config"

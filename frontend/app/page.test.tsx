@@ -5,6 +5,7 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import Home from "./page";
+import * as ClientVault from "../src/lib/clientVault";
 
 const createFile = (name: string, type: string) =>
   new File(["dummy"], name, { type });
@@ -98,6 +99,55 @@ describe("Home page", () => {
       fireEvent.click(downloadBtn);
       expect(createObjectURL).toHaveBeenCalled();
       expect(revokeObjectURL).toHaveBeenCalled();
+    });
+  });
+
+  describe("client-side PII dehydration and rehydration wiring (text/plain)", () => {
+    it("calls dehydrateInBrowser for text/plain files and logs a [CLIENT] message", async () => {
+      const spyDehydrate = jest
+        .spyOn(ClientVault, "dehydrateInBrowser")
+        .mockResolvedValue({
+          tokenizedBuffer: new TextEncoder().encode("Hello {{PII_EMAIL_0}}").buffer,
+          mimeType: "text/plain",
+          piiMap: {
+            byToken: {
+              "{{PII_EMAIL_0}}": {
+                token: "{{PII_EMAIL_0}}",
+                type: "EMAIL",
+                value: "user@example.com",
+              },
+            },
+          },
+        } as never);
+
+      const spyRehydrate = jest
+        .spyOn(ClientVault, "rehydrateInBrowser")
+        .mockResolvedValue(new ArrayBuffer(0));
+
+      global.fetch = mockFetchSuccess("my-cv.pdf");
+
+      render(<Home />);
+
+      const input = screen.getByTestId("dropzone-input");
+      const pdfFile = createFile("my-cv.pdf", "application/pdf");
+      fireEvent.change(input, { target: { files: [pdfFile] } });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Armed CV:/i)).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /harden/i }));
+
+      await waitFor(() => {
+        expect(spyDehydrate).toHaveBeenCalledTimes(1);
+      });
+
+      const logEntry = screen.getByText(/\[CLIENT\] Dehydrated PII in-browser/i);
+      expect(logEntry).toBeInTheDocument();
+
+      await waitFor(() => {
+        expect(spyRehydrate).toHaveBeenCalled();
+      });
     });
   });
 
@@ -418,6 +468,56 @@ describe("Home page", () => {
       fireEvent.click(screen.getByRole("button", { name: /harden/i }));
       await waitFor(() => screen.getByRole("button", { name: /retry/i }));
       expect(scrollIntoViewMock).toHaveBeenCalled();
+    });
+  });
+
+  describe("demo presets visual distinction", () => {
+    it("styles Dirty presets with a distinct hazard accent compared to Clean presets", () => {
+      render(<Home />);
+      const cleanPdf = screen.getByRole("button", { name: /clean · pdf/i });
+      const dirtyPdf = screen.getByRole("button", { name: /dirty · pdf/i });
+
+      expect(cleanPdf).not.toHaveClass("border-amber-300/70");
+      expect(dirtyPdf).toHaveClass("border-amber-300/70");
+      expect(dirtyPdf).toHaveClass("border-dashed");
+    });
+  });
+
+  describe("demo presets loading state", () => {
+    it("shows a generating hint and disables preset buttons while a demo CV is loading", async () => {
+      let resolveFetch: (value: Response) => void;
+      const fetchPromise: Promise<Response> = new Promise((resolve) => {
+        resolveFetch = resolve;
+      });
+
+      global.fetch = jest.fn().mockReturnValue(fetchPromise) as jest.MockedFunction<
+        typeof global.fetch
+      >;
+
+      render(<Home />);
+      const cleanPdf = screen.getByRole("button", { name: /clean · pdf/i });
+      fireEvent.click(cleanPdf);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/Generating demo CV/i)
+        ).toBeInTheDocument();
+      });
+
+      const buttons = screen.getAllByRole("button", { name: /clean · pdf|clean · docx|dirty · pdf|dirty · docx/i });
+      buttons.forEach((btn) => {
+        expect(btn).toBeDisabled();
+      });
+
+      // Resolve fetch to avoid unhandled promise rejections in the test
+      resolveFetch!({
+        ok: true,
+        json: async () => ({
+          bufferBase64: Buffer.from("x").toString("base64"),
+          mimeType: "application/pdf",
+          originalName: "demo.pdf",
+        }),
+      } as unknown as Response);
     });
   });
 

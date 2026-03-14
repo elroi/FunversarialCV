@@ -88,7 +88,14 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
 
   return (
     <CollapsibleCard
-      title="The Metadata Shadow (LLM02)"
+      title={
+        <span className="flex flex-col gap-0.5">
+          <span>The Metadata Shadow (LLM02)</span>
+          <span className="text-[9px] font-mono text-noir-foreground/60">
+            STYLE-SAFE
+          </span>
+        </span>
+      }
       titleId="metadata-shadow-card-title"
       contentId="metadata-shadow-card-content"
       ariaLabel="Expand Metadata Shadow config"

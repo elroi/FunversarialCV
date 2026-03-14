@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import type { DualityCheckResult } from "../engine/dualityCheck";
 import clsx from "clsx";
 
@@ -70,12 +70,56 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
 }) => {
   const showScan =
     !!dualityResult && dualityResult.matchedPatterns.length > 0;
+  const [copyStatus, setCopyStatus] = useState<"idle" | "success" | "error">(
+    "idle"
+  );
+
+  const handleCopyLog = useCallback(async () => {
+    if (typeof navigator === "undefined" || !navigator.clipboard) {
+      setCopyStatus("error");
+      return;
+    }
+    const header =
+      "FunversarialCV local audit log (client-side only; nothing stored server-side)\n";
+    const body =
+      log.length === 0
+        ? "> No entries yet. Drop a CV to start the pipeline.\n"
+        : log.map((entry) => entry.message).join("\n") + "\n";
+    try {
+      await navigator.clipboard.writeText(`${header}${body}`);
+      setCopyStatus("success");
+      setTimeout(() => setCopyStatus("idle"), 2500);
+    } catch {
+      setCopyStatus("error");
+      setTimeout(() => setCopyStatus("idle"), 2500);
+    }
+  }, [log]);
 
   return (
     <section className="flex flex-col gap-4 rounded-xl border border-noir-border bg-noir-panel/60 p-4 text-xs text-noir-foreground/80">
       <header className="flex items-center justify-between">
-        <div className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-cyan">
-          Duality Monitor
+        <div className="flex items-center gap-2">
+          <div className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-cyan">
+            Duality Monitor
+          </div>
+          <button
+            type="button"
+            onClick={handleCopyLog}
+            className="inline-flex items-center justify-center rounded border border-noir-border/60 bg-noir-bg/60 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.2em] text-noir-foreground/60 hover:text-neon-cyan hover:border-neon-cyan/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+            aria-label="Copy log to clipboard"
+          >
+            &gt; Copy Log
+          </button>
+          {copyStatus === "success" && (
+            <span className="text-[9px] text-neon-green">
+              Copied local audit log.
+            </span>
+          )}
+          {copyStatus === "error" && (
+            <span className="text-[9px] text-neon-red">
+              Unable to copy log.
+            </span>
+          )}
         </div>
         <div
           className={clsx(
@@ -139,8 +183,17 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
         </div>
 
         <div className="space-y-2">
-          <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-noir-foreground/60">
-            Pre-hardening scan (Duality Check)
+          <p
+            className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-noir-foreground/60"
+            title="Duality compares the CV's original adversarial surface with the Funversarial layer we add: first scanning for existing prompt-injection or canary-style patterns, then tracking the additional patterns introduced by eggs."
+          >
+            Pre-hardening scan (Duality – original vs. Funversarial layer)
+            <span
+              aria-hidden="true"
+              className="ml-1 inline-flex items-center justify-center rounded border border-noir-border/60 px-1 text-[9px] font-mono text-noir-foreground/60 align-middle"
+            >
+              ?
+            </span>
           </p>
           <p className="text-[10px] sm:text-xs text-noir-foreground/50">
             PII handling is{" "}

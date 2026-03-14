@@ -8,10 +8,24 @@ import { POST } from "./route";
 import { MAX_BODY_BYTES } from "./constants";
 import { createDocumentWithText, MIME_PDF, MIME_DOCX } from "@/engine/documentExtract";
 import * as Processor from "@/engine/Processor";
+import * as vault from "@/lib/vault";
 
 jest.mock("@/engine/Processor", () => {
   const actual = jest.requireActual<typeof import("@/engine/Processor")>("@/engine/Processor");
   return { ...actual, process: jest.fn(actual.process) };
+});
+
+jest.mock("@/lib/vault", () => {
+  const actual = jest.requireActual<typeof import("@/lib/vault")>("@/lib/vault");
+  return { ...actual, containsPii: jest.fn(actual.containsPii) };
+});
+
+jest.mock("@/engine/documentExtract", () => {
+  const actual = jest.requireActual<typeof import("@/engine/documentExtract")>("@/engine/documentExtract");
+  return {
+    ...actual,
+    extractText: jest.fn((buffer: Buffer, mimeType: string) => actual.extractText(buffer, mimeType)),
+  };
 });
 
 describe("POST /api/harden", () => {
@@ -155,6 +169,75 @@ describe("POST /api/harden", () => {
     const json = await res.json();
     expect(json.error).toBeDefined();
     expect(json.error.toLowerCase()).toMatch(/content|extension/);
+  });
+
+  it("returns 400 when document text still contains obvious PII (PII-guard)", async () => {
+    (Processor.process as jest.Mock).mockClear();
+    const piiText = "Name: Test User\nEmail: test.user@example.com\nPhone: (415) 555-1234\n123 Main Street";
+    const minimalDocxWithPii = await createDocumentWithText(piiText, MIME_DOCX);
+    (vault.containsPii as jest.Mock).mockReturnValueOnce(true);
+    const { extractText } = await import("@/engine/documentExtract");
+    (extractText as jest.Mock).mockResolvedValueOnce(piiText);
+    const form = await buildDocxFormData(minimalDocxWithPii, "resume.docx");
+    const req = new Request("http://localhost:3000/api/harden", {
+      method: "POST",
+      body: form,
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toBe(
+      "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored."
+    );
+    expect(Processor.process).not.toHaveBeenCalled();
+  });
+
+  it("accepts tokenizedText mode with originalMimeType and returns 200", async () => {
+    (Processor.process as jest.Mock).mockResolvedValueOnce({
+      buffer: Buffer.from([0x25, 0x50, 0x44, 0x46]), // %PDF
+      scannerReport: {
+        scan: { hasSuspiciousPatterns: false, matchedPatterns: [] },
+        alerts: [],
+      },
+    });
+
+    const form = new FormData();
+    form.append("tokenizedText", "Hello {{PII_EMAIL_0}}");
+    form.append("originalMimeType", MIME_PDF);
+    form.append("payloads", "{}");
+    const req = new Request("http://localhost:3000/api/harden", {
+      method: "POST",
+      body: form,
+    });
+
+    const res = await POST(req as never);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.mimeType).toBe(MIME_PDF);
+    expect(json.bufferBase64).toBeDefined();
+    expect(typeof json.bufferBase64).toBe("string");
+    expect(json.originalName).toBe("document.pdf");
+  });
+
+  it("returns 400 in tokenizedText mode when text still contains obvious PII", async () => {
+    (Processor.process as jest.Mock).mockClear();
+    (vault.containsPii as jest.Mock).mockReturnValueOnce(true);
+    const form = new FormData();
+    form.append("tokenizedText", "Email: user@example.com");
+    form.append("originalMimeType", MIME_PDF);
+    form.append("payloads", "{}");
+    const req = new Request("http://localhost:3000/api/harden", {
+      method: "POST",
+      body: form,
+    });
+
+    const res = await POST(req as never);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toBe(
+      "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored."
+    );
+    expect(Processor.process).not.toHaveBeenCalled();
   });
 
   it("returns 200 with bufferBase64 and scannerReport for valid PDF (mocked process — pdf-parse fails on pdf-lib output in Node)", async () => {

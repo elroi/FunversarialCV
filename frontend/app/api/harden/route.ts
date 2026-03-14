@@ -5,6 +5,7 @@
 
 import { NextRequest } from "next/server";
 import { MAX_BODY_BYTES } from "./constants";
+import { containsPii } from "@/lib/vault";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { logInfo, logError } from "@/lib/log";
 
@@ -40,20 +41,13 @@ export async function POST(request: NextRequest) {
   }
 
   const formData = await request.formData();
+  const tokenizedTextRaw = formData.get("tokenizedText");
+  const originalMimeTypeRaw = formData.get("originalMimeType");
+  const isTextMode =
+    typeof tokenizedTextRaw === "string" &&
+    typeof originalMimeTypeRaw === "string";
+
   const file = formData.get("file");
-  if (!file || !(file instanceof File)) {
-    return Response.json(
-      { error: "Missing or invalid file. Upload a single PDF or DOCX." },
-      { status: 400 }
-    );
-  }
-  const buffer = Buffer.from(await file.arrayBuffer());
-  if (buffer.length > MAX_BODY_BYTES) {
-    return Response.json(
-      { error: "File too large. Max size is 4 MB." },
-      { status: 413 }
-    );
-  }
   const payloadsRaw = formData.get("payloads");
   let payloads: Record<string, string> = {};
   if (payloadsRaw && typeof payloadsRaw === "string") {
@@ -90,26 +84,113 @@ export async function POST(request: NextRequest) {
     detectDocumentType,
     MIME_PDF,
     MIME_DOCX,
+    extractText,
+    createDocumentWithText,
   } = await import("@/engine/documentExtract");
 
-  const mimeType = detectDocumentType(buffer);
-  if (!mimeType) {
-    const detail =
-      buffer.length === 0
-        ? "Document is empty. Please upload a valid PDF or DOCX file."
-        : "Unsupported or invalid document: file must be a valid PDF or DOCX.";
-    return Response.json({ error: detail }, { status: 400 });
-  }
+  let buffer: Buffer;
+  let mimeType: string;
+  let originalName: string;
 
-  const ext = file.name.toLowerCase();
-  if (
-    (mimeType === MIME_PDF && !ext.endsWith(".pdf")) ||
-    (mimeType === MIME_DOCX && !ext.endsWith(".docx"))
-  ) {
-    return Response.json(
-      { error: "File content does not match extension." },
-      { status: 400 }
+  if (isTextMode) {
+    const tokenizedText = tokenizedTextRaw as string;
+    const originalMimeType = originalMimeTypeRaw as string;
+
+    if (originalMimeType !== MIME_PDF && originalMimeType !== MIME_DOCX) {
+      return Response.json(
+        { error: "Unsupported originalMimeType for tokenized text mode." },
+        { status: 400 }
+      );
+    }
+
+    // PII-guard for tokenized text: reject if obvious PII is still present.
+    if (tokenizedText && containsPii(tokenizedText)) {
+      logInfo("/api/harden", "pii_guard_rejected", {
+        mimeType: originalMimeType,
+        ip,
+        mode: "text",
+      });
+      return Response.json(
+        {
+          error:
+            "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const created = await createDocumentWithText(
+      tokenizedText,
+      originalMimeType
     );
+    buffer = created;
+    mimeType = originalMimeType;
+    const originalNameFromForm = formData.get("originalName");
+    originalName =
+      typeof originalNameFromForm === "string" && originalNameFromForm
+        ? originalNameFromForm
+        : originalMimeType === MIME_PDF
+        ? "document.pdf"
+        : "document.docx";
+  } else {
+    if (!file || !(file instanceof File)) {
+      return Response.json(
+        { error: "Missing or invalid file. Upload a single PDF or DOCX." },
+        { status: 400 }
+      );
+    }
+    const rawBuffer = Buffer.from(await file.arrayBuffer());
+    if (rawBuffer.length > MAX_BODY_BYTES) {
+      return Response.json(
+        { error: "File too large. Max size is 4 MB." },
+        { status: 413 }
+      );
+    }
+
+    const detectedMimeType = detectDocumentType(rawBuffer);
+    if (!detectedMimeType) {
+      const detail =
+        rawBuffer.length === 0
+          ? "Document is empty. Please upload a valid PDF or DOCX file."
+          : "Unsupported or invalid document: file must be a valid PDF or DOCX.";
+      return Response.json({ error: detail }, { status: 400 });
+    }
+
+    const ext = file.name.toLowerCase();
+    if (
+      (detectedMimeType === MIME_PDF && !ext.endsWith(".pdf")) ||
+      (detectedMimeType === MIME_DOCX && !ext.endsWith(".docx"))
+    ) {
+      return Response.json(
+        { error: "File content does not match extension." },
+        { status: 400 }
+      );
+    }
+
+    // PII-guard: reject documents that still contain obvious PII.
+    try {
+      const text = await extractText(rawBuffer, detectedMimeType);
+      if (text && containsPii(text)) {
+        logInfo("/api/harden", "pii_guard_rejected", {
+          mimeType: detectedMimeType,
+          ip,
+          mode: "binary",
+        });
+        return Response.json(
+          {
+            error:
+              "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored.",
+          },
+          { status: 400 }
+        );
+      }
+    } catch {
+      // If text extraction fails, skip PII-guard rather than breaking valid requests.
+    }
+
+    buffer = rawBuffer;
+    mimeType = detectedMimeType;
+    originalName = file.name;
   }
 
   const knownIds = new Set(AVAILABLE_EGGS.map((e) => e.id));
@@ -165,7 +246,7 @@ export async function POST(request: NextRequest) {
       bufferBase64: result.buffer.toString("base64"),
       mimeType,
       scannerReport: result.scannerReport,
-      originalName: file.name,
+      originalName,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Processing failed.";

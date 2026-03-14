@@ -38,13 +38,27 @@ export default function ResourcesPage() {
         <section className="space-y-8 text-sm text-noir-foreground/90">
           <section>
             <h2 className="text-base font-semibold text-neon-green mb-2">
-              Resources
+              Usage and responsibility
             </h2>
+            <p className="text-noir-foreground/80 mb-2">
+              FunversarialCV is provided for educational and research purposes
+              only. It is intended to help practitioners explore and harden
+              AI-assisted hiring workflows against adversarial behaviour in a
+              controlled, permissioned setting.
+            </p>
+            <p className="text-noir-foreground/80 mb-2">
+              No guarantee is made that this tool will detect, prevent, or
+              simulate every attack pattern, and it does not constitute legal,
+              compliance, or HR advice. You are solely responsible for how you
+              use this tool and any documents produced with it, including
+              compliance with all applicable laws, regulations, and
+              organizational policies.
+            </p>
             <p className="text-noir-foreground/80">
-              Context, patterns, and safety notes for Funversarial CVs – an
-              educational tool designed for candidates, hiring teams, and
-              security practitioners exploring OWASP-aligned adversarial
-              document hardening.
+              Do not weaponize FunversarialCV: do not use it to evade legitimate
+              security controls, deceive human reviewers, or cause harm. Use it
+              only where you have explicit authorization to perform adversarial
+              testing.
             </p>
           </section>
           <section>
@@ -64,18 +78,44 @@ export default function ResourcesPage() {
 
           <section>
             <h2 className="text-base font-semibold text-neon-green mb-2">
+              What are eggs?
+            </h2>
+            <p className="text-noir-foreground/80 mb-2">
+              Eggs are small, composable adversarial patterns that can be
+              layered into a CV. Each egg targets specific LLM behaviours – for
+              example, prompt injection, hallucination, or over-trust in
+              metadata – while keeping the document readable to humans.
+            </p>
+            <p className="text-noir-foreground/80">
+              The concept is inspired by classic easter eggs in games and
+              software: hidden elements that are meant to be searched for,
+              surfaced, and understood. Funversarial eggs are designed for
+              educational red-teaming of AI-assisted hiring stacks, not for
+              bypassing human review or ATS rules in production.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-base font-semibold text-neon-green mb-2">
               For candidates
             </h2>
             <p className="text-noir-foreground/80 mb-2">
-              Use a Funversarial CV when you are explicitly experimenting with
-              AI-heavy or agentic hiring flows – for example, when roles or
-              organizations publicly discuss LLM-based screening. Avoid using
-              hardened CVs for conservative, compliance-heavy, or regulated
-              roles where any non-standard formatting could be misinterpreted.
+              Act responsibly! This is an educational tool. Only use a
+              Funversarial CV on systems having AI-heavy or agentic hiring flows
+              you own or for which you have explicit written permission to do
+              so.
+            </p>
+            <p className="text-noir-foreground/80 mb-2">
+              For example, when roles or organizations publicly discuss LLM-based
+              screening and are open to research-oriented or red-teaming style
+              exercises. Even when doing so, you should exercise caution and
+              avoid using hardened CVs for conservative, compliance-heavy, or
+              regulated roles where any non-standard formatting could be
+              misinterpreted.
             </p>
             <p className="text-noir-foreground/80">
               Keep a clean, conventional CV for traditional channels, and treat
-              Funversarial CVs as an opt-in, experimental track for AI-aware
+              Funversarial CVs as an opt-in, educational track for AI-aware
               organizations that understand adversarial testing and OWASP LLM
               risks.
             </p>
@@ -88,15 +128,17 @@ export default function ResourcesPage() {
             <p className="text-noir-foreground/80 mb-2">
               Many modern pipelines quietly rely on LLMs to summarize,
               shortlist, or rank candidates. Funversarial CVs help you
-              understand how fragile those systems are in the face of subtle
-              prompt injection, hallucination bait, or metadata manipulation,
-              without intending to trick human reviewers.
+              understand, in an educational and controlled way, how fragile
+              those systems can be in the face of subtle prompt injection,
+              hallucination bait, or metadata manipulation, without intending to
+              trick human reviewers.
             </p>
             <p className="text-noir-foreground/80">
-              We recommend evaluating Funversarial CVs in sandboxes or test
-              tenants first. Use them to validate that screening agents do not
-              over-trust document content, and that human-in-the-loop controls
-              remain in place when high-stakes decisions are involved.
+              We recommend evaluating Funversarial CVs as an educational signal
+              in sandboxes or test tenants first. Use them to validate that
+              screening agents do not over-trust document content, and that
+              human-in-the-loop controls remain in place when high-stakes
+              decisions are involved.
             </p>
           </section>
 
@@ -126,6 +168,38 @@ export default function ResourcesPage() {
               data manipulators – no macros, scripts, or embedded code are
               executed during processing.
             </p>
+            <div className="mt-3 space-y-1 text-noir-foreground/80">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-neon-cyan">
+                Processing flow (Stateless Vault)
+              </h3>
+              <ul className="space-y-1 text-xs sm:text-sm font-mono">
+                <li>
+                  &gt; [1] Accept — CV is uploaded and held in memory only.
+                </li>
+                <li>
+                  &gt; [2] Dehydrate PII — emails, phone numbers, and similar
+                  identifiers are replaced with short-lived vault tokens.
+                </li>
+                <li>
+                  &gt; [3] Analyze duality — the original CV is scanned for
+                  existing prompt-injection or other adversarial patterns.
+                </li>
+                <li>
+                  &gt; [4] Apply eggs — selected adversarial eggs are layered
+                  onto the dehydrated document only (no macros or scripts
+                  executed).
+                </li>
+                <li>
+                  &gt; [5] Rehydrate PII — tokens are replaced with the original
+                  PII in the outgoing buffer.
+                </li>
+                <li>
+                  &gt; [6] Stream &amp; purge — the hardened CV is streamed back
+                  as a base64 buffer and in-memory data is discarded, with
+                  nothing persisted server-side.
+                </li>
+              </ul>
+            </div>
           </section>
 
           <section>
@@ -140,10 +214,55 @@ export default function ResourcesPage() {
               hallucination-oriented patterns are used to surface over-reliance
               on model-generated summaries.
             </p>
-            <p className="text-noir-foreground/80">
+            <p className="text-noir-foreground/80 mb-2">
               The goal is defensive: to make it easier for practitioners to
               reason about, test, and harden AI-assisted hiring stacks – not to
               weaponize CVs in production environments or bypass human judgment.
+            </p>
+            <p className="text-noir-foreground/80">
+              For the full OWASP Top 10 for LLM Applications, see the{" "}
+              <Link
+                href="https://owasp.org/www-project-top-10-for-large-language-model-applications/"
+                target="_blank"
+                rel="noreferrer"
+                className="underline decoration-dotted underline-offset-2 text-neon-cyan hover:text-neon-green"
+              >
+                OWASP Top 10 for LLM Applications
+              </Link>
+              . For a high-level overview in video form, watch the{" "}
+              <Link
+                href="https://www.youtube.com/watch?v=gUNXZMcd2jU"
+                target="_blank"
+                rel="noreferrer"
+                className="underline decoration-dotted underline-offset-2 text-neon-cyan hover:text-neon-green"
+              >
+                Recommended talk: OWASP&apos;s Top 10 Ways to Attack LLMs
+              </Link>
+              .
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-base font-semibold text-neon-green mb-2">
+              Get started
+            </h2>
+            <p className="text-noir-foreground/80 mb-2">
+              Want to try this out but afraid to upload your own file? Use the
+              built-in demo CVs from the main FunversarialCV console first to
+              see how different eggs behave without touching any real data.
+            </p>
+            <p className="text-noir-foreground/80 mb-2">
+              If you are a candidate, keep your conventional CV as the primary
+              version and only use Funversarial CVs in AI-heavy pipelines where
+              you have explicit permission to experiment. Start with a single
+              egg enabled and incrementally layer on more complexity.
+            </p>
+            <p className="text-noir-foreground/80">
+              If you are part of a hiring or security team, wire Funversarial
+              CVs into a sandbox or test tenant of your hiring stack. Compare
+              how clean and Funversarial CVs move through your pipeline, and use
+              the differences to tighten prompts, add guardrails, and reinforce
+              human-in-the-loop review.
             </p>
           </section>
         </section>

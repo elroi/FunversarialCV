@@ -30,6 +30,25 @@ async function main() {
   writeFileSync(join(outDir, "minimal.pdf"), Buffer.from(pdfBytes));
   console.log("Wrote e2e/fixtures/minimal.pdf");
 
+  // PDF with PII (for client dehydration E2E: payload must have tokens, not raw PII)
+  const piiPdf = await PDFDocument.create();
+  const piiFont = await piiPdf.embedFont(StandardFonts.Helvetica);
+  const piiPage = piiPdf.addPage([595, 842]);
+  const piiLines = [
+    "Name: Test User",
+    "Email: user@example.com",
+    "Phone: (415) 555-1234",
+    "Address: 123 Main Street",
+  ];
+  let piiY = 802;
+  for (const line of piiLines) {
+    piiPage.drawText(line, { x: 40, y: piiY, size: 11, font: piiFont, color: rgb(0, 0, 0) });
+    piiY -= 18;
+  }
+  const piiPdfBytes = await piiPdf.save();
+  writeFileSync(join(outDir, "pii-sample.pdf"), Buffer.from(piiPdfBytes));
+  console.log("Wrote e2e/fixtures/pii-sample.pdf");
+
   // Minimal DOCX
   const doc = new Document({
     sections: [

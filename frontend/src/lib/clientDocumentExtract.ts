@@ -44,6 +44,7 @@ async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
   // pdfjs-dist is browser-capable; we use a dynamic import so it never runs on the server.
   const pdfjsLib = await import("pdfjs-dist");
   const pdfjs = pdfjsLib as {
+    GlobalWorkerOptions?: { workerSrc: string };
     getDocument(opts: { data: ArrayBuffer }): {
       promise: Promise<{
         numPages: number;
@@ -53,6 +54,10 @@ async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
       }>;
     };
   };
+  // Required for getDocument() in browser (including headless/CI). Worker is copied to public/ in postinstall.
+  if (typeof window !== "undefined" && pdfjs.GlobalWorkerOptions && !pdfjs.GlobalWorkerOptions.workerSrc) {
+    pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+  }
 
   const loadingTask = pdfjs.getDocument({ data: buffer });
   const pdf = await loadingTask.promise;

@@ -13,7 +13,8 @@
         "test:e2e": "playwright test",
         "test:e2e:ui": "playwright test --ui",
         "gen:e2e-fixtures": "node scripts/gen-e2e-fixtures.mjs",
-        "gen:demo-cv": "node scripts/gen-demo-cv-once.mjs"
+        "gen:demo-cv": "node scripts/gen-demo-cv-once.mjs",
+        "postinstall": "node -e \"const fs=require('fs');const p=require('path');const src=p.join('node_modules','pdfjs-dist','build','pdf.worker.min.mjs');const dest=p.join('public','pdf.worker.min.mjs');if(fs.existsSync(src)){fs.mkdirSync('public',{recursive:true});fs.copyFileSync(src,dest);console.log('Copied pdf.worker.min.mjs to public/');}\""
     },
     "dependencies": {
         "clsx": "^2.1.0",

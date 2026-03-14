@@ -6,6 +6,7 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import Home from "./page";
 import * as ClientVault from "../src/lib/clientVault";
+import * as ClientDocumentCreate from "../src/lib/clientDocumentCreate";
 
 const createFile = (name: string, type: string) =>
   new File(["dummy"], name, { type });
@@ -102,13 +103,13 @@ describe("Home page", () => {
     });
   });
 
-  describe("client-side PII dehydration and rehydration wiring (text/plain)", () => {
-    it("calls dehydrateInBrowser for text/plain files and logs a [CLIENT] message", async () => {
+  describe("client-side PII dehydration and rehydration wiring", () => {
+    it("dehydrates in browser, rebuilds tokenized file, sends file, then rehydrates response", async () => {
       const spyDehydrate = jest
         .spyOn(ClientVault, "dehydrateInBrowser")
         .mockResolvedValue({
           tokenizedBuffer: new TextEncoder().encode("Hello {{PII_EMAIL_0}}").buffer,
-          mimeType: "text/plain",
+          mimeType: "application/pdf",
           piiMap: {
             byToken: {
               "{{PII_EMAIL_0}}": {
@@ -118,7 +119,12 @@ describe("Home page", () => {
               },
             },
           },
+          tokenizedText: "Hello {{PII_EMAIL_0}}",
         } as never);
+
+      jest
+        .spyOn(ClientDocumentCreate, "createDocumentWithTextInBrowser")
+        .mockResolvedValue(new ArrayBuffer(8));
 
       const spyRehydrate = jest
         .spyOn(ClientVault, "rehydrateInBrowser")
@@ -142,8 +148,13 @@ describe("Home page", () => {
         expect(spyDehydrate).toHaveBeenCalledTimes(1);
       });
 
-      const logEntry = screen.getByText(/\[CLIENT\] Dehydrated PII in-browser/i);
-      expect(logEntry).toBeInTheDocument();
+      expect(
+        screen.getByText(/\[CLIENT\] Dehydrated PII in-browser/i)
+      ).toBeInTheDocument();
+      expect(ClientDocumentCreate.createDocumentWithTextInBrowser).toHaveBeenCalledWith(
+        "Hello {{PII_EMAIL_0}}",
+        "application/pdf"
+      );
 
       await waitFor(() => {
         expect(spyRehydrate).toHaveBeenCalled();
@@ -339,7 +350,7 @@ describe("Home page", () => {
 
       expect(screen.getByRole("checkbox", { name: /Invisible Hand/i })).toBeChecked();
       expect(screen.getByRole("checkbox", { name: /Canary Wing/i })).toBeChecked();
-      expect(screen.getByRole("checkbox", { name: /Incident Mailto/i })).not.toBeChecked();
+      expect(screen.getByRole("checkbox", { name: /Mailto Surprise/i })).not.toBeChecked();
       expect(screen.getByRole("checkbox", { name: /Metadata Shadow/i })).not.toBeChecked();
     });
 
@@ -363,7 +374,7 @@ describe("Home page", () => {
       });
 
       expect(screen.getByRole("checkbox", { name: /Invisible Hand/i })).toBeChecked();
-      expect(screen.getByRole("checkbox", { name: /Incident Mailto/i })).toBeChecked();
+      expect(screen.getByRole("checkbox", { name: /Mailto Surprise/i })).toBeChecked();
       expect(screen.getByRole("checkbox", { name: /Canary Wing/i })).toBeChecked();
       expect(screen.getByRole("checkbox", { name: /Metadata Shadow/i })).toBeChecked();
     });
@@ -585,7 +596,7 @@ describe("Home page", () => {
         });
         await waitFor(() => screen.getByText(/Eggs to run/i));
         const invisibleHand = screen.getByRole("button", { name: /expand.*Invisible Hand/i });
-        const incidentMailto = screen.getByRole("button", { name: /expand.*Incident.*Mailto/i });
+        const incidentMailto = screen.getByRole("button", { name: /expand.*Mailto Surprise/i });
         const canaryWing = screen.getByRole("button", { name: /expand.*Canary Wing/i });
         const metadataShadow = screen.getByRole("button", { name: /expand.*Metadata Shadow/i });
         expect(invisibleHand).toHaveAttribute("aria-expanded", "false");

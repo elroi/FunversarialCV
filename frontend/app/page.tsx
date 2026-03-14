@@ -636,6 +636,9 @@ export default function Home() {
           &amp; Volatile vault model: documents are processed in-memory only –
           with PII dehydration, adversarial layers, and rehydration into a final
           stream – so nothing is retained after your hardened CV is generated.
+          When <strong>Preserve styles</strong> is on, we keep your layout where
+          possible; when that isn’t possible we fall back to a rebuild path and
+          explain it in the UI.
         </p>
         <p className="mb-4 text-[11px] text-neon-cyan/90 border-l-2 border-neon-cyan/50 pl-3 py-1">
           Your CV is processed in your browser first. Before anything leaves your device,
@@ -781,11 +784,7 @@ export default function Home() {
                     <span>Preserve styles</span>
                   </label>
                   <p id="preserve-styles-desc" className="text-[10px] text-noir-foreground/50 ml-6 -mt-1">
-                    Note: Hardening may strip some decorative formatting to optimize for AI parsers. Use
-                    {" "}
-                    <span className="font-semibold">Preserve styles</span>
-                    {" "}
-                    to keep your original layout where possible.
+                    DOCX: we keep layout via in-place structure edits when possible. PDF: we rebuild from text so layout may change. If an egg changes body text we rebuild and styles may not be preserved; the log will indicate which path was used.
                   </p>
                 </div>
                 <div className="mt-3">

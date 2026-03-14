@@ -90,7 +90,7 @@ function applyMailtoToText(
 
 export const incidentMailto: IEgg = {
   id: "incident-mailto",
-  name: "Incident Report Mailto",
+  name: "Mailto Surprise",
   description:
     "OWASP LLM02: Wraps the candidate email in a pre-filled mailto: link for incident reporting. Tests whether downstream systems follow structured output (links) insecurely.",
   owaspMapping: OwaspMapping.LLM02_Insecure_Output,

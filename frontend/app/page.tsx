@@ -21,6 +21,7 @@ import type { DualityCheckResult } from "../src/engine/dualityCheck";
 import { EGG_OPTIONS, DEFAULT_ENABLED_EGG_IDS } from "../src/eggs/eggMetadata";
 import { Button } from "../src/components/ui/Button";
 import { Card } from "../src/components/ui/Card";
+import { CollapsibleCard } from "../src/components/ui/CollapsibleCard";
 
 /** Must match API route MAX_BODY_BYTES so client rejects before sending. */
 const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
@@ -669,79 +670,85 @@ export default function Home() {
             <p className="mt-1.5 text-caption text-noir-foreground/50 font-mono" title="Open DevTools → Network, trigger Harden, inspect the POST to /api/harden; payload should contain tokens like {{PII_EMAIL_0}}, not raw email or phone.">
               Verify: DevTools → Network → inspect <code className="text-xs">POST /api/harden</code> — payload has tokens only, no raw PII.
             </p>
-            <div className="mt-3 space-y-2 text-caption text-noir-foreground/60">
-              <p className="uppercase tracking-[0.2em] text-neon-cyan">
-                Sample CV Preset
-              </p>
-              <p className="text-caption text-noir-foreground/60">
-                Load a synthetic demo CV instead of your own — use <span className="text-neon-cyan font-mono">Clean</span> for a safe baseline, or <span className="text-neon-green font-mono">Dirty</span> to explore adversarial content.
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-neon-cyan/30 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
-                  disabled={isDemoLoading}
-                  onClick={() => loadPreset("clean", "pdf")}
-                >
-                  <span className="font-mono text-neon-cyan">Clean · PDF</span>
-                  <span className="text-xs text-noir-foreground/60">
-                    Baseline sample
-                  </span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-neon-cyan/30 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
-                  disabled={isDemoLoading}
-                  onClick={() => loadPreset("clean", "docx")}
-                >
-                  <span className="font-mono text-neon-cyan">Clean · DOCX</span>
-                  <span className="text-xs text-noir-foreground/60">
-                    Baseline sample (Word)
-                  </span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-amber-300/70 border-dashed bg-noir-panel text-noir-foreground hover:border-amber-400/80 flex flex-col items-start"
-                  disabled={isDemoLoading}
-                  onClick={() => loadPreset("dirty", "pdf")}
-                >
-                  <span className="font-mono text-neon-green">Dirty · PDF</span>
-                  <span className="text-xs text-noir-foreground/60">
-                    Adversarial sample
-                  </span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-amber-300/70 border-dashed bg-noir-panel text-noir-foreground hover:border-amber-400/80 flex flex-col items-start"
-                  disabled={isDemoLoading}
-                  onClick={() => loadPreset("dirty", "docx")}
-                >
-                  <span className="font-mono text-neon-green">Dirty · DOCX</span>
-                  <span className="text-xs text-noir-foreground/60">
-                    Adversarial sample (Word)
-                  </span>
-                </Button>
-              </div>
-              {isDemoLoading && (
-                <p
-                  className="text-caption text-neon-cyan/80 font-mono"
-                  aria-live="polite"
-                >
-                  &gt; Generating demo CV… this may take a few seconds.
+            <CollapsibleCard
+              className="mt-3"
+              title="Use Sample CV to Test"
+              titleId="sample-cv-preset-title"
+              contentId="sample-cv-preset-content"
+              ariaLabel="Expand Use Sample CV to Test"
+              defaultExpanded={false}
+            >
+              <div className="space-y-3 text-caption text-noir-foreground/60">
+                <p className="text-caption text-noir-foreground/60">
+                  Load a synthetic demo CV instead of your own — use <span className="text-neon-cyan font-mono">Clean</span> for a safe baseline, or <span className="text-neon-green font-mono">Dirty</span> to explore adversarial content.
                 </p>
-              )}
-              <p className="text-caption text-noir-foreground/60">
-                &gt; Last preset:{" "}
-                <span className="font-mono text-neon-green">
-                  {demoVariant === "clean" ? "clean" : "dirty"} ·{" "}
-                  {demoFormat.toUpperCase()}
-                </span>
-              </p>
-            </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-neon-cyan/30 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                    disabled={isDemoLoading}
+                    onClick={() => loadPreset("clean", "pdf")}
+                  >
+                    <span className="font-mono text-neon-cyan">Clean · PDF</span>
+                    <span className="text-xs text-noir-foreground/60">
+                      Baseline sample
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-neon-cyan/30 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                    disabled={isDemoLoading}
+                    onClick={() => loadPreset("clean", "docx")}
+                  >
+                    <span className="font-mono text-neon-cyan">Clean · DOCX</span>
+                    <span className="text-xs text-noir-foreground/60">
+                      Baseline sample (Word)
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-amber-300/70 border-dashed bg-noir-panel text-noir-foreground hover:border-amber-400/80 flex flex-col items-start"
+                    disabled={isDemoLoading}
+                    onClick={() => loadPreset("dirty", "pdf")}
+                  >
+                    <span className="font-mono text-neon-green">Dirty · PDF</span>
+                    <span className="text-xs text-noir-foreground/60">
+                      Adversarial sample
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-amber-300/70 border-dashed bg-noir-panel text-noir-foreground hover:border-amber-400/80 flex flex-col items-start"
+                    disabled={isDemoLoading}
+                    onClick={() => loadPreset("dirty", "docx")}
+                  >
+                    <span className="font-mono text-neon-green">Dirty · DOCX</span>
+                    <span className="text-xs text-noir-foreground/60">
+                      Adversarial sample (Word)
+                    </span>
+                  </Button>
+                </div>
+                {isDemoLoading && (
+                  <p
+                    className="text-caption text-neon-cyan/80 font-mono"
+                    aria-live="polite"
+                  >
+                    &gt; Generating demo CV… this may take a few seconds.
+                  </p>
+                )}
+                <p className="text-caption text-noir-foreground/60">
+                  &gt; Last preset:{" "}
+                  <span className="font-mono text-neon-green">
+                    {demoVariant === "clean" ? "clean" : "dirty"} ·{" "}
+                    {demoFormat.toUpperCase()}
+                  </span>
+                </p>
+              </div>
+            </CollapsibleCard>
             {selectedFileName && (
               <div ref={armedSectionRef}>
                 <p className="mt-3 text-sm text-neon-green">
@@ -759,7 +766,7 @@ export default function Home() {
                     disabled={!hasDemoLoaded}
                   >
                     {hasDemoLoaded
-                      ? "View current demo as-is"
+                      ? "Download to view current demo as-is"
                       : "Select demo document and click here to view as-is"}
                   </button>
                   <Button
@@ -799,23 +806,23 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="mt-3">
-                  <Card className="px-3 py-2">
-                    <p className="text-caption uppercase tracking-[0.2em] text-noir-foreground/60 mb-2">
+                  <Card className="px-4 py-3">
+                    <p className="border-b border-noir-border/60 pb-2 text-caption font-medium uppercase tracking-[0.2em] text-noir-foreground/70 mb-3">
                       Eggs to run
                     </p>
-                    <div className="flex flex-wrap gap-x-4 gap-y-0">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                     {EGG_OPTIONS.map((egg) => (
                       <label
                         key={egg.id}
-                        className="flex min-h-[44px] cursor-pointer items-center gap-2 py-2 pr-2 text-sm text-noir-foreground/80"
+                        className="flex min-h-[44px] cursor-pointer items-center gap-3 py-2 pr-2 text-sm text-noir-foreground/80"
                       >
                         <input
                           type="checkbox"
                           checked={enabledEggIds.has(egg.id)}
                           onChange={() => toggleEgg(egg.id)}
-                          className="rounded border-noir-border text-neon-cyan focus:ring-neon-cyan/50"
+                          className="mt-0.5 shrink-0 rounded border-noir-border text-neon-cyan focus:ring-neon-cyan/50"
                         />
-                        <span className="flex flex-col leading-tight">
+                        <span className="flex flex-col gap-0.5 leading-snug">
                           <span>{egg.name}</span>
                           <span className="text-xs font-mono text-noir-foreground/50">
                             {egg.id === "invisible-hand" || egg.id === "canary-wing"

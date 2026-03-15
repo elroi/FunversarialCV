@@ -44,6 +44,24 @@ Stored fields for each hit:
 
 No CV content, CV metadata, IP address, or other PII is written by this endpoint; the canary token is the only identifier.
 
+---
+
+## Canary status (GET /api/canary/status)
+
+Candidate-facing "did my canary sing?" — returns recent hits for a single token so the user can see when their canary was triggered.
+
+- **Query:** `token` (required) — the canary token (same as in the embedded URL). Only hits for this token are returned; the token acts as the secret.
+- **Response (200):** `{ hits: Array<{ variant, ts, userAgent?, referer? }> }` (newest first, up to 50).
+- **Rate limit:** Per-IP; configurable via `RATE_LIMIT_CANARY_STATUS_MAX` / `RATE_LIMIT_CANARY_STATUS_WINDOW_MS`. 429 with `Retry-After` when exceeded.
+- **Best-effort:** Data is process-local (in-memory). After a cold start or with multiple instances, the list may be empty until the next canary hit lands on the same process.
+
+| Status | When | Example message |
+|--------|------|-----------------|
+| 400    | Missing or empty `token` | "Missing query parameter: token." |
+| 429    | Too many status checks from this IP | "Too many status checks. Try again later." |
+
+---
+
 ## Errors
 
 All error responses have a JSON body `{ error: string }`.

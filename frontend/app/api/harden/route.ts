@@ -211,6 +211,25 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // If canary-wing runs with no token, generate one here and inject so we can return it to the client
+  // (the card needs the token for "Check for triggers"); the egg would otherwise generate its own and the client wouldn't know it.
+  let canaryTokenUsed: string | undefined;
+  if (payloadsForEggs["canary-wing"]) {
+    try {
+      const parsed = JSON.parse(payloadsForEggs["canary-wing"]) as Record<string, unknown>;
+      const token = parsed?.token;
+      if (token === undefined || token === null || String(token).trim() === "") {
+        const uuid = typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : (await import("crypto")).randomUUID();
+        canaryTokenUsed = uuid;
+        payloadsForEggs["canary-wing"] = JSON.stringify({ ...parsed, token: uuid });
+      }
+    } catch {
+      // leave payload as-is
+    }
+  }
+
   // #region agent log
   fetch("http://127.0.0.1:7449/ingest/0768c635-2444-40d4-9a51-16892d6a03ff", {
     method: "POST",
@@ -248,6 +267,7 @@ export async function POST(request: NextRequest) {
       mimeType,
       scannerReport: result.scannerReport,
       originalName,
+      ...(canaryTokenUsed !== undefined ? { canaryTokenUsed } : {}),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Processing failed.";

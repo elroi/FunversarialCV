@@ -364,6 +364,32 @@ describe("POST /api/harden", () => {
     );
   }, 15000);
 
+  it("returns canaryTokenUsed when canary-wing payload has no token so client can sync card", async () => {
+    const minimalDocx = await createDocumentWithText("Resume content", MIME_DOCX);
+    const form = new FormData();
+    form.append(
+      "file",
+      new Blob([new Uint8Array(minimalDocx)], {
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      }),
+      "test.docx"
+    );
+    form.append(
+      "payloads",
+      JSON.stringify({
+        "canary-wing": JSON.stringify({ baseUrl: "http://localhost:3000/api/canary" }),
+      })
+    );
+    form.append("eggIds", JSON.stringify(["canary-wing"]));
+    const req = new Request("http://localhost:3000/api/harden", { method: "POST", body: form });
+    const res = await POST(req as never);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.canaryTokenUsed).toBeDefined();
+    expect(typeof json.canaryTokenUsed).toBe("string");
+    expect(json.canaryTokenUsed).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+  }, 15000);
+
   it("runs no eggs when client sends eggIds: [] (all eggs unchecked)", async () => {
     const minimalDocx = await createDocumentWithText("Resume content", MIME_DOCX);
     const form = await buildDocxFormData(minimalDocx);

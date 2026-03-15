@@ -30,7 +30,17 @@ export function getRecentCanaryHits(limit: number = MAX_HITS): CanaryHit[] {
 }
 
 /**
- * Persist a canary hit for later analysis. No-op when KV is not configured.
+ * Return recent hits for a single token (for candidate-facing "did my canary sing?").
+ * Process-local; best-effort when running on multiple instances.
+ */
+export function getCanaryHitsByToken(tokenId: string, limit: number = 50): CanaryHit[] {
+  if (!tokenId.trim()) return [];
+  return hits.filter((h) => h.tokenId === tokenId).slice(0, limit);
+}
+
+/**
+ * Persist a canary hit for later analysis. Extension point for durable analytics:
+ * when KV is configured, write here; getRecentCanaryHits / getCanaryHitsByToken can read from KV.
  * To enable: add @vercel/kv, set KV_REST_API_URL (and KV_REST_API_TOKEN if required),
  * and implement e.g. kv.lpush('canary:hits', JSON.stringify(hit)) and kv.incr(`canary:by-variant:${variant}`).
  */

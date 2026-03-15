@@ -465,6 +465,17 @@ export default function Home() {
         preserveStyles,
       };
 
+      // If server generated a canary token (empty token in payload), sync it to the card so "Check for triggers" works.
+      const canaryTokenUsed = data.canaryTokenUsed;
+      if (typeof canaryTokenUsed === "string" && canaryTokenUsed.trim() !== "") {
+        try {
+          const current = canaryWingPayload.trim() ? JSON.parse(canaryWingPayload) as Record<string, unknown> : {};
+          setCanaryWingPayload(JSON.stringify({ ...current, token: canaryTokenUsed }));
+        } catch {
+          // leave canary payload as-is
+        }
+      }
+
       if (scannerScan && typeof scannerScan === "object") {
         setDualityResult({
           hasSuspiciousPatterns: !!scannerScan.hasSuspiciousPatterns,

@@ -35,7 +35,7 @@
 |------------|--------|--------|
 | **WS1 – Body size limits** | Done | All items checked; limits, UX, E2E, docs aligned. |
 | **WS2 – Canary** | Done | Option B (signal-only). Close-the-loop: GET /api/canary/status, “Did my canary sing?” UX, canaryTokenUsed in harden response. Docs: v1 no long-term analytics; persistCanaryHit extension point. |
-| **WS3 – PII** | Mostly done | Address patterns, vault, unit tests, README. Open: Processor integration test (address round-trip). |
+| **WS3 – PII** | Done | Address patterns, vault, unit tests, README, Processor integration test (address round-trip). |
 | **WS4 – Rate limit & logging** | Done | rateLimit.ts, log.ts; integrated in harden and canary routes; tests. |
 | **WS5 – Vercel & CI** | Partial | Project root, build, env vars, Hosting & Ops docs done. Open: verify Preview/Production; branch protection. |
 | **WS6 – Pre-launch** | Open | E2E in CI; PR merge; production smoke; tag v1.0.0-launch; optional changelog. |
@@ -179,7 +179,7 @@
     - Clear address examples that should be tokenized and restored.
     - Non-address text that must not be over-matched.
 - **Integration tests**
-  - [ ] Add or extend processor tests where CV text includes an address:
+  - [x] Add or extend processor tests where CV text includes an address:
     - Verify round-trip correctness after the full pipeline (dehydrate → eggs → rehydrate).
 
 #### 3.4 Documentation

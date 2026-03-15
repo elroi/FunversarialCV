@@ -53,6 +53,20 @@ describe("Processor", () => {
     expect(result.scannerReport.alerts).toEqual([]);
   }, 15000);
 
+  it("round-trips address through full pipeline: dehydrate → eggs → rehydrate", async () => {
+    const textWithAddress = "John Doe. Address: 123 Main St. Experienced engineer.";
+    const buffer = await createDocumentWithText(textWithAddress, MIME_DOCX);
+    const result = await process({
+      buffer,
+      mimeType: MIME_DOCX,
+      eggs: [invisibleHand],
+      preserveStyles: false,
+    });
+    const extracted = await extractText(result.buffer, MIME_DOCX);
+    expect(extracted).toContain("123 Main St");
+    expect(extracted).not.toMatch(/\{\{PII_ADDR_\d+\}\}/);
+  }, 15000);
+
   describe("preserveStyles feature flag (add-only path)", () => {
     it("when preserveStyles is true and only add-only eggs: uses original buffer, preserves DOCX paragraph count", async () => {
       const buffer = await createDocumentWithText("Line one\nLine two\nLine three", MIME_DOCX);

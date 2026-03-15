@@ -4,6 +4,22 @@ This document expands the [review and next steps](.cursor/plans) into concrete i
 
 ---
 
+## Progress summary
+
+| Area | Status | Notes |
+|------|--------|--------|
+| **Phase 1 (API, page, errors)** | Done | POST /api/harden, magic bytes, payload filter; page wire-up, download, duality; safe 400/500. |
+| **Phase 2.1 Invisible Hand** | Done | InvisibleHandConfigCard + default-if-empty copy. |
+| **Phase 2.2 Metadata Shadow** | Done | Egg, registry, config card, tests. |
+| **Phase 3.1 README** | Done | Format-preservation note, link to this plan. |
+| **Phase 3.2 Egg toggles** | Done | enabledEggIds, eggIds in API. |
+| **Phase 3.3 API route tests** | Done | harden/route.test.ts. |
+| **Canary close-the-loop** | Done | GET /api/canary/status, “Did my canary sing?” UX, canaryTokenUsed in harden response; v1 signal-only, docs updated. |
+
+Full launch checklist (body limits, PII, rate limit, Vercel, pre-launch): [LAUNCH_IMPLEMENTATION_PLAN.md](LAUNCH_IMPLEMENTATION_PLAN.md).
+
+---
+
 ## Development practices (mandatory)
 
 - **TDD:** Always write tests first, then implement until tests pass. Apply to every feature and fix (eggs, API route, helpers, UI behavior where testable).

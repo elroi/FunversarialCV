@@ -44,6 +44,8 @@ Stored fields for each hit:
 
 No CV content, CV metadata, IP address, or other PII is written by this endpoint; the canary token is the only identifier.
 
+**v1:** Hits are not persisted to durable storage; data is process-local and may be lost on cold starts or scaling. To add durable analytics later, wire Vercel KV (or similar) in `persistCanaryHit` in `frontend/src/lib/canaryHits.ts`; that function is the designated extension point.
+
 ---
 
 ## Canary status (GET /api/canary/status)

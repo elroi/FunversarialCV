@@ -46,7 +46,7 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
       title={
         <span className="flex flex-col gap-0.5">
           <span>The Invisible Hand (LLM01)</span>
-          <span className="text-[9px] font-mono text-noir-foreground/60">
+          <span className="text-xs font-mono text-noir-foreground/60">
             STYLE-AFFECTING
           </span>
         </span>
@@ -59,7 +59,7 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
       className={className}
     >
       <p
-        className="text-[10px] sm:text-xs text-noir-foreground/70 mb-4"
+        className="text-caption sm:text-sm text-noir-foreground/70 mb-4"
         title="Leave blank to use the default system note."
       >
         Optional custom trap text for AI parsers. Leave blank to use the default system note (0.5pt white, invisible to humans).
@@ -74,11 +74,11 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
           maxLength={MAX_PAYLOAD_LENGTH}
           rows={3}
           disabled={disabled}
-          className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none resize-y"
+          className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-sm text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none resize-y"
           title="Optional. Leave blank to use default system note. Max 500 characters."
           aria-describedby="invisible-hand-hint"
         />
-        <p id="invisible-hand-hint" className="text-[10px] sm:text-xs text-noir-foreground/50 mt-1">
+        <p id="invisible-hand-hint" className="text-caption sm:text-xs text-noir-foreground/50 mt-1">
           {trapText.length}/{MAX_PAYLOAD_LENGTH} characters. No HTML or script; letters, digits, spaces, and basic punctuation only.
         </p>
       </label>
@@ -90,7 +90,7 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
       >
         <h4
           id="invisible-hand-manual-title"
-          className="text-[10px] sm:text-xs uppercase tracking-wider text-noir-foreground/80 mb-2"
+          className="text-caption sm:text-xs uppercase tracking-wider text-noir-foreground/80 mb-2"
         >
           How to check &amp; validate
         </h4>
@@ -98,13 +98,13 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
           <CheckAndValidateBlock
             content={manualCheckAndValidation}
             fallback={
-              <p className="text-[10px] sm:text-xs text-noir-foreground/50 italic">
+              <p className="text-caption sm:text-xs text-noir-foreground/50 italic">
                 Instructions not available. Ensure the app can reach /api/eggs.
               </p>
             }
           />
         ) : (
-          <p className="text-[10px] sm:text-xs text-noir-foreground/50 italic">
+          <p className="text-caption sm:text-xs text-noir-foreground/50 italic">
             Instructions not available. Ensure the app can reach /api/eggs.
           </p>
         )}

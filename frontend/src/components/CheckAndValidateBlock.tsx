@@ -20,7 +20,7 @@ export interface CheckAndValidateBlockProps {
  */
 export const CheckAndValidateBlock: React.FC<CheckAndValidateBlockProps> = ({
   content,
-  className = "text-[10px] sm:text-xs text-noir-foreground/70",
+  className = "text-caption sm:text-xs text-noir-foreground/70",
   fallback,
 }) => {
   if (!content?.trim()) {

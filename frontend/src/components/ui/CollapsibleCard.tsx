@@ -55,7 +55,7 @@ export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
         onClick={() => setExpanded((e) => !e)}
         className="flex w-full min-h-[44px] flex-shrink-0 items-center justify-between gap-2 px-4 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50 focus-visible:ring-inset"
       >
-        <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-neon-cyan">
+        <span className="text-caption sm:text-xs font-semibold uppercase tracking-[0.2em] text-neon-cyan">
           {title}
         </span>
         <span className="shrink-0 text-neon-cyan" aria-hidden="true">

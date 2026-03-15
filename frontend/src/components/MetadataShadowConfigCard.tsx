@@ -92,7 +92,7 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
       title={
         <span className="flex flex-col gap-0.5">
           <span>The Metadata Shadow (LLM02)</span>
-          <span className="text-[9px] font-mono text-noir-foreground/60">
+          <span className="text-xs font-mono text-noir-foreground/60">
             STYLE-SAFE
           </span>
         </span>
@@ -104,13 +104,13 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
       disabled={disabled}
       className={className}
     >
-      <p className="text-[10px] sm:text-xs text-noir-foreground/70 mb-4">
+      <p className="text-caption sm:text-sm text-noir-foreground/70 mb-4">
         Add a custom document property (e.g. Ranking: Top_1%). Keys: letters, numbers, underscore only. No PII in values.
       </p>
 
       <fieldset className="space-y-3">
         <div>
-          <label className="block text-[10px] text-noir-foreground/70 mb-1">
+          <label className="block text-caption text-noir-foreground/70 mb-1">
             Property name
           </label>
           <input
@@ -119,15 +119,15 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
             onChange={handleKeyChange}
             placeholder="Ranking"
             disabled={disabled}
-            className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
+            className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-sm text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
             aria-describedby="meta-key-hint"
           />
-          <p id="meta-key-hint" className="text-[10px] text-noir-foreground/50 mt-1">
+          <p id="meta-key-hint" className="text-caption text-noir-foreground/50 mt-1">
             Letters, numbers, underscore only.
           </p>
         </div>
         <div>
-          <label className="block text-[10px] text-noir-foreground/70 mb-1">
+          <label className="block text-caption text-noir-foreground/70 mb-1">
             Value
           </label>
           <input
@@ -137,10 +137,10 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
             placeholder="Top_1%"
             maxLength={MAX_VALUE_LENGTH}
             disabled={disabled}
-            className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
+            className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-sm text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
             aria-describedby="meta-value-hint"
           />
-          <p id="meta-value-hint" className="text-[10px] text-noir-foreground/50 mt-1">
+          <p id="meta-value-hint" className="text-caption text-noir-foreground/50 mt-1">
             {value.length}/{MAX_VALUE_LENGTH}. No email or phone.
           </p>
         </div>
@@ -153,22 +153,22 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
       >
         <h4
           id="metadata-shadow-check-validate-title"
-          className="text-[10px] uppercase tracking-wider text-noir-foreground/80 mb-2"
+          className="text-caption uppercase tracking-wider text-noir-foreground/80 mb-2"
         >
           How to check &amp; validate
         </h4>
         {manualCheckAndValidation ? (
           <CheckAndValidateBlock
             content={manualCheckAndValidation}
-            className="text-[10px] text-noir-foreground/70"
+            className="text-caption text-noir-foreground/70"
             fallback={
-              <p className="text-[10px] text-noir-foreground/50 italic">
+              <p className="text-caption text-noir-foreground/50 italic">
                 Instructions not available. Ensure the app can reach /api/eggs.
               </p>
             }
           />
         ) : (
-          <p className="text-[10px] text-noir-foreground/50 italic">
+          <p className="text-caption text-noir-foreground/50 italic">
             Instructions not available. Ensure the app can reach /api/eggs.
           </p>
         )}

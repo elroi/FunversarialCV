@@ -101,17 +101,17 @@ export const DropZone: React.FC<DropZoneProps> = ({
       >
         <div className="pointer-events-none scanlines absolute inset-0 rounded-xl" />
         <div className="relative z-10 flex flex-col items-center space-y-2">
-          <p className="text-xs uppercase tracking-[0.2em] text-neon-cyan">
+          <p className="text-caption uppercase tracking-[0.2em] text-neon-cyan">
             Funversarial Upload Channel
           </p>
           <p className="text-lg font-semibold text-neon-green">
             Drop your CV here
           </p>
-          <p className="text-xs text-noir-foreground/70">
+          <p className="text-sm text-noir-foreground/70">
             .pdf or .docx • Drag &amp; drop or{" "}
             <span className="text-neon-cyan">browse</span>
           </p>
-          <p className="text-[10px] text-noir-foreground/50">
+          <p className="text-caption text-noir-foreground/50">
             PII handling is{" "}
             <span className="font-semibold text-neon-cyan">
               Stateless &amp; Volatile
@@ -138,7 +138,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
       {error && (
         <p
           id="dropzone-error"
-          className="text-xs font-medium text-neon-red"
+          className="text-sm font-medium text-neon-red"
         >
           {error}
         </p>

@@ -45,6 +45,7 @@ For **Canary Wing** specifically, the `/api/canary` endpoint records **ephemeral
 - Stored fields: `tokenId`, `variant`, `ts`, and truncated `userAgent` / `referer` strings.
 - No CV content or PII ever reaches this endpoint; the canary token is the only identifier.
 - In the default setup, hits are kept in a small, in-memory ring buffer (process-local, capped at recent activity) and are intended for **debugging and red-teaming**, not long-term tracking.
+- **Did my canary sing?** In the app, use **Check for triggers** in the Canary Wing card to see recent hits for your token. The status is **best-effort and process-local**: you see triggers only when the same server process handled both the canary ping and your status check; after a cold start or with multiple instances you may see none until the next hit.
 
 ---
 
@@ -60,7 +61,7 @@ FunversarialCV is designed to run as a Next.js 14 app on Vercel:
 
 - **Runtime:** Node / Serverless Functions for `/api/harden` and `/api/canary`, with stateless, in-memory processing only.
 - **File size:** CV uploads are limited to **4 MB** per file to stay safely under Vercel’s Serverless request caps and avoid opaque platform 413 errors.
-- **Rate limiting:** `/api/harden` and `/api/canary` include lightweight, per-IP rate limiting with configurable env vars (`RATE_LIMIT_HARDEN_*`, `RATE_LIMIT_CANARY_*`) suitable for low-to-moderate traffic.
+- **Rate limiting:** `/api/harden`, `/api/canary`, and `/api/canary/status` include lightweight, per-IP rate limiting with configurable env vars (`RATE_LIMIT_HARDEN_*`, `RATE_LIMIT_CANARY_*`, `RATE_LIMIT_CANARY_STATUS_*`) suitable for low-to-moderate traffic.
 - **Logging:** Structured JSON logs (route, event, meta) are emitted via `log.ts` and visible in Vercel logs; no PII or CV content is logged, only tokens/variants and operational metadata.
 - **Error behavior:** User-facing errors are explicit but safe (no stack traces or internal paths); 500 responses are generic ("Processing failed. Please try again.") while details are logged server-side only.
 

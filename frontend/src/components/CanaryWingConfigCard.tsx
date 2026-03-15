@@ -82,6 +82,11 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
     "https://this-app/api/canary"
   );
 
+  // "Did my canary sing?" — candidate-facing status (best-effort, process-local).
+  const [statusHits, setStatusHits] = useState<Array<{ variant: string; ts: string; userAgent?: string; referer?: string }> | null>(null);
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [statusError, setStatusError] = useState<string | null>(null);
+
   // Sync from parent when payload changes externally (e.g. reset or load).
   useEffect(() => {
     setUrl(config.url ?? "");
@@ -159,6 +164,29 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
   const copyCanaryLink = useCallback(() => {
     void navigator.clipboard.writeText(resultingUrl);
   }, [resultingUrl]);
+
+  const checkCanaryStatus = useCallback(async () => {
+    const t = token.trim();
+    if (!t) return;
+    setStatusError(null);
+    setStatusLoading(true);
+    try {
+      const base = typeof window !== "undefined" ? window.location.origin : "";
+      const res = await fetch(`${base}/api/canary/status?token=${encodeURIComponent(t)}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setStatusHits(null);
+        setStatusError(data?.error ?? "Failed to load status.");
+        return;
+      }
+      setStatusHits(Array.isArray(data?.hits) ? data.hits : []);
+    } catch {
+      setStatusHits(null);
+      setStatusError("Network error. Try again.");
+    } finally {
+      setStatusLoading(false);
+    }
+  }, [token]);
 
   return (
     <CollapsibleCard
@@ -464,6 +492,76 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
           </button>
         </div>
       </fieldset>
+
+      <div
+        className="mt-4 pt-4 border-t border-noir-border"
+        role="region"
+        aria-labelledby="canary-status-title"
+      >
+        <h4
+          id="canary-status-title"
+          className="text-[10px] sm:text-xs uppercase tracking-wider text-noir-foreground/80 mb-2"
+        >
+          Did my canary sing?
+        </h4>
+        <p className="text-[10px] text-noir-foreground/70 mb-2">
+          When the canary link in your hardened CV is opened or clicked, the server records the hit (variant, time, and optional client info). To see your results:
+        </p>
+        <ol className="text-[10px] text-noir-foreground/70 list-decimal list-inside space-y-1 mb-2 ml-0.5">
+          <li><strong>Find the egg</strong> — Open your hardened PDF or DOCX. Use Select All (Ctrl/Cmd+A) or search for a URL; the canary is embedded as nearly invisible text and/or a clickable region.</li>
+          <li><strong>Trigger it</strong> — Click the canary link (or have someone/something else open it). The server logs the hit and associates it with your token.</li>
+          <li><strong>Watch the result</strong> — Click <strong>Check for triggers</strong> below. You&apos;ll see each trigger with variant (e.g. <code className="text-[9px]">pdf-clickable</code>) and timestamp; repeated triggers appear in the list.</li>
+        </ol>
+        <p className="text-[10px] text-noir-foreground/50 mb-2">
+          Hits are stored per server process. If you just triggered the link and see no results, click Check for triggers again once the request was handled by this app.
+        </p>
+        <div className="flex flex-wrap items-center gap-2 mb-2">
+          <button
+            type="button"
+            onClick={checkCanaryStatus}
+            disabled={disabled || !token.trim() || statusLoading}
+            className="rounded border border-noir-border bg-noir-panel px-2 py-1.5 text-[10px] text-neon-cyan hover:bg-noir-border/50 focus:border-neon-cyan focus:outline-none disabled:opacity-50"
+            aria-label="Check if canary was triggered"
+          >
+            {statusLoading ? "Checking…" : "Check for triggers"}
+          </button>
+        </div>
+        {statusError && (
+          <p className="text-[10px] text-red-400/90 mb-2" role="alert">
+            {statusError}
+          </p>
+        )}
+        {statusHits !== null && !statusError && (
+          <div className="text-[10px] text-noir-foreground/80">
+            {statusHits.length === 0 ? (
+              <p className="text-noir-foreground/60 italic">
+                No triggers yet. Find the canary link in your hardened CV, click it, then click <strong>Check for triggers</strong> above to see it here.
+              </p>
+            ) : (
+              <>
+                <p className="mb-1.5 font-medium text-neon-cyan/90">
+                  Your canary sang {statusHits.length} time{statusHits.length !== 1 ? "s" : ""} — each row below is a recorded hit (variant and time).
+                </p>
+                <ul className="list-disc list-inside space-y-0.5 text-noir-foreground/70">
+                  {statusHits.slice(0, 10).map((h, i) => (
+                    <li key={`${h.ts}-${i}`}>
+                      <span className="font-mono text-[9px]">{h.variant}</span> — {h.ts}
+                      {h.userAgent && (
+                        <span className="block ml-4 truncate text-[9px] text-noir-foreground/50" title={h.userAgent}>
+                          {h.userAgent.slice(0, 60)}{h.userAgent.length > 60 ? "…" : ""}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                {statusHits.length > 10 && (
+                  <p className="mt-1 text-[9px] text-noir-foreground/50">Showing latest 10 of {statusHits.length}.</p>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
       <div
         className="mt-4 pt-4 border-t border-noir-border"

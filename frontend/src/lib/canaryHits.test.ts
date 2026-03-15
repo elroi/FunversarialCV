@@ -3,7 +3,7 @@
  * Verifies that persistCanaryHit stores normalized hits and getRecentCanaryHits returns them newest-first.
  */
 
-import { persistCanaryHit, getRecentCanaryHits, __resetCanaryHitsForTests } from "./canaryHits";
+import { persistCanaryHit, getRecentCanaryHits, getCanaryHitsByToken, __resetCanaryHitsForTests } from "./canaryHits";
 
 describe("canaryHits persistence", () => {
   beforeEach(() => {
@@ -42,6 +42,21 @@ describe("canaryHits persistence", () => {
       ts: firstTs,
       userAgent: "agent-1",
     });
+  });
+
+  it("getCanaryHitsByToken returns only hits for the given token, newest-first", async () => {
+    await persistCanaryHit({ tokenId: "a", variant: "v1", ts: "2026-03-09T10:00:00.000Z" });
+    await persistCanaryHit({ tokenId: "b", variant: "v2", ts: "2026-03-09T10:01:00.000Z" });
+    await persistCanaryHit({ tokenId: "a", variant: "v3", ts: "2026-03-09T10:02:00.000Z" });
+    const forA = getCanaryHitsByToken("a");
+    expect(forA).toHaveLength(2);
+    expect(forA[0].variant).toBe("v3");
+    expect(forA[1].variant).toBe("v1");
+    const forB = getCanaryHitsByToken("b");
+    expect(forB).toHaveLength(1);
+    expect(forB[0].variant).toBe("v2");
+    expect(getCanaryHitsByToken("c")).toEqual([]);
+    expect(getCanaryHitsByToken("")).toEqual([]);
   });
 
   it("enforces an upper bound on stored hits so memory use stays bounded", async () => {

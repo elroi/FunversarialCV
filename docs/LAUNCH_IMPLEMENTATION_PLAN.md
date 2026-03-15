@@ -29,6 +29,17 @@
   - Manual smoke tests on production.
   - Launch commit tagged (e.g. `v1.0.0-launch`).
 
+### 3. Progress summary
+
+| Workstream | Status | Notes |
+|------------|--------|--------|
+| **WS1 – Body size limits** | Done | All items checked; limits, UX, E2E, docs aligned. |
+| **WS2 – Canary** | Done | Option B (signal-only). Close-the-loop: GET /api/canary/status, “Did my canary sing?” UX, canaryTokenUsed in harden response. Docs: v1 no long-term analytics; persistCanaryHit extension point. |
+| **WS3 – PII** | Mostly done | Address patterns, vault, unit tests, README. Open: Processor integration test (address round-trip). |
+| **WS4 – Rate limit & logging** | Done | rateLimit.ts, log.ts; integrated in harden and canary routes; tests. |
+| **WS5 – Vercel & CI** | Partial | Project root, build, env vars, Hosting & Ops docs done. Open: verify Preview/Production; branch protection. |
+| **WS6 – Pre-launch** | Open | E2E in CI; PR merge; production smoke; tag v1.0.0-launch; optional changelog. |
+
 ---
 
 ## Workstream 1 – Align Body Size Limits
@@ -74,13 +85,15 @@
 
 ## Workstream 2 – Canary Analytics & Persistence
 
+**Status: Complete (Option B).** Decision: v1 signal-only; close-the-loop shipped (status API, “Did my canary sing?” UX, canaryTokenUsed); docs updated.
+
 **Objective**: Decide whether Canary Wing in v1 includes hit persistence/analytics, and implement or explicitly de-scope accordingly.
 
 ### 2.1 Product/Scope Decision
 
 - **Decide v1 scope**
   - [ ] **Option A**: Minimal analytics (persist hits + simple view).
-  - [ ] **Option B**: No persistence; `/api/canary` acts as a transient ping only.
+  - [x] **Option B**: No persistence; `/api/canary` acts as a transient ping only.
 
 ### If Option A – Implement Minimal Analytics
 
@@ -126,11 +139,11 @@
 #### 2.6 Documentation Changes
 
 - **Update Canary Wing description**
-  - [ ] Clarify in `README.md` and other docs that:
+  - [x] Clarify in `README.md` and other docs that:
     - v1 does not provide long-term canary analytics.
     - `/api/canary` is a “signal only” endpoint.
 - **Document extension hook**
-  - [ ] Keep `persistCanaryHit` as an extension point and document how it could be wired in a future version.
+  - [x] Keep `persistCanaryHit` as an extension point and document how it could be wired in a future version.
 
 ---
 

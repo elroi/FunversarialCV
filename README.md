@@ -46,6 +46,7 @@ For **Canary Wing** specifically, the `/api/canary` endpoint records **ephemeral
 - No CV content or PII ever reaches this endpoint; the canary token is the only identifier.
 - In the default setup, hits are kept in a small, in-memory ring buffer (process-local, capped at recent activity) and are intended for **debugging and red-teaming**, not long-term tracking.
 - **Did my canary sing?** In the app, use **Check for triggers** in the Canary Wing card to see recent hits for your token. The status is **best-effort and process-local**: you see triggers only when the same server process handled both the canary ping and your status check; after a cold start or with multiple instances you may see none until the next hit.
+- **v1 scope:** v1 does not provide long-term canary analytics; `/api/canary` is a **signal-only** endpoint (process-local hits). To add durable analytics in a future version, implement KV (or similar) in `persistCanaryHit` in `frontend/src/lib/canaryHits.ts`; that function is the designated extension point.
 
 ---
 

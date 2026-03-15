@@ -96,34 +96,34 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
   }, [log]);
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-noir-border bg-noir-panel/60 p-4 text-xs text-noir-foreground/80">
+    <section className="flex flex-col gap-4 rounded-xl border border-noir-border bg-noir-panel/60 p-4 text-sm text-noir-foreground/80">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-cyan">
+          <div className="text-caption sm:text-xs uppercase tracking-[0.2em] text-neon-cyan">
             Duality Monitor
           </div>
           <button
             type="button"
             onClick={handleCopyLog}
-            className="inline-flex items-center justify-center rounded border border-noir-border/60 bg-noir-bg/60 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.2em] text-noir-foreground/60 hover:text-neon-cyan hover:border-neon-cyan/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+            className="inline-flex items-center justify-center rounded border border-noir-border/60 bg-noir-bg/60 px-1.5 py-0.5 text-xs uppercase tracking-[0.2em] text-noir-foreground/60 hover:text-neon-cyan hover:border-neon-cyan/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
             aria-label="Copy log to clipboard"
           >
             &gt; Copy Log
           </button>
           {copyStatus === "success" && (
-            <span className="text-[9px] text-neon-green">
+            <span className="text-xs text-neon-green">
               Copied local audit log.
             </span>
           )}
           {copyStatus === "error" && (
-            <span className="text-[9px] text-neon-red">
+            <span className="text-xs text-neon-red">
               Unable to copy log.
             </span>
           )}
         </div>
         <div
           className={clsx(
-            "rounded-full px-2 py-0.5 text-[10px] sm:text-xs font-medium",
+            "rounded-full px-2 py-0.5 text-caption sm:text-xs font-medium",
             processingState === "completed" && "border border-neon-green/60",
             processingState === "processing" && "border border-neon-cyan/60",
             processingState === "idle" && "border border-noir-border",
@@ -147,7 +147,7 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
 
       <div className="space-y-3">
         <div className="space-y-2">
-          <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-noir-foreground/60">
+          <p className="text-caption sm:text-xs uppercase tracking-[0.2em] text-noir-foreground/60">
             Pipeline Stages
           </p>
           <ol className="space-y-1">
@@ -158,12 +158,12 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
                   key={stage.id}
                   className="flex items-center justify-between rounded-lg bg-noir-bg/60 px-2 py-1"
                 >
-                  <span className="font-mono text-[11px] sm:text-xs">
+                  <span className="font-mono text-caption sm:text-xs">
                     {stage.label}
                   </span>
                   <span
                     className={clsx(
-                      "text-[10px] uppercase tracking-[0.18em]",
+                      "text-caption uppercase tracking-[0.18em]",
                       status === "pending" &&
                         "text-noir-foreground/50",
                       status === "running" &&
@@ -184,18 +184,18 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
 
         <div className="space-y-2">
           <p
-            className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-noir-foreground/60"
+            className="text-caption sm:text-xs uppercase tracking-[0.2em] text-noir-foreground/60"
             title="Duality compares the CV's original adversarial surface with the Funversarial layer we add: first scanning for existing prompt-injection or canary-style patterns, then tracking the additional patterns introduced by eggs."
           >
             Pre-hardening scan (Duality – original vs. Funversarial layer)
             <span
               aria-hidden="true"
-              className="ml-1 inline-flex items-center justify-center rounded border border-noir-border/60 px-1 text-[9px] font-mono text-noir-foreground/60 align-middle"
+              className="ml-1 inline-flex items-center justify-center rounded border border-noir-border/60 px-1 text-xs font-mono text-noir-foreground/60 align-middle"
             >
               ?
             </span>
           </p>
-          <p className="text-[10px] sm:text-xs text-noir-foreground/50">
+          <p className="text-caption sm:text-xs text-noir-foreground/50">
             PII handling is{" "}
             <span className="font-semibold text-neon-cyan">
               Stateless &amp; Volatile
@@ -204,22 +204,22 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
           </p>
           <div className="mt-1 rounded-lg border border-noir-border bg-noir-bg/80 p-2">
             {!dualityResult && (
-              <p className="text-[11px] text-noir-foreground/60">
+              <p className="text-caption text-noir-foreground/60">
                 Awaiting first scan. Drop a CV to begin analysis.
               </p>
             )}
             {dualityResult && !dualityResult.hasSuspiciousPatterns && (
-              <p className="text-[11px] text-neon-green">
+              <p className="text-caption text-neon-green">
                 No suspicious prompt-injection patterns detected in the
                 original CV.
               </p>
             )}
             {dualityResult && dualityResult.hasSuspiciousPatterns && (
               <div className="space-y-2">
-                <p className="text-[11px] text-neon-red">
+                <p className="text-caption text-neon-red">
                   Suspicious patterns detected (prompt-injection, canary URLs, or metadata):
                 </p>
-                <ul className="ml-4 list-disc space-y-1 text-[11px] text-neon-red">
+                <ul className="ml-4 list-disc space-y-1 text-caption text-neon-red">
                   {dualityResult.matchedPatterns.map((name) => (
                     <li key={name}>
                       <span className="font-mono">{name}</span>
@@ -227,7 +227,7 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
                   ))}
                 </ul>
                 {dualityResult.details && (
-                  <ul className="mt-1 space-y-0.5 text-[10px] text-neon-red">
+                  <ul className="mt-1 space-y-0.5 text-caption text-neon-red">
                     {dualityResult.details.map((detail) => (
                       <li key={detail}>{detail}</li>
                     ))}
@@ -238,10 +238,10 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
                   role="status"
                   aria-live="polite"
                 >
-                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-red/90">
+                  <p className="font-mono text-caption uppercase tracking-[0.2em] text-neon-red/90">
                     {DUALITY_REMEDIATION_LABEL}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-noir-foreground/90">
+                  <p className="mt-0.5 text-caption text-noir-foreground/90">
                     {DUALITY_REMEDIATION_MESSAGE}
                   </p>
                 </div>
@@ -252,10 +252,10 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
       </div>
 
       <div className="space-y-1">
-        <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-noir-foreground/60">
+        <p className="text-caption sm:text-xs uppercase tracking-[0.2em] text-noir-foreground/60">
           Terminal Log
         </p>
-        <div className="noir-shell relative max-h-40 overflow-y-auto rounded-lg border border-noir-border bg-noir-bg/80 p-2 font-mono text-xs md:text-[11px] leading-relaxed"
+        <div className="noir-shell relative max-h-40 overflow-y-auto rounded-lg border border-noir-border bg-noir-bg/80 p-2 font-mono text-caption leading-relaxed"
           role="log"
           aria-live="polite"
           aria-label="Terminal log"

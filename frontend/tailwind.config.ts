@@ -7,6 +7,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontSize: {
+        caption: ["0.8125rem", { lineHeight: "1.4" }],
+      },
       colors: {
         "noir-bg": "#050814",
         "noir-panel": "#050b18",

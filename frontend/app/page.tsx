@@ -619,28 +619,28 @@ export default function Home() {
                 FunversarialCV
               </span>
             </h1>
-            <p className="text-xs text-noir-foreground/70">
+            <p className="text-sm text-noir-foreground/70">
               Adversarial CV hardening console for hungry LLMs.
             </p>
           </div>
         </header>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-neon-cyan/80">
+          <p className="text-caption sm:text-xs font-mono uppercase tracking-[0.2em] text-neon-cyan/80">
             PII Mode: Stateless &amp; Volatile
           </p>
           <div className="flex items-center gap-2">
-            <span className="shrink-0 rounded-full border border-neon-green/60 bg-noir-panel px-3 py-1 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-green engine-online-pulse">
+            <span className="shrink-0 rounded-full border border-neon-green/60 bg-noir-panel px-3 py-1 text-caption sm:text-xs uppercase tracking-[0.2em] text-neon-green engine-online-pulse">
               Engine Online
             </span>
             <Link
               href="/resources"
-              className="rounded-full border border-neon-cyan/70 px-3 py-1 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-cyan hover:border-neon-green hover:text-neon-green focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+              className="rounded-full border border-neon-cyan/70 px-3 py-1 text-caption sm:text-xs uppercase tracking-[0.2em] text-neon-cyan hover:border-neon-green hover:text-neon-green focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
             >
               Resources
             </Link>
           </div>
         </div>
-        <p className="mb-6 text-xs text-noir-foreground/80">
+        <p className="mb-6 text-sm text-noir-foreground/80">
           FunversarialCV is an educational tool for exploring how CVs behave in
           AI-heavy hiring flows. It hardens documents with OWASP-aligned,
           LLM-targeted easter eggs while keeping your data inside a Stateless
@@ -651,7 +651,7 @@ export default function Home() {
           possible; when that isn’t possible we fall back to a rebuild path and
           explain it in the UI.
         </p>
-        <p className="mb-4 text-[11px] text-neon-cyan/90 border-l-2 border-neon-cyan/50 pl-3 py-1">
+        <p className="mb-4 text-caption text-neon-cyan/90 border-l-2 border-neon-cyan/50 pl-3 py-1">
           Your CV is processed in your browser first. Before anything leaves your device,
           we replace email, phone, and other identifiers with short-lived tokens. Our
           server only sees tokens, never your raw contact details.
@@ -659,82 +659,82 @@ export default function Home() {
 
         <section className="flex flex-1 flex-col gap-8 md:flex-row">
           <div className="flex-1">
-            <div className="mb-4 text-xs uppercase tracking-[0.2em] text-neon-cyan">
+            <div className="mb-4 text-caption uppercase tracking-[0.2em] text-neon-cyan">
               Input Channel
             </div>
             <DropZone onFileSelect={onFileSelect} maxSizeBytes={MAX_FILE_SIZE_BYTES} openFilePickerRef={openFilePickerRef} />
-            <p className="mt-1 text-[10px] text-noir-foreground/50">
+            <p className="mt-1 text-caption text-noir-foreground/50">
               Max 4 MB. PDF or DOCX only.
             </p>
-            <p className="mt-1.5 text-[10px] text-noir-foreground/50 font-mono" title="Open DevTools → Network, trigger Harden, inspect the POST to /api/harden; payload should contain tokens like {{PII_EMAIL_0}}, not raw email or phone.">
-              Verify: DevTools → Network → inspect <code className="text-[9px]">POST /api/harden</code> — payload has tokens only, no raw PII.
+            <p className="mt-1.5 text-caption text-noir-foreground/50 font-mono" title="Open DevTools → Network, trigger Harden, inspect the POST to /api/harden; payload should contain tokens like {{PII_EMAIL_0}}, not raw email or phone.">
+              Verify: DevTools → Network → inspect <code className="text-xs">POST /api/harden</code> — payload has tokens only, no raw PII.
             </p>
-            <div className="mt-3 space-y-2 text-[10px] text-noir-foreground/60">
+            <div className="mt-3 space-y-2 text-caption text-noir-foreground/60">
               <p className="uppercase tracking-[0.2em] text-neon-cyan">
                 Sample CV Preset
               </p>
-              <p className="text-[10px] text-noir-foreground/60">
+              <p className="text-caption text-noir-foreground/60">
                 Load a synthetic demo CV instead of your own — use <span className="text-neon-cyan font-mono">Clean</span> for a safe baseline, or <span className="text-neon-green font-mono">Dirty</span> to explore adversarial content.
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   type="button"
                   variant="secondary"
-                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-neon-cyan/30 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                  className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-neon-cyan/30 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
                   disabled={isDemoLoading}
                   onClick={() => loadPreset("clean", "pdf")}
                 >
                   <span className="font-mono text-neon-cyan">Clean · PDF</span>
-                  <span className="text-[9px] text-noir-foreground/60">
+                  <span className="text-xs text-noir-foreground/60">
                     Baseline sample
                   </span>
                 </Button>
                 <Button
                   type="button"
                   variant="secondary"
-                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-neon-cyan/30 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                  className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-neon-cyan/30 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
                   disabled={isDemoLoading}
                   onClick={() => loadPreset("clean", "docx")}
                 >
                   <span className="font-mono text-neon-cyan">Clean · DOCX</span>
-                  <span className="text-[9px] text-noir-foreground/60">
+                  <span className="text-xs text-noir-foreground/60">
                     Baseline sample (Word)
                   </span>
                 </Button>
                 <Button
                   type="button"
                   variant="secondary"
-                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-amber-300/70 border-dashed bg-noir-panel text-noir-foreground hover:border-amber-400/80 flex flex-col items-start"
+                  className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-amber-300/70 border-dashed bg-noir-panel text-noir-foreground hover:border-amber-400/80 flex flex-col items-start"
                   disabled={isDemoLoading}
                   onClick={() => loadPreset("dirty", "pdf")}
                 >
                   <span className="font-mono text-neon-green">Dirty · PDF</span>
-                  <span className="text-[9px] text-noir-foreground/60">
+                  <span className="text-xs text-noir-foreground/60">
                     Adversarial sample
                   </span>
                 </Button>
                 <Button
                   type="button"
                   variant="secondary"
-                  className="min-h-[36px] px-3 py-2 text-[10px] sm:text-xs border border-amber-300/70 border-dashed bg-noir-panel text-noir-foreground hover:border-amber-400/80 flex flex-col items-start"
+                  className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-amber-300/70 border-dashed bg-noir-panel text-noir-foreground hover:border-amber-400/80 flex flex-col items-start"
                   disabled={isDemoLoading}
                   onClick={() => loadPreset("dirty", "docx")}
                 >
                   <span className="font-mono text-neon-green">Dirty · DOCX</span>
-                  <span className="text-[9px] text-noir-foreground/60">
+                  <span className="text-xs text-noir-foreground/60">
                     Adversarial sample (Word)
                   </span>
                 </Button>
               </div>
               {isDemoLoading && (
                 <p
-                  className="text-[10px] text-neon-cyan/80 font-mono"
+                  className="text-caption text-neon-cyan/80 font-mono"
                   aria-live="polite"
                 >
                   &gt; Generating demo CV… this may take a few seconds.
                 </p>
               )}
-              <p className="text-[10px] text-noir-foreground/60">
+              <p className="text-caption text-noir-foreground/60">
                 &gt; Last preset:{" "}
                 <span className="font-mono text-neon-green">
                   {demoVariant === "clean" ? "clean" : "dirty"} ·{" "}
@@ -744,13 +744,13 @@ export default function Home() {
             </div>
             {selectedFileName && (
               <div ref={armedSectionRef}>
-                <p className="mt-3 text-xs text-neon-green">
+                <p className="mt-3 text-sm text-neon-green">
                   &gt; Armed CV: <span className="font-semibold">{selectedFileName}</span>
                 </p>
                 <div className="mt-1 flex flex-col items-start gap-1">
                   <button
                     type="button"
-                    className={`px-0 text-[10px] underline underline-offset-2 ${
+                    className={`px-0 text-caption underline underline-offset-2 ${
                       hasDemoLoaded
                         ? "text-neon-cyan hover:text-neon-green"
                         : "text-noir-foreground/40 cursor-not-allowed"
@@ -768,20 +768,20 @@ export default function Home() {
                       clearFile();
                       openFilePickerRef.current?.();
                     }}
-                    className="min-h-[44px] py-2 px-3 text-[10px] sm:text-xs"
+                    className="min-h-[44px] py-2 px-3 text-caption sm:text-xs"
                     aria-label="Change file"
                   >
                     Change file
                   </Button>
                 </div>
-                <p className="mt-1 text-[10px] text-noir-foreground/60">
+                <p className="mt-1 text-caption text-noir-foreground/60">
                   Configure eggs below, then click Harden.
                 </p>
-                <p className="mt-0.5 text-[10px] text-noir-foreground/50">
+                <p className="mt-0.5 text-caption text-noir-foreground/50">
                   Output uses plain-text layout unless &quot;Preserve styles&quot; is on (add-only eggs only).
                 </p>
                 <div className="mt-2">
-                  <label className="flex min-h-[44px] cursor-pointer items-center gap-2 py-2 text-xs text-noir-foreground/80">
+                  <label className="flex min-h-[44px] cursor-pointer items-center gap-2 py-2 text-sm text-noir-foreground/80">
                     <input
                       type="checkbox"
                       checked={preserveStyles}
@@ -794,20 +794,20 @@ export default function Home() {
                     />
                     <span>Preserve styles</span>
                   </label>
-                  <p id="preserve-styles-desc" className="text-[10px] text-noir-foreground/50 ml-6 -mt-1">
+                  <p id="preserve-styles-desc" className="text-caption text-noir-foreground/50 ml-6 -mt-1">
                     DOCX: we keep layout via in-place structure edits when possible. PDF: we rebuild from text so layout may change. If an egg changes body text we rebuild and styles may not be preserved; the log will indicate which path was used.
                   </p>
                 </div>
                 <div className="mt-3">
                   <Card className="px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-noir-foreground/60 mb-2">
+                    <p className="text-caption uppercase tracking-[0.2em] text-noir-foreground/60 mb-2">
                       Eggs to run
                     </p>
                     <div className="flex flex-wrap gap-x-4 gap-y-0">
                     {EGG_OPTIONS.map((egg) => (
                       <label
                         key={egg.id}
-                        className="flex min-h-[44px] cursor-pointer items-center gap-2 py-2 pr-2 text-xs text-noir-foreground/80"
+                        className="flex min-h-[44px] cursor-pointer items-center gap-2 py-2 pr-2 text-sm text-noir-foreground/80"
                       >
                         <input
                           type="checkbox"
@@ -817,7 +817,7 @@ export default function Home() {
                         />
                         <span className="flex flex-col leading-tight">
                           <span>{egg.name}</span>
-                          <span className="text-[9px] font-mono text-noir-foreground/50">
+                          <span className="text-xs font-mono text-noir-foreground/50">
                             {egg.id === "invisible-hand" || egg.id === "canary-wing"
                               ? "STYLE-AFFECTING"
                               : "STYLE-SAFE"}
@@ -853,7 +853,7 @@ export default function Home() {
                 <p
                   ref={successMessageRef}
                   tabIndex={-1}
-                  className="text-xs text-neon-green"
+                  className="text-sm text-neon-green"
                 >
                   &gt;{" "}
                   {lastHardenedConfigRef.current?.eggIds?.length === 0
@@ -884,14 +884,14 @@ export default function Home() {
             )}
             {error && (
               <div ref={errorRef} className="mt-2" role="alert">
-                <p className="text-xs text-neon-red">
+                <p className="text-sm text-neon-red">
                   &gt; Alert: {error}
                 </p>
                 <Button
                   ref={retryButtonRef}
                   variant="secondary"
                   onClick={runHarden}
-                  className="mt-1 text-xs px-2 py-1 min-h-[44px]"
+                  className="mt-1 text-sm px-2 py-1 min-h-[44px]"
                   aria-label="Retry"
                 >
                   Retry
@@ -932,15 +932,15 @@ export default function Home() {
             </div>
           </div>
 
-          <aside className="mt-8 w-full text-xs text-noir-foreground/80 md:mt-0 md:w-80 md:shrink-0 md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-3rem)] md:overflow-y-auto">
-            <div className="mb-4 text-xs uppercase tracking-[0.2em] text-neon-cyan">
+          <aside className="mt-8 w-full text-sm text-noir-foreground/80 md:mt-0 md:w-80 md:shrink-0 md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-3rem)] md:overflow-y-auto">
+            <div className="mb-4 text-caption uppercase tracking-[0.2em] text-neon-cyan">
               Pipeline Status
             </div>
             <div className="block md:hidden mb-2">
               <button
                 type="button"
                 onClick={() => setDualityMonitorOpen((o) => !o)}
-                className="flex w-full min-h-[44px] items-center justify-between rounded px-3 py-3 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-cyan focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50"
+                className="flex w-full min-h-[44px] items-center justify-between rounded px-3 py-3 text-caption sm:text-xs uppercase tracking-[0.2em] text-neon-cyan focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50"
                 aria-expanded={dualityMonitorOpen}
                 aria-controls="duality-monitor-content"
                 id="duality-monitor-toggle"

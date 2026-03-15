@@ -31,7 +31,7 @@ export default function CanaryAdminPage({ searchParams }: PageProps) {
       <div className="mx-auto max-w-4xl">
         <header className="mb-6">
           <h1 className="text-xl font-semibold">Canary Wing hits</h1>
-          <p className="mt-1 text-xs text-noir-foreground/70">
+          <p className="mt-1 text-sm text-noir-foreground/70">
             Experimental internal analytics for Canary Wing. Data is
             process-local and bounded; no PII is stored, only token, variant,
             timestamp, user agent, and referer.
@@ -43,7 +43,7 @@ export default function CanaryAdminPage({ searchParams }: PageProps) {
           </p>
         ) : (
           <div className="overflow-x-auto rounded border border-noir-border bg-noir-panel/70">
-            <table className="min-w-full text-xs">
+            <table className="min-w-full text-sm">
               <thead className="bg-noir-panel border-b border-noir-border">
                 <tr>
                   <th className="px-3 py-2 text-left font-semibold">Token</th>
@@ -61,15 +61,15 @@ export default function CanaryAdminPage({ searchParams }: PageProps) {
                     key={`${hit.tokenId}-${hit.ts}-${index}`}
                     className="border-t border-noir-border/50"
                   >
-                    <td className="px-3 py-2 font-mono text-[11px]">
+                    <td className="px-3 py-2 font-mono text-caption">
                       {hit.tokenId}
                     </td>
-                    <td className="px-3 py-2 text-[11px]">{hit.variant}</td>
-                    <td className="px-3 py-2 text-[11px]">{hit.ts}</td>
-                    <td className="px-3 py-2 text-[11px]">
+                    <td className="px-3 py-2 text-caption">{hit.variant}</td>
+                    <td className="px-3 py-2 text-caption">{hit.ts}</td>
+                    <td className="px-3 py-2 text-caption">
                       {hit.userAgent ?? ""}
                     </td>
-                    <td className="px-3 py-2 text-[11px]">
+                    <td className="px-3 py-2 text-caption">
                       {hit.referer ?? ""}
                     </td>
                   </tr>

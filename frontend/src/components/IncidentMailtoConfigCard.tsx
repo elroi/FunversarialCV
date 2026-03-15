@@ -152,7 +152,7 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
       title={
         <span className="flex flex-col gap-0.5">
           <span>{cardTitle}</span>
-          <span className="text-[9px] font-mono text-noir-foreground/60">
+          <span className="text-xs font-mono text-noir-foreground/60">
             STYLE-SAFE
           </span>
         </span>
@@ -165,7 +165,7 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
       className={className}
     >
       <p
-        className="text-[10px] sm:text-xs text-noir-foreground/70 mb-4"
+        className="text-caption sm:text-sm text-noir-foreground/70 mb-4"
         title="This egg identifies the email token in your CV and turns it into a rich mailto: link with configurable subject, body, CC, and BCC."
       >
         LLM02: Insecure Output — wrap candidate email in a pre-filled mailto link.
@@ -174,14 +174,14 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
       {/* —— Email fields (routing) —— */}
       <fieldset className="mb-4">
         <legend
-          className="text-[10px] uppercase tracking-wider text-noir-foreground/80 mb-2"
+          className="text-caption uppercase tracking-wider text-noir-foreground/80 mb-2"
           title="CC, BCC, link placement, and which email token in the CV gets the mailto link."
         >
           Email routing
         </legend>
         <div className="space-y-2">
           <label
-            className="block text-[10px] text-noir-foreground/70"
+            className="block text-caption text-noir-foreground/70"
             title="Optional comma-separated addresses to CC on the incident report (e.g. security@company.com). Non-PII service addresses only."
           >
             CC (comma-separated)
@@ -192,15 +192,15 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
             onChange={(e) => setCcInput(e.target.value)}
             placeholder="security@example.com"
             disabled={disabled}
-            className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
+            className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-sm text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
             aria-describedby="cc-hint"
             title="Optional comma-separated addresses to CC on the incident report. Non-PII service addresses only."
           />
-          <span id="cc-hint" className="text-[10px] text-noir-foreground/50">
+          <span id="cc-hint" className="text-caption text-noir-foreground/50">
             Non-PII service addresses only.
           </span>
           <label
-            className="block text-[10px] text-noir-foreground/70 mt-2"
+            className="block text-caption text-noir-foreground/70 mt-2"
             title="Optional comma-separated addresses to BCC on the incident report."
           >
             BCC
@@ -211,12 +211,12 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
             onChange={(e) => setBccInput(e.target.value)}
             placeholder="optional"
             disabled={disabled}
-            className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
+            className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-sm text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
             title="Optional comma-separated addresses to BCC."
           />
           <div className="flex gap-4 pt-2">
             <label
-              className="flex items-center gap-2 text-xs"
+              className="flex items-center gap-2 text-sm"
               title="Replaces the visible email in the CV with the same text plus the full mailto link in parentheses (e.g. email@example.com (mailto:?...)). Use to test if parsers or clients make the address clickable."
             >
               <input
@@ -230,7 +230,7 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
               Wrap visible email
             </label>
             <label
-              className="flex items-center gap-2 text-xs"
+              className="flex items-center gap-2 text-sm"
               title="Keeps the email as-is and adds a separate incident link next to it (e.g. email@example.com — Report incident [mailto:?...]). Use when you want the CV text unchanged but still want a planted link."
             >
               <input
@@ -244,12 +244,12 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
               Append link
             </label>
           </div>
-          <p className="text-[10px] text-noir-foreground/50 mt-1">
+          <p className="text-caption text-noir-foreground/50 mt-1">
             We try to wrap the email in a link (structure-level edit). If the document structure doesn’t allow it, we append a separate link instead; your choice is respected when possible.
           </p>
           <div className="flex items-center gap-2">
             <label
-              className="text-[10px] text-noir-foreground/70"
+              className="text-caption text-noir-foreground/70"
               title="Your CV's email addresses are replaced by tokens {{PII_EMAIL_0}}, {{PII_EMAIL_1}}, etc. This index (0-based) chooses which token gets the mailto link. Use 0 for the first email, 1 for the second, and so on."
             >
               Email token index
@@ -260,7 +260,7 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
               value={targetTokenIndex}
               onChange={(e) => setTargetTokenIndex(parseInt(e.target.value, 10) || 0)}
               disabled={disabled}
-              className="w-16 rounded border border-noir-border bg-noir-bg px-2 py-1 text-xs focus:border-neon-cyan focus:outline-none"
+              className="w-16 rounded border border-noir-border bg-noir-bg px-2 py-1 text-sm focus:border-neon-cyan focus:outline-none"
               aria-label="Which PII_EMAIL token to use (0-based)"
               title="0-based index: which {{PII_EMAIL_n}} token gets the mailto link (0 = first email, 1 = second, etc.)."
             />
@@ -271,14 +271,14 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
       {/* —— Template fields —— */}
       <fieldset>
         <legend
-          className="text-[10px] uppercase tracking-wider text-noir-foreground/80 mb-2"
+          className="text-caption uppercase tracking-wider text-noir-foreground/80 mb-2"
           title="Preset subject, body, and incident type. Override any field to mix styles (e.g. canary wording with a different subject)."
         >
           Incident template
         </legend>
         <div className="space-y-2">
           <label
-            className="block text-[10px] text-noir-foreground/70"
+            className="block text-caption text-noir-foreground/70"
             title="Preset subject, body, and incident type. You can override any field below to mix styles (e.g. canary wording with a different subject)."
           >
             Template
@@ -287,7 +287,7 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
             value={templateId}
             onChange={(e) => onTemplateChange(e.target.value)}
             disabled={disabled}
-            className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs text-noir-foreground focus:border-neon-cyan focus:outline-none"
+            className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-sm text-noir-foreground focus:border-neon-cyan focus:outline-none"
             aria-describedby="template-hint"
             aria-label="Choose incident mailto template"
             title="Choose a preset or Custom to edit everything. Templates are presets — use Override to mix features (e.g. canary body + any subject)."
@@ -301,14 +301,14 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
           </select>
           <p
             id="template-hint"
-            className="text-[10px] text-noir-foreground/50"
+            className="text-caption text-noir-foreground/50"
             title="Templates only pre-fill subject, body, and incident type. Features like canary wording are not locked to one template — mix and match via Override."
           >
             Templates are presets. Use &quot;Override subject/body&quot; to mix features (e.g. canary-style body with another subject, or add incident types to any template).
           </p>
 
           {selectedTemplate?.description && (
-            <p className="text-[10px] text-neon-cyan/80 italic">
+            <p className="text-caption text-neon-cyan/80 italic">
               {selectedTemplate.description}
             </p>
           )}
@@ -316,7 +316,7 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
           {(showAdvanced || templateId === CUSTOM_TEMPLATE_ID) && (
             <div className="mt-3 space-y-2 pt-2 border-t border-noir-border">
               <label
-                className="block text-[10px] text-noir-foreground/70"
+                className="block text-caption text-noir-foreground/70"
                 title="The email subject line of the incident report (mailto subject= parameter)."
               >
                 Subject
@@ -327,11 +327,11 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder={displaySubject || "Incident Report — FunversarialCV"}
                 disabled={disabled}
-                className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
+                className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-sm placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
                 title="Subject line of the incident email (mailto subject= parameter)."
               />
               <label
-                className="block text-[10px] text-noir-foreground/70"
+                className="block text-caption text-noir-foreground/70"
                 title="The body text of the incident email (mailto body= parameter)."
               >
                 Body
@@ -342,11 +342,11 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
                 placeholder={displayBody || "This incident was triggered by an adversarial CV layer."}
                 rows={3}
                 disabled={disabled}
-                className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none resize-y"
+                className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-sm placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none resize-y"
                 title="Body text of the incident email (mailto body= parameter). Can include canary-style or custom wording."
               />
               <label
-                className="block text-[10px] text-noir-foreground/70"
+                className="block text-caption text-noir-foreground/70"
                 title="Optional tag sent as x-incident-type in the mailto query (e.g. LLM_Prompt_Abuse_Canary, Model_Theft_Canary). Available for any template."
               >
                 Incident type tag
@@ -357,11 +357,11 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
                 onChange={(e) => setIncidentType(e.target.value)}
                 placeholder="e.g. LLM_Prompt_Abuse_Canary"
                 disabled={disabled}
-                className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
+                className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-sm placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
                 title="Optional x-incident-type mailto parameter. Use with any template (e.g. canary, screening abuse)."
               />
               <label
-                className="block text-[10px] text-noir-foreground/70"
+                className="block text-caption text-noir-foreground/70"
                 title="When using Append link mode, this is the visible label for the incident link (e.g. Report incident)."
               >
                 Link label
@@ -372,7 +372,7 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
                 onChange={(e) => setMailtoLabel(e.target.value)}
                 placeholder="Report incident"
                 disabled={disabled}
-                className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-xs placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
+                className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-sm placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
                 title="Visible label for the link when using Append link mode."
               />
             </div>
@@ -382,7 +382,7 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
             <button
               type="button"
               onClick={() => setShowAdvanced(true)}
-              className="text-[10px] text-neon-cyan hover:underline mt-1"
+              className="text-caption text-neon-cyan hover:underline mt-1"
               title="Templates are presets. Click to show subject, body, incident type, and link label so you can mix features (e.g. canary-style body with another subject)."
             >
               Override subject/body
@@ -394,21 +394,21 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
       {/* —— Resulting link: copy to add manually to CV —— */}
       <fieldset className="mt-4 pt-4 border-t border-noir-border">
         <legend
-          className="text-[10px] uppercase tracking-wider text-noir-foreground/80 mb-2"
+          className="text-caption uppercase tracking-wider text-noir-foreground/80 mb-2"
           title="Copy this link to add the incident-report mailto to your CV manually (e.g. in Word or PDF). Replace the placeholder with your email in the document if needed."
         >
           Resulting link — copy to enrich your CV manually
         </legend>
         <p
           id="resulting-link-hint"
-          className="text-[10px] text-noir-foreground/50 mb-2"
+          className="text-caption text-noir-foreground/50 mb-2"
           title="Copy this link to add the incident-report mailto to your CV manually (e.g. paste next to your email). Replace {{PII_EMAIL_0}} with your email in the document if needed."
         >
           Copy this link to add it manually to your CV (e.g. paste next to your email). Replace {tokenPlaceholder} with your email in the document if needed.
         </p>
         <div className="flex gap-2 items-center">
           <code
-            className="flex-1 min-w-0 rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-[10px] text-noir-foreground break-all"
+            className="flex-1 min-w-0 rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-caption text-noir-foreground break-all"
             title={resultingLink}
           >
             {resultingLink}
@@ -417,7 +417,7 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
             type="button"
             onClick={copyMailtoLink}
             disabled={disabled}
-            className="shrink-0 rounded border border-noir-border bg-noir-panel px-2 py-1.5 text-[10px] text-neon-cyan hover:bg-noir-border/50 focus:border-neon-cyan focus:outline-none disabled:opacity-50"
+            className="shrink-0 rounded border border-noir-border bg-noir-panel px-2 py-1.5 text-caption text-neon-cyan hover:bg-noir-border/50 focus:border-neon-cyan focus:outline-none disabled:opacity-50"
             title="Copy this link to add the incident-report mailto to your CV manually."
             aria-label="Copy resulting mailto link"
           >
@@ -433,7 +433,7 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
       >
         <h4
           id="incident-mailto-check-validate-title"
-          className="text-[10px] sm:text-xs uppercase tracking-wider text-noir-foreground/80 mb-2"
+          className="text-caption sm:text-xs uppercase tracking-wider text-noir-foreground/80 mb-2"
         >
           How to check &amp; validate
         </h4>
@@ -441,13 +441,13 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
           <CheckAndValidateBlock
             content={manualCheckAndValidation}
             fallback={
-              <p className="text-[10px] sm:text-xs text-noir-foreground/50 italic">
+              <p className="text-caption sm:text-xs text-noir-foreground/50 italic">
                 Instructions not available. Ensure the app can reach /api/eggs.
               </p>
             }
           />
         ) : (
-          <p className="text-[10px] sm:text-xs text-noir-foreground/50 italic">
+          <p className="text-caption sm:text-xs text-noir-foreground/50 italic">
             Instructions not available. Ensure the app can reach /api/eggs.
           </p>
         )}

@@ -12,23 +12,23 @@ export default function ResourcesPage() {
                 FunversarialCV
               </span>
             </h1>
-            <p className="text-xs text-noir-foreground/70">
+            <p className="text-sm text-noir-foreground/70">
               Adversarial CV hardening console for hungry LLMs.
             </p>
           </div>
         </header>
 
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-neon-cyan/80">
+          <p className="text-caption sm:text-xs font-mono uppercase tracking-[0.2em] text-neon-cyan/80">
             PII Mode: Stateless &amp; Volatile
           </p>
           <div className="flex items-center gap-2">
-            <span className="shrink-0 rounded-full border border-neon-green/60 bg-noir-panel px-3 py-1 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-green engine-online-pulse">
+            <span className="shrink-0 rounded-full border border-neon-green/60 bg-noir-panel px-3 py-1 text-caption sm:text-xs uppercase tracking-[0.2em] text-neon-green engine-online-pulse">
               Engine Online
             </span>
             <Link
               href="/"
-              className="rounded-full border border-neon-cyan/70 px-3 py-1 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-neon-cyan hover:border-neon-green hover:text-neon-green focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+              className="rounded-full border border-neon-cyan/70 px-3 py-1 text-caption sm:text-xs uppercase tracking-[0.2em] text-neon-cyan hover:border-neon-green hover:text-neon-green focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
             >
               Back home
             </Link>
@@ -86,7 +86,7 @@ export default function ResourcesPage() {
               structure level instead of rebuilding it from plain text. That
               structure is often called an <strong>AST</strong> (abstract syntax
               tree): a tree representation of the document (e.g. for DOCX, the
-              XML in <code className="font-mono text-[10px] bg-noir-panel px-1 rounded">word/document.xml</code>).
+              XML in <code className="font-mono text-caption bg-noir-panel px-1 rounded">word/document.xml</code>).
               We modify specific nodes (e.g. wrapping the email run in a
               hyperlink) so styles and layout stay intact. When AST-level edits
               aren’t possible – for example with some PDFs or when an egg
@@ -192,20 +192,20 @@ export default function ResourcesPage() {
             <p className="text-noir-foreground/80 mb-2">
               <strong>For security reviewers:</strong> To verify that only tokens
               leave the browser, open DevTools → Network, trigger &quot;Harden
-              CV&quot;, and inspect the <code className="font-mono text-[10px] bg-noir-panel px-1 rounded">POST /api/harden</code> request.
+              CV&quot;, and inspect the <code className="font-mono text-caption bg-noir-panel px-1 rounded">POST /api/harden</code> request.
               The payload should contain placeholders like{" "}
-              <code className="font-mono text-[10px] bg-noir-panel px-1 rounded">{`{{PII_EMAIL_0}}`}</code> and must
+              <code className="font-mono text-caption bg-noir-panel px-1 rounded">{`{{PII_EMAIL_0}}`}</code> and must
               not contain raw email, phone, or address strings. E2E tests in{" "}
-              <code className="font-mono text-[10px] bg-noir-panel px-1 rounded">frontend/e2e/specs/happy-path.spec.ts</code> assert
-              this; key client logic lives in <code className="font-mono text-[10px] bg-noir-panel px-1 rounded">frontend/src/lib/clientVault.ts</code> and{" "}
-              <code className="font-mono text-[10px] bg-noir-panel px-1 rounded">frontend/app/api/harden/route.ts</code> for the server.
+              <code className="font-mono text-caption bg-noir-panel px-1 rounded">frontend/e2e/specs/happy-path.spec.ts</code> assert
+              this; key client logic lives in <code className="font-mono text-caption bg-noir-panel px-1 rounded">frontend/src/lib/clientVault.ts</code> and{" "}
+              <code className="font-mono text-caption bg-noir-panel px-1 rounded">frontend/app/api/harden/route.ts</code> for the server.
             </p>
             <div className="mt-3 grid gap-4 text-noir-foreground/80 md:grid-cols-2">
               <div className="space-y-1">
-                <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-neon-cyan">
+                <h3 className="text-caption font-semibold uppercase tracking-[0.2em] text-neon-cyan">
                   Processing flow (Stateless Vault)
                 </h3>
-                <ul className="space-y-1 text-xs sm:text-sm font-mono">
+                <ul className="space-y-1 text-caption sm:text-sm font-mono">
                   <li>
                     &gt; [1] Load — CV is uploaded from the browser and held in
                     memory only.
@@ -238,10 +238,10 @@ export default function ResourcesPage() {
                 aria-label="Stateless Vault data flow diagram"
                 className="rounded-lg border border-noir-border bg-noir-panel/60 p-3"
               >
-                <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-neon-cyan">
+                <h3 className="mb-2 text-caption font-semibold uppercase tracking-[0.2em] text-neon-cyan">
                   System diagram
                 </h3>
-                <pre className="font-mono text-[10px] sm:text-xs whitespace-pre leading-relaxed text-noir-foreground/80">
+                <pre className="font-mono text-caption sm:text-xs whitespace-pre leading-relaxed text-noir-foreground/80">
 {`+------------------------------------------------------------+
 |                      Browser client                        |
 |                                                            |

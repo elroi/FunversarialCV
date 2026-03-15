@@ -37,7 +37,7 @@
 | **WS2 – Canary** | Done | Option B (signal-only). Close-the-loop: GET /api/canary/status, “Did my canary sing?” UX, canaryTokenUsed in harden response. Docs: v1 no long-term analytics; persistCanaryHit extension point. |
 | **WS3 – PII** | Done | Address patterns, vault, unit tests, README, Processor integration test (address round-trip). |
 | **WS4 – Rate limit & logging** | Done | rateLimit.ts, log.ts; integrated in harden and canary routes; tests. |
-| **WS5 – Vercel & CI** | Partial | Project root, build, env vars, Hosting & Ops docs done. Open: verify Preview/Production; branch protection. |
+| **WS5 – Vercel & CI** | Partial | Project root, build, env vars, Hosting & Ops docs done. Preview/Production verified (Vercel MCP). Open: branch protection on `main` (currently not enabled). |
 | **WS6 – Pre-launch** | Open | E2E in CI; PR merge; production smoke; tag v1.0.0-launch; optional changelog. |
 
 ---
@@ -264,9 +264,9 @@
 - **Build settings**
   - [x] Ensure build command/output directory use the standard Next.js defaults (unless there’s a reason to customize).
 - **Preview vs production**
-  - [ ] Verify:
-    - PR branches deploy to Preview.
-    - `main` deploys to Production.
+  - [x] Verify:
+    - PR branches deploy to Preview (Vercel: deployments from `feature/*` have target Preview).
+    - `main` deploys to Production (Vercel: deployments from `main` have target production).
 
 ### 5.2 Environment Variables
 
@@ -279,13 +279,13 @@
 ### 5.3 Branch Protection & CI
 
 - **Branch rules**
-  - [ ] Confirm `main` is protected:
+  - [ ] Confirm `main` is protected (verified via GitHub API: **main is not currently protected**; enable in repo **Settings → Branches → Add rule** for `main`):
     - All changes via PR.
     - Required checks:
       - `CI / unit-and-lint`.
       - `e2e`.
 - **Vercel + GitHub integration**
-  - [ ] Ensure Vercel only promotes to production when those checks are green.
+  - [ ] Ensure Vercel only promotes to production when those checks are green (after branch rule is added).
 
 ### 5.4 Hosting & Ops Documentation
 

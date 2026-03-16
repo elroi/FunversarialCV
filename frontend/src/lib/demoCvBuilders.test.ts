@@ -75,5 +75,16 @@ describe("demoCvBuilders", () => {
       expect(text).toContain("SYSTEM:");
       expect(text).toContain("alex.mercer@example-secure.test");
     });
+
+    it("contact line has link annotations for email, phone, LinkedIn, GitHub", () => {
+      const buffer = buildUncompressedDemoCvPdf("clean");
+      const raw = buffer.toString("utf8");
+      expect(raw).toMatch(/\/URI \(mailto:alex\.mercer@example-secure\.test\)/);
+      expect(raw).toMatch(/\/URI \(tel:\d+\)/);
+      expect(raw).toMatch(/\/URI \(https:\/\/linkedin\.com/);
+      expect(raw).toMatch(/\/URI \(https:\/\/github\.com/);
+      const linkCount = (raw.match(/\/Subtype \/Link/g) || []).length;
+      expect(linkCount).toBeGreaterThanOrEqual(4);
+    });
   });
 });

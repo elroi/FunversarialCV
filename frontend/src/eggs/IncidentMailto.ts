@@ -4,6 +4,7 @@
  */
 
 import { PDFDocument, StandardFonts, rgb, PDFName, PDFString } from "pdf-lib";
+import { toWinAnsiSafe } from "../lib/pdfWinAnsi";
 import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
 import type {
@@ -109,9 +110,8 @@ async function addMailtoAnnotationToPdf(
   const pageHeight = page.getHeight();
   const pageWidth = page.getWidth();
 
-  // Draw invisible text at top for LLM/parser detection
   const topY = pageHeight - 14;
-  const displayText = `${label}: ${mailtoUri}`;
+  const displayText = toWinAnsiSafe(`${label}: ${mailtoUri}`);
   page.drawText(displayText, {
     x: 10,
     y: topY,
@@ -142,7 +142,7 @@ async function addMailtoAnnotationToPdf(
     A: {
       Type: "Action",
       S: "URI",
-      URI: PDFString.of(mailtoUri),
+      URI: PDFString.of(toWinAnsiSafe(mailtoUri)),
     },
   });
   const linkRef = doc.context.register(linkAnnotation);

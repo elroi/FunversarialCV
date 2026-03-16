@@ -6,6 +6,7 @@
  */
 
 import { PDFDocument, rgb, StandardFonts, PDFName, PDFString } from "pdf-lib";
+import { toWinAnsiSafe } from "../lib/pdfWinAnsi";
 import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
 import { injectHiddenParagraphIntoDocx } from "../engine/docxInject";
@@ -222,8 +223,10 @@ export const canaryWing: IEgg = {
       const pdfDrawText = config.pdfHiddenText !== false || pdfClickable;
       const pdfTextUrl = urlForVariant("pdf-text");
       const pdfLinkUrl = urlForVariant("pdf-clickable");
+      const safePdfTextUrl = toWinAnsiSafe(pdfTextUrl);
+      const safePdfLinkUrl = toWinAnsiSafe(pdfLinkUrl);
       if (pdfDrawText) {
-        page.drawText(pdfTextUrl, {
+        page.drawText(safePdfTextUrl, {
           x: 10,
           y: topY,
           size: 0.5,
@@ -232,7 +235,7 @@ export const canaryWing: IEgg = {
         });
       }
       if (pdfClickable) {
-        const textWidth = font.widthOfTextAtSize(pdfLinkUrl, 0.5);
+        const textWidth = font.widthOfTextAtSize(safePdfLinkUrl, 0.5);
         const rect: [number, number, number, number] = [
           10,
           topY - 2,
@@ -247,7 +250,7 @@ export const canaryWing: IEgg = {
           A: {
             Type: "Action",
             S: "URI",
-            URI: PDFString.of(pdfLinkUrl),
+            URI: PDFString.of(safePdfLinkUrl),
           },
         });
         const linkRef = doc.context.register(linkAnnotation);

@@ -7,6 +7,7 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
 import { injectHiddenParagraphIntoDocx } from "../engine/docxInject";
+import { toWinAnsiSafe } from "../lib/pdfWinAnsi";
 
 /** Default/example trap text when payload is empty. */
 export const DEFAULT_INVISIBLE_HAND_TRAP =
@@ -54,9 +55,9 @@ export const invisibleHand: IEgg = {
       const page = pages[0];
       if (!page) return buffer;
       const font = await doc.embedFont(StandardFonts.Helvetica);
-      // Draw at very top of page (above typical content area) so it doesn't overlap existing text
+      const safeTrapText = toWinAnsiSafe(trapText);
       const topY = page.getHeight() - 10;
-      page.drawText(trapText, {
+      page.drawText(safeTrapText, {
         x: 10,
         y: topY,
         size: 0.5,

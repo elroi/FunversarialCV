@@ -7,6 +7,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import Home from "./page";
 import * as ClientVault from "../src/lib/clientVault";
 import * as ClientDocumentCreate from "../src/lib/clientDocumentCreate";
+import * as ClientTokenReplace from "../src/lib/clientTokenReplaceInCopy";
 
 const createFile = (name: string, type: string) =>
   new File(["dummy"], name, { type });
@@ -105,6 +106,8 @@ describe("Home page", () => {
 
   describe("client-side PII dehydration and rehydration wiring", () => {
     it("dehydrates in browser, rebuilds tokenized file, sends file, then rehydrates response", async () => {
+      jest.spyOn(ClientTokenReplace, "replacePiiWithTokensInCopy").mockResolvedValue(null);
+
       const spyDehydrate = jest
         .spyOn(ClientVault, "dehydrateInBrowser")
         .mockResolvedValue({
@@ -149,7 +152,7 @@ describe("Home page", () => {
       });
 
       expect(
-        screen.getByText(/\[CLIENT\] Dehydrated PII in-browser/i)
+        screen.getByText(/\[CLIENT\] Dehydrated PII in-browser,.+sending to server\./i)
       ).toBeInTheDocument();
       expect(ClientDocumentCreate.createDocumentWithTextInBrowser).toHaveBeenCalledWith(
         "Hello {{PII_EMAIL_0}}",

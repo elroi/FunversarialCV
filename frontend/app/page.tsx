@@ -81,6 +81,15 @@ export default function Home() {
   /** Egg metadata from GET /api/eggs (id -> { name, manualCheckAndValidation }). */
   const [eggMetadataById, setEggMetadataById] = useState<Record<string, { name: string; manualCheckAndValidation: string }>>({});
 
+  /** When set, show confirmation dialog: PDF and eggs can only be processed by the server. */
+  const [serverPdfConfirm, setServerPdfConfirm] = useState<{
+    fileToSend: File;
+    name: string;
+    payloadsForEnabled: Record<string, string>;
+    enabledEggIds: string[];
+    preserveStyles: boolean;
+  } | null>(null);
+
   useEffect(() => {
     if (typeof fetch !== "function") return;
     fetch("/api/eggs")
@@ -250,6 +259,212 @@ export default function Home() {
     void startPipelineForFile(selectedFile);
   };
 
+  /** Builds formData, POSTs to /api/harden, and handles response. Used by main flow and server-PDF confirm dialog. */
+  const runSubmitToServer = useCallback(
+    async (params: {
+      fileToSend: File;
+      name: string;
+      eggIdsToUse: string[];
+      payloadsForEnabled: Record<string, string>;
+      preserveStyles: boolean;
+      piiMapForRehydrate: PiiMap | null;
+      rehydrateMimeType: string | null;
+    }) => {
+      const {
+        fileToSend,
+        name,
+        eggIdsToUse,
+        payloadsForEnabled,
+        preserveStyles,
+        piiMapForRehydrate,
+        rehydrateMimeType,
+      } = params;
+      const formData = new FormData();
+      formData.append("file", fileToSend);
+      formData.append("payloads", JSON.stringify(payloadsForEnabled));
+      formData.append("eggIds", JSON.stringify(eggIdsToUse));
+      if (preserveStyles) {
+        formData.append("preserveStyles", "true");
+      }
+
+      try {
+        const res = await fetch("/api/harden", { method: "POST", body: formData });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          const errMsg =
+            typeof data?.error === "string" ? data.error : "Processing failed.";
+          setError(errMsg);
+          setProcessingState("error");
+          setActiveStage("duality-check");
+          setLog((prev) => [
+            ...prev,
+            {
+              id: "duality-err",
+              stage: "duality-check",
+              level: "error",
+              message: `[ERROR] ${errMsg}`,
+            },
+          ]);
+          retryButtonRef.current?.focus();
+          return;
+        }
+
+        const bufferBase64 = data.bufferBase64;
+        if (typeof bufferBase64 !== "string") {
+          setError("Invalid response from server: missing document data.");
+          setProcessingState("error");
+          setActiveStage("duality-check");
+          setLog((prev) => [
+            ...prev,
+            {
+              id: "invalid-resp",
+              stage: "duality-check",
+              level: "error",
+              message: "[ERROR] Invalid response from server.",
+            },
+          ]);
+          retryButtonRef.current?.focus();
+          return;
+        }
+
+        const mimeTypeFromServer = data.mimeType as string;
+        const originalName = (data.originalName as string) || name;
+        const scannerScan = data.scannerReport?.scan;
+
+        let blob: Blob;
+        try {
+          const binaryString = atob(bufferBase64);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+
+          if (piiMapForRehydrate && rehydrateMimeType) {
+            const tokenizedBuffer = bytes.buffer.slice(
+              bytes.byteOffset,
+              bytes.byteOffset + bytes.byteLength
+            );
+            const rehydratedBuffer = await rehydrateInBrowser(
+              tokenizedBuffer,
+              rehydrateMimeType,
+              piiMapForRehydrate
+            );
+            const rehydratedBytes = new Uint8Array(rehydratedBuffer);
+            blob = new Blob([rehydratedBytes], { type: rehydrateMimeType });
+            setLog((prev) => [
+              ...prev,
+              {
+                id: "client-rehydrate",
+                stage: "rehydration",
+                level: "success",
+                message:
+                  "[CLIENT] Rehydrated tokens back into original PII in-browser; server only saw tokenized content.",
+              },
+            ]);
+          } else {
+            blob = new Blob([bytes], { type: mimeTypeFromServer });
+          }
+        } catch {
+          setError("Invalid response from server: invalid document data.");
+          setProcessingState("error");
+          setActiveStage("duality-check");
+          setLog((prev) => [
+            ...prev,
+            {
+              id: "invalid-resp",
+              stage: "duality-check",
+              level: "error",
+              message: "[ERROR] Invalid response from server.",
+            },
+          ]);
+          retryButtonRef.current?.focus();
+          return;
+        }
+
+        lastHardenedBlobRef.current = blob;
+        lastHardenedConfigRef.current = {
+          payloads: { ...payloadsForEnabled },
+          eggIds: [...eggIdsToUse],
+          preserveStyles,
+        };
+
+        const canaryTokenUsed = data.canaryTokenUsed;
+        if (typeof canaryTokenUsed === "string" && canaryTokenUsed.trim() !== "") {
+          try {
+            const current = canaryWingPayload.trim() ? JSON.parse(canaryWingPayload) as Record<string, unknown> : {};
+            setCanaryWingPayload(JSON.stringify({ ...current, token: canaryTokenUsed }));
+          } catch {
+            // leave as-is
+          }
+        }
+
+        if (scannerScan && typeof scannerScan === "object") {
+          setDualityResult({
+            hasSuspiciousPatterns: !!scannerScan.hasSuspiciousPatterns,
+            matchedPatterns: Array.isArray(scannerScan.matchedPatterns)
+              ? scannerScan.matchedPatterns
+              : [],
+            details: Array.isArray(scannerScan.details) ? scannerScan.details : undefined,
+          });
+        } else {
+          setDualityResult({ hasSuspiciousPatterns: false, matchedPatterns: [] });
+        }
+
+        setProcessingState("completed");
+        setActiveStage("rehydration");
+        const noEggsApplied = eggIdsToUse.length === 0;
+        setSuccessMessage(noEggsApplied ? originalName : buildFinalFileName(originalName));
+        successMessageRef.current?.focus();
+        setLog((prev) => [
+          ...prev,
+          {
+            id: "duality",
+            stage: "duality-check",
+            level: "info",
+            message:
+              "[DUALITY] Scanning original CV for existing prompt-injection patterns…",
+          },
+          {
+            id: "dehydrate",
+            stage: "dehydration",
+            level: "info",
+            message:
+              "[DEHYDRATE] PII dehydrated into Stateless & Volatile vault tokens (in-memory only; never stored).",
+          },
+          {
+            id: "inject",
+            stage: "injection",
+            level: "success",
+            message: "[INJECT] Funversarial eggs applied to dehydrated document.",
+          },
+          {
+            id: "rehydrate",
+            stage: "rehydration",
+            level: "success",
+            message:
+              "[REHYDRATE] PII rehydrated into final hardened CV stream. Stateless & Volatile handling complete; nothing persisted.",
+          },
+        ]);
+      } catch (_err) {
+        setError("Network error. Please try again.");
+        setProcessingState("error");
+        setActiveStage("accept");
+        retryButtonRef.current?.focus();
+        setLog((prev) => [
+          ...prev,
+          {
+            id: "network-err",
+            stage: "accept",
+            level: "error",
+            message: "[ERROR] Network error.",
+          },
+        ]);
+      }
+    },
+    [canaryWingPayload]
+  );
+
   const startPipelineForFile = async (file: File) => {
     const name = file.name;
     if (file.size === 0) {
@@ -294,11 +509,38 @@ export default function Home() {
         payloadsForEnabled[id] = payloads[id as keyof typeof payloads];
       }
     }
-    const formData = new FormData();
 
     let rehydrateMimeType: string | null = null;
     let piiMapForRehydrate: PiiMap | null = null;
     let fileToSend: File = file;
+
+    // E2E hook: force server-PDF confirmation dialog without calling dehydrateInBrowser (for Playwright).
+    if (
+      typeof window !== "undefined" &&
+      window.location.search.includes("e2eServerPdf=1") &&
+      file.type === "application/pdf" &&
+      enabledEggIds.size > 0
+    ) {
+      setLog((prev) => [
+        ...prev,
+        {
+          id: "client-server-only-confirm",
+          stage: "dehydration",
+          level: "info",
+          message:
+            "[CLIENT] This PDF and the selected eggs can only be processed by the server. Confirm to continue or uncheck eggs.",
+        },
+      ]);
+      setServerPdfConfirm({
+        fileToSend: file,
+        name,
+        payloadsForEnabled: { ...payloadsForEnabled },
+        enabledEggIds: [...enabledEggIds],
+        preserveStyles,
+      });
+      return;
+    }
+
     try {
       const result = await dehydrateInBrowser(file);
       rehydrateMimeType = result.mimeType;
@@ -341,204 +583,57 @@ export default function Home() {
         e instanceof Error
           ? e.message
           : "Client-side dehydration failed. Falling back to server path.";
-      const friendly =
-        /defineProperty|non-object/i.test(msg)
-          ? "PDF could not be read in the browser; file was sent to the server for processing instead."
-          : msg;
+      const isPdfParseIssue = /defineProperty|non-object|Invalid PDF/i.test(msg);
+      const friendly = isPdfParseIssue
+        ? "This PDF could not be read in the browser (parser limitation); using server path. Many other PDFs work client-side."
+        : msg;
+      // Use "info" level for expected fallback (PDF parse issues), "warn" for unexpected errors
+      const level = isPdfParseIssue ? "info" : "warn";
       setLog((prev) => [
         ...prev,
         {
-          id: "client-dehydrate-error",
+          id: "client-dehydrate-fallback",
           stage: "dehydration",
-          level: "error",
+          level,
           message: `[CLIENT] ${friendly}`,
         },
       ]);
-    }
-
-    formData.append("file", fileToSend);
-    formData.append("payloads", JSON.stringify(payloadsForEnabled));
-    formData.append("eggIds", JSON.stringify([...enabledEggIds]));
-    if (preserveStyles) {
-      formData.append("preserveStyles", "true");
-    }
-
-    try {
-      const res = await fetch("/api/harden", { method: "POST", body: formData });
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        const errMsg =
-          typeof data?.error === "string" ? data.error : "Processing failed.";
-        setError(errMsg);
-        setProcessingState("error");
-        setActiveStage("duality-check");
+      // When PDF and eggs are enabled, require confirmation before sending to server
+      if (
+        isPdfParseIssue &&
+        file.type === "application/pdf" &&
+        enabledEggIds.size > 0
+      ) {
         setLog((prev) => [
           ...prev,
           {
-            id: "duality-err",
-            stage: "duality-check",
-            level: "error",
-            message: `[ERROR] ${errMsg}`,
+            id: "client-server-only-confirm",
+            stage: "dehydration",
+            level: "info",
+            message:
+              "[CLIENT] This PDF and the selected eggs can only be processed by the server. Confirm to continue or uncheck eggs.",
           },
         ]);
-        retryButtonRef.current?.focus();
-        return;
-      }
-
-      const bufferBase64 = data.bufferBase64;
-      if (typeof bufferBase64 !== "string") {
-        setError("Invalid response from server: missing document data.");
-        setProcessingState("error");
-        setActiveStage("duality-check");
-        setLog((prev) => [
-          ...prev,
-          {
-            id: "invalid-resp",
-            stage: "duality-check",
-            level: "error",
-            message: "[ERROR] Invalid response from server.",
-          },
-        ]);
-        retryButtonRef.current?.focus();
-        return;
-      }
-
-      const mimeTypeFromServer = data.mimeType as string;
-      const originalName = (data.originalName as string) || name;
-      const scannerScan = data.scannerReport?.scan;
-
-      let blob: Blob;
-      try {
-        const binaryString = atob(bufferBase64);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-
-        // If we dehydrated on the client and held a PiiMap, rehydrate in-browser before download.
-        if (piiMapForRehydrate && rehydrateMimeType) {
-          const tokenizedBuffer = bytes.buffer.slice(
-            bytes.byteOffset,
-            bytes.byteOffset + bytes.byteLength
-          );
-          const rehydratedBuffer = await rehydrateInBrowser(
-            tokenizedBuffer,
-            rehydrateMimeType,
-            piiMapForRehydrate
-          );
-          const rehydratedBytes = new Uint8Array(rehydratedBuffer);
-          blob = new Blob([rehydratedBytes], { type: rehydrateMimeType });
-          setLog((prev) => [
-            ...prev,
-            {
-              id: "client-rehydrate",
-              stage: "rehydration",
-              level: "success",
-              message:
-                "[CLIENT] Rehydrated tokens back into original PII in-browser; server only saw tokenized content.",
-            },
-          ]);
-        } else {
-          blob = new Blob([bytes], { type: mimeTypeFromServer });
-        }
-      } catch {
-        setError("Invalid response from server: invalid document data.");
-        setProcessingState("error");
-        setActiveStage("duality-check");
-        setLog((prev) => [
-          ...prev,
-          {
-            id: "invalid-resp",
-            stage: "duality-check",
-            level: "error",
-            message: "[ERROR] Invalid response from server.",
-          },
-        ]);
-        retryButtonRef.current?.focus();
-        return;
-      }
-
-      lastHardenedBlobRef.current = blob;
-      lastHardenedConfigRef.current = {
-        payloads: { ...payloadsForEnabled },
-        eggIds: [...enabledEggIds],
-        preserveStyles,
-      };
-
-      // If server generated a canary token (empty token in payload), sync it to the card so "Check for triggers" works.
-      const canaryTokenUsed = data.canaryTokenUsed;
-      if (typeof canaryTokenUsed === "string" && canaryTokenUsed.trim() !== "") {
-        try {
-          const current = canaryWingPayload.trim() ? JSON.parse(canaryWingPayload) as Record<string, unknown> : {};
-          setCanaryWingPayload(JSON.stringify({ ...current, token: canaryTokenUsed }));
-        } catch {
-          // leave canary payload as-is
-        }
-      }
-
-      if (scannerScan && typeof scannerScan === "object") {
-        setDualityResult({
-          hasSuspiciousPatterns: !!scannerScan.hasSuspiciousPatterns,
-          matchedPatterns: Array.isArray(scannerScan.matchedPatterns)
-            ? scannerScan.matchedPatterns
-            : [],
-          details: Array.isArray(scannerScan.details) ? scannerScan.details : undefined,
+        setServerPdfConfirm({
+          fileToSend: file,
+          name,
+          payloadsForEnabled: { ...payloadsForEnabled },
+          enabledEggIds: [...enabledEggIds],
+          preserveStyles,
         });
-      } else {
-        setDualityResult({ hasSuspiciousPatterns: false, matchedPatterns: [] });
+        return;
       }
-
-      setProcessingState("completed");
-      setActiveStage("rehydration");
-      const noEggsApplied = enabledEggIds.size === 0;
-      setSuccessMessage(noEggsApplied ? originalName : buildFinalFileName(originalName));
-      successMessageRef.current?.focus();
-      setLog((prev) => [
-        ...prev,
-        {
-          id: "duality",
-          stage: "duality-check",
-          level: "info",
-          message:
-            "[DUALITY] Scanning original CV for existing prompt-injection patterns…",
-        },
-        {
-          id: "dehydrate",
-          stage: "dehydration",
-          level: "info",
-          message:
-            "[DEHYDRATE] PII dehydrated into Stateless & Volatile vault tokens (in-memory only; never stored).",
-        },
-        {
-          id: "inject",
-          stage: "injection",
-          level: "success",
-          message: "[INJECT] Funversarial eggs applied to dehydrated document.",
-        },
-        {
-          id: "rehydrate",
-          stage: "rehydration",
-          level: "success",
-          message:
-            "[REHYDRATE] PII rehydrated into final hardened CV stream. Stateless & Volatile handling complete; nothing persisted.",
-        },
-      ]);
-    } catch (_err) {
-      setError("Network error. Please try again.");
-      setProcessingState("error");
-      setActiveStage("accept");
-      retryButtonRef.current?.focus();
-      setLog((prev) => [
-        ...prev,
-        {
-          id: "network-err",
-          stage: "accept",
-          level: "error",
-          message: "[ERROR] Network error.",
-        },
-      ]);
     }
+
+    await runSubmitToServer({
+      fileToSend,
+      name,
+      eggIdsToUse: [...enabledEggIds],
+      payloadsForEnabled,
+      preserveStyles,
+      piiMapForRehydrate,
+      rehydrateMimeType,
+    });
   };
 
   const loadDemoCv = async (variant: "clean" | "dirty", format: "pdf" | "docx") => {
@@ -611,8 +706,91 @@ export default function Home() {
   };
 
   return (
-    <main id="main-content" className="min-h-screen bg-noir-bg text-noir-foreground">
-      <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
+    <>
+      {serverPdfConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-noir-bg/90 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="server-pdf-confirm-title"
+          aria-describedby="server-pdf-confirm-desc"
+        >
+          <Card className="w-full max-w-md border-neon-cyan/50 bg-noir-panel p-5 shadow-lg">
+            <h2 id="server-pdf-confirm-title" className="mb-2 text-base font-semibold text-neon-cyan">
+              Server-side processing required
+            </h2>
+            <p id="server-pdf-confirm-desc" className="mb-4 text-sm text-noir-foreground/80">
+              This PDF could not be processed in the browser. The file and the selected eggs can only be processed by the server.
+            </p>
+            <p className="mb-3 text-caption text-noir-foreground/60">
+              Selected eggs that will run on the server:{" "}
+              <span className="font-mono text-neon-cyan/90">
+                {serverPdfConfirm.enabledEggIds
+                  .map((id) => EGG_OPTIONS.find((o) => o.id === id)?.name ?? id)
+                  .join(", ")}
+              </span>
+            </p>
+            <p className="mb-4 text-caption text-noir-foreground/50">
+              You can continue with the server processing these eggs, or uncheck them and continue without eggs.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() => {
+                  const conf = serverPdfConfirm;
+                  setServerPdfConfirm(null);
+                  void runSubmitToServer({
+                    fileToSend: conf.fileToSend,
+                    name: conf.name,
+                    eggIdsToUse: conf.enabledEggIds,
+                    payloadsForEnabled: conf.payloadsForEnabled,
+                    preserveStyles: conf.preserveStyles,
+                    piiMapForRehydrate: null,
+                    rehydrateMimeType: null,
+                  });
+                }}
+              >
+                Continue (use server)
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  const conf = serverPdfConfirm;
+                  userHasChangedCheckboxesRef.current = true;
+                  setEnabledEggIds(new Set());
+                  setServerPdfConfirm(null);
+                  void runSubmitToServer({
+                    fileToSend: conf.fileToSend,
+                    name: conf.name,
+                    eggIdsToUse: [],
+                    payloadsForEnabled: {},
+                    preserveStyles: conf.preserveStyles,
+                    piiMapForRehydrate: null,
+                    rehydrateMimeType: null,
+                  });
+                }}
+              >
+                Uncheck eggs and continue
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setServerPdfConfirm(null);
+                  setProcessingState("idle");
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      <main id="main-content" className="min-h-screen bg-noir-bg text-noir-foreground">
+        <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
         <header className="mb-4 flex flex-wrap items-start justify-between gap-2 border-b border-noir-border pb-4">
           <div>
             <h1 className="text-2xl font-semibold">
@@ -971,6 +1149,7 @@ export default function Home() {
           </aside>
         </section>
       </div>
-    </main>
+      </main>
+    </>
   );
 }

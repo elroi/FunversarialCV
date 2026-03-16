@@ -8,6 +8,7 @@ import { MAX_BODY_BYTES } from "./constants";
 import { containsPii } from "@/lib/vault";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { logInfo, logError } from "@/lib/log";
+import { ADD_ONLY_EGG_IDS } from "@/engine/Processor";
 
 function getClientIp(req: NextRequest): string {
   const xff = req.headers.get("x-forwarded-for");
@@ -167,25 +168,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // PII-guard: reject documents that still contain obvious PII.
-    try {
-      const text = await extractText(rawBuffer, detectedMimeType);
-      if (text && containsPii(text)) {
-        logInfo("/api/harden", "pii_guard_rejected", {
-          mimeType: detectedMimeType,
-          ip,
-          mode: "binary",
-        });
-        return Response.json(
-          {
-            error:
-              "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored.",
-          },
-          { status: 400 }
-        );
+    // Check if this is an add-only request (preserveStyles + all eggs are add-only).
+    // For add-only PDFs, we skip the PII guard because:
+    // 1) Add-only eggs don't modify body text, just add hidden content
+    // 2) Client PDF extraction may have failed, but eggs can still be applied directly
+    // 3) No PII is sent to external services; processing is entirely local
+    const isAddOnlyRequest =
+      preserveStyles &&
+      detectedMimeType === MIME_PDF &&
+      eggIds !== null &&
+      eggIds.length > 0 &&
+      eggIds.every((id) => ADD_ONLY_EGG_IDS.has(id));
+
+    if (!isAddOnlyRequest) {
+      // PII-guard: reject documents that still contain obvious PII.
+      try {
+        const text = await extractText(rawBuffer, detectedMimeType);
+        if (text && containsPii(text)) {
+          logInfo("/api/harden", "pii_guard_rejected", {
+            mimeType: detectedMimeType,
+            ip,
+            mode: "binary",
+          });
+          return Response.json(
+            {
+              error:
+                "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored.",
+            },
+            { status: 400 }
+          );
+        }
+      } catch {
+        // If text extraction fails, skip PII-guard rather than breaking valid requests.
       }
-    } catch {
-      // If text extraction fails, skip PII-guard rather than breaking valid requests.
     }
 
     buffer = rawBuffer;

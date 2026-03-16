@@ -17,6 +17,7 @@
         "postinstall": "node -e \"const fs=require('fs');const p=require('path');const src=p.join('node_modules','pdfjs-dist','build','pdf.worker.min.mjs');const dest=p.join('public','pdf.worker.min.mjs');if(fs.existsSync(src)){fs.mkdirSync('public',{recursive:true});fs.copyFileSync(src,dest);console.log('Copied pdf.worker.min.mjs to public/');}\""
     },
     "dependencies": {
+        "@embedpdf/pdfium": "^2.8.0",
         "clsx": "^2.1.0",
         "docx": "^8.5.0",
         "jszip": "^3.10.1",
@@ -25,7 +26,7 @@
         "next": "14.1.0",
         "pdf-lib": "^1.17.1",
         "pdf-parse": "^1.1.1",
-        "pdfjs-dist": "^5.5.207",
+        "pdfjs-dist": "^5.3.93",
         "react": "^18",
         "react-dom": "^18",
         "tailwind-merge": "^2.2.1",

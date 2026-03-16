@@ -41,9 +41,26 @@ interface PdfPageTextItem {
 }
 
 async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
+  try {
+    return await extractPdfTextWithPdfjs(buffer);
+  } catch {
+    const { extractPdfTextWithPdfium } = await import(
+      /* webpackChunkName: "clientPdfium" */ "./clientPdfium"
+    );
+    return extractPdfTextWithPdfium(buffer);
+  }
+}
+
+async function extractPdfTextWithPdfjs(buffer: ArrayBuffer): Promise<string> {
   // pdfjs-dist is browser-capable; we use a dynamic import so it never runs on the server.
-  const pdfjsLib = await import("pdfjs-dist");
+  // Pinned to 5.3.93: 5.4.394+ has "Object.defineProperty called on non-object" with Next.js/webpack.
+  // webpackChunkName ensures a stable chunk path so Next.js serves it correctly.
+  // Some PDFs (e.g. certain compression) may still throw; then we try PDFium fallback.
+  const pdfjsLib = await import(
+    /* webpackChunkName: "pdfjs-dist" */ "pdfjs-dist"
+  );
   const pdfjs = pdfjsLib as {
+    version?: string;
     GlobalWorkerOptions?: { workerSrc: string };
     getDocument(opts: { data: ArrayBuffer }): {
       promise: Promise<{
@@ -54,9 +71,10 @@ async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
       }>;
     };
   };
-  // Required for getDocument() in browser (including headless/CI). Worker is copied to public/ in postinstall.
-  if (typeof window !== "undefined" && pdfjs.GlobalWorkerOptions && !pdfjs.GlobalWorkerOptions.workerSrc) {
-    pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+  // Worker must match the library version (API vs Worker version check). Use version in URL so we don't load a cached worker from a different install.
+  const version = pdfjs.version ?? "";
+  if (typeof window !== "undefined" && pdfjs.GlobalWorkerOptions) {
+    pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.mjs?v=${version}`;
   }
 
   const loadingTask = pdfjs.getDocument({ data: buffer });

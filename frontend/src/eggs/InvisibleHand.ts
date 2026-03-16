@@ -54,14 +54,14 @@ export const invisibleHand: IEgg = {
       const page = pages[0];
       if (!page) return buffer;
       const font = await doc.embedFont(StandardFonts.Helvetica);
-      const margin = 40;
-      const y = page.getHeight() - margin;
+      // Draw at very top of page (above typical content area) so it doesn't overlap existing text
+      const topY = page.getHeight() - 10;
       page.drawText(trapText, {
-        x: margin,
-        y,
+        x: 10,
+        y: topY,
         size: 0.5,
         font,
-        color: rgb(1, 1, 1),
+        color: rgb(1, 1, 1), // white (invisible on white background)
       });
       const pdfBytes = await doc.save();
       return Buffer.from(pdfBytes);

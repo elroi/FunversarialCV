@@ -75,8 +75,17 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
     eggs.every((egg) => ADD_ONLY_EGG_IDS.has(egg.id));
 
   if (allAddOnly) {
-    const rawText = await extractText(buffer, mimeType);
-    const scan = await runScan({ text: rawText, buffer, mimeType });
+    // Try text extraction for duality scan; if it fails, proceed with eggs anyway (preserving original layout).
+    let rawText = "";
+    let extractionFailed = false;
+    try {
+      rawText = await extractText(buffer, mimeType);
+    } catch {
+      extractionFailed = true;
+    }
+    const scan = extractionFailed
+      ? { hasPromptInjection: false, patterns: [], message: "Text extraction failed; duality check skipped." }
+      : await runScan({ text: rawText, buffer, mimeType });
     const scannerReport = buildScannerReport(scan);
     let currentBuffer = buffer;
     for (const egg of eggs) {

@@ -9,7 +9,8 @@ import {
 } from "./clientTokenReplaceInCopy";
 import type { PiiMap } from "./clientVaultTypes";
 import JSZip from "jszip";
-import { MIME_DOCX } from "./clientDocumentExtract";
+import { MIME_DOCX, MIME_PDF } from "./clientDocumentExtract";
+import { buildUncompressedDemoCvPdf } from "./demoCvBuilders";
 
 /** Build a minimal DOCX buffer containing the given body text in word/document.xml. */
 async function createMinimalDocxBuffer(bodyText: string): Promise<ArrayBuffer> {
@@ -62,15 +63,92 @@ const minimalCore = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties"></cp:coreProperties>`;
 
 describe("replacePiiWithTokensInCopy", () => {
-  it("returns null for non-DOCX file (caller should use rebuild path)", async () => {
-    const pdfFile = new File(
-      [new Uint8Array([0x25, 0x50, 0x44, 0x46])],
-      "doc.pdf",
-      { type: "application/pdf" }
-    );
+  it("for PDF with empty piiMap, returns copy unchanged (no PII to replace)", async () => {
+    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34]);
+    const pdfFile = {
+      name: "doc.pdf",
+      type: MIME_PDF,
+      arrayBuffer: () => Promise.resolve(pdfBytes.buffer.slice(0, pdfBytes.length)),
+    } as File;
     const piiMap: PiiMap = { byToken: {} };
     const result = await replacePiiWithTokensInCopy(pdfFile, piiMap);
+    expect(result).not.toBeNull();
+    expect(result!.file.name).toBe("doc.pdf");
+    expect(result!.file.type).toBe(MIME_PDF);
+    expect(new Uint8Array(result!.buffer)).toEqual(pdfBytes);
+  });
+
+  it("for PDF when PII appears as literal bytes, replaces in-place and preserves layout", async () => {
+    const encoder = new TextEncoder();
+    const email = "user@example.com";
+    const token = "{{PII_EMAIL_0}}";
+    const pdfWithPii = encoder.encode(
+      "%PDF-1.4\n%\n(fake stream) Contact: " + email + " for info.\n%%EOF"
+    );
+    const pdfFile = {
+      name: "cv.pdf",
+      type: MIME_PDF,
+      arrayBuffer: () => Promise.resolve(pdfWithPii.buffer.slice(0, pdfWithPii.length)),
+    } as File;
+    const piiMap: PiiMap = {
+      byToken: {
+        [token]: { token, type: "EMAIL", value: email },
+      },
+    };
+    const result = await replacePiiWithTokensInCopy(pdfFile, piiMap);
+    expect(result).not.toBeNull();
+    const outText = new TextDecoder().decode(result!.buffer);
+    expect(outText).toContain(token);
+    expect(outText).not.toContain(email);
+    expect(outText).toContain("%PDF-1.4");
+  });
+
+  it("for PDF when PII not found in buffer (e.g. compressed), returns null so caller rebuilds", async () => {
+    const pdfBytes = new Uint8Array([
+      0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34, 0x0a, 0x25, 0x0a,
+    ]);
+    const pdfFile = {
+      name: "minimal.pdf",
+      type: MIME_PDF,
+      arrayBuffer: () => Promise.resolve(pdfBytes.buffer.slice(0, pdfBytes.length)),
+    } as File;
+    const piiMap: PiiMap = {
+      byToken: {
+        "{{PII_EMAIL_0}}": {
+          token: "{{PII_EMAIL_0}}",
+          type: "EMAIL",
+          value: "user@example.com",
+        },
+      },
+    };
+    const result = await replacePiiWithTokensInCopy(pdfFile, piiMap);
     expect(result).toBeNull();
+  });
+
+  it("for uncompressed demo PDF with demo PII map, returns tokenized copy (preserve-styles path)", async () => {
+    const buffer = buildUncompressedDemoCvPdf("clean");
+    const pdfFile = {
+      name: "demo.pdf",
+      type: MIME_PDF,
+      arrayBuffer: () =>
+        Promise.resolve(buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)),
+    } as File;
+    const email = "alex.mercer@example-secure.test";
+    const piiMap: PiiMap = {
+      byToken: {
+        "{{PII_EMAIL_0}}": {
+          token: "{{PII_EMAIL_0}}",
+          type: "EMAIL",
+          value: email,
+        },
+      },
+    };
+    const result = await replacePiiWithTokensInCopy(pdfFile, piiMap);
+    expect(result).not.toBeNull();
+    const outText = new TextDecoder().decode(result!.buffer);
+    expect(outText).toContain("{{PII_EMAIL_0}}");
+    expect(outText).not.toContain(email);
+    expect(result!.file.name).toBe("demo.pdf");
   });
 
   it("for DOCX, replaces PII values with tokens in word/document.xml", async () => {

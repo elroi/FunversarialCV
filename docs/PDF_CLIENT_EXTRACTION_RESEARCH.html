@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Research&colon; Alternative client-side PDF libraries to reduce PII sent to server</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <h1 id="research-alternative-client-side-pdf-libraries-to-reduce-pii-sent-to-server">Research: Alternative client-side PDF libraries to reduce PII sent to server</h1>
+<p><strong>Goal:</strong> Find JavaScript PDF libraries that can extract text in the browser for PDFs our current stack cannot handle, so we can avoid sending PII to the server when client-side dehydration would otherwise fail.</p>
+<p><strong>Current stack (summary):</strong></p>
+<ul>
+<li><strong>Client:</strong> <code>pdfjs-dist</code> 5.3.93 in <code>frontend/src/lib/clientDocumentExtract.ts</code> — <code>getDocument({ data })</code> → <code>getPage()</code> → <code>getTextContent()</code>. Pinned to 5.3.93 due to <code>Object.defineProperty called on non-object</code> in 5.4.x with Next.js/webpack.</li>
+<li><strong>Server:</strong> <code>pdf-parse</code> (PDF.js wrapper) in <code>documentExtract.ts</code> for Node.</li>
+<li><strong>Failures that trigger server fallback:</strong> Errors matching <code>/defineProperty|non-object|Invalid PDF/i</code> (see <code>app/page.tsx</code>), and in practice also “Unknown compression method in flate stream” and similar PDF.js parsing errors.</li>
+</ul>
+<hr>
+<h2 id="1-options-that-use-a-different-engine-can-handle-different-pdfs">1. Options that use a <strong>different engine</strong> (can handle different PDFs)</h2>
+<h3 id="11-pdfium-via-webassembly--embedpdfpdfium">1.1 PDFium via WebAssembly — <strong>@embedpdf/pdfium</strong></h3>
+<ul>
+<li><strong>Engine:</strong> Google’s PDFium (C++ compiled to WASM), not PDF.js.</li>
+<li><strong>Use case:</strong> Rendering and <strong>text extraction</strong> in browser and Node.</li>
+<li><strong>API (conceptually):</strong> <code>init()</code> → <code>FPDF_LoadMemDocument(buffer)</code> → <code>FPDF_LoadPage()</code> → <code>FPDFText_LoadPage()</code> → <code>FPDFText_GetText()</code> (UTF-16LE) → convert to JS string.</li>
+<li><strong>Pros:</strong>
+<ul>
+<li>Different parser; may succeed on PDFs that PDF.js rejects (e.g. some compression or malformed streams).</li>
+<li>Native-quality implementation; good for edge cases.</li>
+</ul>
+</li>
+<li><strong>Cons:</strong>
+<ul>
+<li>WASM binary (CDN or self-host), different API, integration effort.</li>
+<li>Bundle size and init cost; best as a <strong>fallback</strong> after PDF.js fails rather than primary.</li>
+</ul>
+</li>
+<li><strong>NPM:</strong> <code>@embedpdf/pdfium</code> (e.g. ~72.8K weekly downloads), MIT/Apache.</li>
+<li><strong>Docs:</strong> <a href="https://www.embedpdf.com/docs/pdfium/introduction">embedpdf.com/docs/pdfium</a>, <a href="https://www.embedpdf.com/docs/pdfium/examples/extract-text-from-pdf">Extracting Text from PDF Pages</a>.</li>
+</ul>
+<p><strong>Recommendation:</strong> Add as <strong>second-step fallback</strong> in the client: try <code>pdfjs-dist</code> → on throw, try <code>@embedpdf/pdfium</code> → if both fail, show “Server-side processing required” and send to server. This directly reduces how often PII is sent for “problem” PDFs that PDFium can parse.</p>
+<hr>
+<h2 id="2-options-that-wrap-or-rebundle-pdfjs-same-engine-different-packaging">2. Options that <strong>wrap or rebundle PDF.js</strong> (same engine, different packaging)</h2>
+<h3 id="21-unpdf--unjsunpdf">2.1 unpdf — <strong>unjs/unpdf</strong></h3>
+<ul>
+<li><strong>What it is:</strong> Wrapper around a <strong>custom serverless build of PDF.js</strong> (e.g. 5.4.296 / 5.4.394). Worker inlined, WASM stripped, string replacements and global mocks for edge/Node/browser.</li>
+<li><strong>API:</strong> <code>getDocumentProxy(buffer)</code> → <code>extractText(pdf, { mergePages: true })</code> → <code>{ totalPages, text }</code>.</li>
+<li><strong>Pros:</strong>
+<ul>
+<li>Single dependency, no separate worker file to host; could simplify our worker setup.</li>
+<li>One API for browser + Node + serverless; might avoid the <code>defineProperty</code> issue if their build patches it.</li>
+<li>Actively maintained (UnJS), ~280K+ weekly downloads.</li>
+</ul>
+</li>
+<li><strong>Cons:</strong>
+<ul>
+<li>Still PDF.js under the hood; <strong>same parsing limits</strong> (e.g. “Invalid PDF”, “Unknown compression method”). Won’t fix PDFs that PDF.js fundamentally can’t parse.</li>
+</ul>
+</li>
+<li><strong>NPM:</strong> <code>unpdf</code>.</li>
+</ul>
+<p><strong>Recommendation:</strong> Consider as a <strong>replacement for raw <code>pdfjs-dist</code></strong> in the client to simplify worker handling and possibly use a patched 5.4 build. Not a solution by itself for “PDFs pdfjs can’t handle”; pair with a different engine (e.g. PDFium) for that.</p>
+<h3 id="22-mehmet-kozanpdf-parse">2.2 mehmet-kozan/pdf-parse</h3>
+<ul>
+<li><strong>What it is:</strong> Cross-platform (Node + browser) PDF parser; extracts text, images, tables; can render pages as PNG.</li>
+<li><strong>Engine:</strong> Still uses <strong>pdfjs-dist</strong>.</li>
+<li><strong>Conclusion:</strong> Same engine, same class of failures; no gain for “problem” PDFs. Can be skipped for this goal.</li>
+</ul>
+<h3 id="23-pdfjs-extract">2.3 pdf.js-extract</h3>
+<ul>
+<li><strong>What it is:</strong> Thin wrapper around pdf.js adding text + (x,y) coordinates.</li>
+<li><strong>Conclusion:</strong> Same engine; no additional robustness for parsing failures.</li>
+</ul>
+<hr>
+<h2 id="3-pdfjs-upstream-behavior-for-context">3. PDF.js upstream behavior (for context)</h2>
+<ul>
+<li><strong>defineProperty / Next.js:</strong> Known regression in pdfjs-dist <strong>5.4.394+</strong> with webpack (e.g. Next.js): <code>Object.defineProperty called on non-object</code> during module init. Workaround in the wild is to stay on <strong>5.3.93</strong> (or 5.4.54 and below). Issues: mozilla/pdf.js#20435, #20478.</li>
+<li><strong>Compression / flate:</strong> PDF.js has had fixes for “Unknown compression method in flate stream” and ill-formed streams (e.g. not throwing in some cases, fallbacks in XRef). Newer 5.4.x would theoretically handle more edge cases, but we can’t safely upgrade until the defineProperty/Next.js issue is fixed.</li>
+<li><strong>Practical takeaway:</strong> Relying only on upgrading pdfjs-dist is blocked; adding a <strong>different engine</strong> (e.g. PDFium) is the way to cover PDFs that current PDF.js cannot parse.</li>
+</ul>
+<hr>
+<h2 id="4-summary-and-suggested-direction">4. Summary and suggested direction</h2>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Reduces PII to server?</th>
+<th>Effort</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Add PDFium (@embedpdf/pdfium) as fallback</strong></td>
+<td>Yes, for PDFs only PDFium can parse</td>
+<td>Medium</td>
+<td>Different engine; try after pdfjs fails.</td>
+</tr>
+<tr>
+<td><strong>Replace pdfjs with unpdf</strong></td>
+<td>No (same engine)</td>
+<td>Low</td>
+<td>Simplifies worker; may allow newer PDF.js build.</td>
+</tr>
+<tr>
+<td><strong>Upgrade pdfjs-dist</strong></td>
+<td>Maybe (more PDFs parsed)</td>
+<td>Blocked</td>
+<td>Blocked by defineProperty in 5.4.x.</td>
+</tr>
+<tr>
+<td><strong>Other wrappers (pdf-parse, pdf.js-extract)</strong></td>
+<td>No</td>
+<td>—</td>
+<td>Same engine.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Concrete next steps:</strong></p>
+<ol>
+<li>
+<p><strong>Implement PDFium fallback (client):</strong><br>
+In <code>clientDocumentExtract.ts</code>, keep current pdfjs-based <code>extractPdfText()</code>. On throw, call a new <code>extractPdfTextWithPdfium(buffer)</code> using <code>@embedpdf/pdfium</code>; if that also fails, rethrow so the app can show the server-PDF confirmation dialog. This preserves current behavior and adds a second engine only where needed.</p>
+</li>
+<li>
+<p><strong>Optional — try unpdf:</strong><br>
+Spike replacing <code>pdfjs-dist</code> with <code>unpdf</code> in the client (single entry point, no worker path). Run existing E2E and manual tests; if defineProperty is gone and extraction still works, consider switching. Still keep PDFium as fallback for PDFs that PDF.js (whether raw or via unpdf) cannot parse.</p>
+</li>
+<li>
+<p><strong>Track PDF.js:</strong><br>
+Watch mozilla/pdf.js#20435 / #20478 (and any “fix” in 5.4.x). When a version is safe with Next.js/webpack, re-evaluate upgrading to get latest flate/stream handling; PDFium fallback remains valuable for PDFs that only PDFium handles.</p>
+</li>
+</ol>
+<hr>
+<h2 id="5-references">5. References</h2>
+<ul>
+<li><a href="https://www.npmjs.com/package/@embedpdf/pdfium">@embedpdf/pdfium – npm</a></li>
+<li><a href="https://www.embedpdf.com/docs/pdfium/examples/extract-text-from-pdf">EmbedPDF PDFium – Text extraction example</a></li>
+<li><a href="https://github.com/unjs/unpdf">unpdf – GitHub</a></li>
+<li><a href="https://github.com/mozilla/pdf.js/issues/20435">PDF.js defineProperty regression (5.4.394) – Issue #20435</a></li>
+<li><a href="https://github.com/mozilla/pdf.js/issues/6316">PDF.js “Unknown compression method in flate stream” – Issue #6316</a></li>
+<li><a href="https://github.com/mehmet-kozan/pdf-parse">mehmet-kozan/pdf-parse</a></li>
+<li><a href="https://www.npmjs.com/package/pdf.js-extract">pdf.js-extract (npm)</a></li>
+</ul>
+
+            
+            
+        </body>
+        </html>

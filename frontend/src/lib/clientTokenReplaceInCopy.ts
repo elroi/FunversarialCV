@@ -1,11 +1,11 @@
 /**
  * In-place PII → token replacement in a copy of the original file.
- * Preserves document layout (DOCX: word/document.xml only; PDF deferred).
+ * Preserves document layout (DOCX: word/document.xml; PDF: raw buffer when PII found).
  * Server receives the tokenized copy; rehydration happens on the client after response.
  */
 
 import JSZip from "jszip";
-import { MIME_DOCX } from "./clientDocumentExtract";
+import { MIME_DOCX, MIME_PDF } from "./clientDocumentExtract";
 import type { PiiMap } from "./clientVaultTypes";
 
 const DOCUMENT_XML_PATH = "word/document.xml";
@@ -13,20 +13,86 @@ const DOCUMENT_RELS_PATH = "word/_rels/document.xml.rels";
 
 export type TokenizedCopyResult = { file: File; buffer: ArrayBuffer };
 
+function findBytes(haystack: Uint8Array, needle: Uint8Array): number {
+  if (needle.length === 0 || needle.length > haystack.length) return -1;
+  for (let i = 0; i <= haystack.length - needle.length; i++) {
+    let match = true;
+    for (let j = 0; j < needle.length; j++) {
+      if (haystack[i + j] !== needle[j]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) return i;
+  }
+  return -1;
+}
+
 /**
- * Replaces PII with tokens inside a copy of the file. Only DOCX is supported;
- * for PDF/text the caller should use createDocumentWithTextInBrowser (rebuild path).
+ * In-place PII → token replacement in a PDF buffer. Preserves layout when PII
+ * appears as literal bytes (e.g. uncompressed streams). If token is longer than
+ * value we cannot replace without shifting bytes, so we return null and caller rebuilds.
+ */
+function replacePiiWithTokensInPdfBuffer(
+  buffer: ArrayBuffer,
+  piiMap: PiiMap
+): ArrayBuffer | null {
+  const encoder = new TextEncoder();
+  const arr = new Uint8Array(buffer);
+  const entries = Object.values(piiMap.byToken);
+  if (entries.length === 0) return buffer;
+
+  // Longer values first to avoid partial replacements (e.g. "a@b.com" inside "x a@b.com y").
+  const byValueLength = [...entries].sort(
+    (a, b) => encoder.encode(b.value).length - encoder.encode(a.value).length
+  );
+
+  for (const entry of byValueLength) {
+    const valueBytes = encoder.encode(entry.value);
+    let tokenBytes = encoder.encode(entry.token);
+    if (tokenBytes.length > valueBytes.length) {
+      return null;
+    }
+    if (tokenBytes.length < valueBytes.length) {
+      const padded = new Uint8Array(valueBytes.length);
+      padded.set(tokenBytes);
+      padded.fill(0x20, tokenBytes.length);
+      tokenBytes = padded;
+    }
+    let pos = findBytes(arr, valueBytes);
+    if (pos === -1) return null;
+    while (pos !== -1) {
+      arr.set(tokenBytes, pos);
+      pos = findBytes(arr, valueBytes);
+    }
+  }
+  return arr.buffer;
+}
+
+/**
+ * Replaces PII with tokens inside a copy of the file.
  *
- * DOCX: loads the file as ZIP, replaces each PII value with its token in
- * word/document.xml, saves the ZIP and returns the tokenized File and its buffer.
+ * DOCX: loads as ZIP, replaces in word/document.xml, returns tokenized File.
+ * PDF: in-place replacement in raw buffer when PII appears as literal bytes (preserves
+ * layout). If PDF has compressed streams, token longer than value, or PII not found,
+ * returns null → caller uses createDocumentWithTextInBrowser (rebuild, no style preservation).
  *
- * @returns The tokenized result (file + buffer), or null if format not supported (use rebuild).
+ * @returns The tokenized result (file + buffer), or null if format not supported or in-place not possible (use rebuild).
  */
 export async function replacePiiWithTokensInCopy(
   file: File,
   piiMap: PiiMap
 ): Promise<TokenizedCopyResult | null> {
   const mimeType = file.type;
+
+  if (mimeType === MIME_PDF) {
+    const buffer = await file.arrayBuffer();
+    const out = replacePiiWithTokensInPdfBuffer(buffer, piiMap);
+    if (out === null) return null;
+    const tokenizedFile = new File([out], file.name, { type: file.type });
+    return { file: tokenizedFile, buffer: out };
+  }
+
   if (mimeType !== MIME_DOCX) {
     return null;
   }

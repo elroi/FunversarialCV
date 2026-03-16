@@ -38,6 +38,7 @@ As a tool focused on **Security for AI and AI for Security**, we prioritize data
 
 * **Zero-Retention Architecture:** Files are processed entirely in volatile memory (RAM) and are never written to disk or a database.
 * **PII Sanitization:** Before "hardening," the tool identifies PII patterns (Email, Phone, and common Address formats) to help you redact sensitive data before sharing your CV globally. Detection is heuristic and focused on obvious high-risk patterns (e.g. `user@example.com`, `+1 (555) 123-4567`, `123 Main St …`), not full DLP.
+* **Client PDF extraction:** PDF text extraction in the browser uses pdfjs-dist first; if it fails (e.g. some compression or parsing issues), we try PDFium (WASM) as a fallback so more PDFs can be dehydrated client-side without sending PII to the server. If both fail, you see "Server-side processing required" and may choose to send the PDF to the server. See [docs/PDF_CLIENT_EXTRACTION_RESEARCH.md](docs/PDF_CLIENT_EXTRACTION_RESEARCH.md) for rationale and alternatives.
 * **Stateless Execution:** Your data exists only for the duration of the request. Once the download is complete, the memory is purged.
 
 For **Canary Wing** specifically, the `/api/canary` endpoint records **ephemeral, token-scoped hits** for analytics:

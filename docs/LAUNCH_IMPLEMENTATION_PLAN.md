@@ -37,8 +37,8 @@
 | **WS2 – Canary** | Done | Option B (signal-only). Close-the-loop: GET /api/canary/status, “Did my canary sing?” UX, canaryTokenUsed in harden response. Docs: v1 no long-term analytics; persistCanaryHit extension point. |
 | **WS3 – PII** | Done | Address patterns, vault, unit tests, README, Processor integration test (address round-trip). |
 | **WS4 – Rate limit & logging** | Done | rateLimit.ts, log.ts; integrated in harden and canary routes; tests. |
-| **WS5 – Vercel & CI** | Partial | Project root, build, env vars, Hosting & Ops docs done. Preview/Production verified (Vercel MCP). Open: branch protection on `main` (currently not enabled). |
-| **WS6 – Pre-launch** | Open | E2E in CI; PR merge; production smoke; tag v1.0.0-launch; optional changelog. |
+| **WS5 – Vercel & CI** | Done | Project root, build, env vars, Hosting & Ops docs. Preview/Production verified. Branch ruleset on `main`: require PR, unit-and-lint + e2e, block force push. |
+| **WS6 – Pre-launch** | In progress | E2E in CI; PR merge (done). Remaining: production smoke; tag v1.0.0-launch; optional changelog. |
 
 ---
 
@@ -279,13 +279,13 @@
 ### 5.3 Branch Protection & CI
 
 - **Branch rules**
-  - [ ] Confirm `main` is protected (verified via GitHub API: **main is not currently protected**; enable in repo **Settings → Branches → Add rule** for `main`):
+  - [x] Confirm `main` is protected (branch ruleset: require PR, require status checks unit-and-lint + e2e, block force push):
     - All changes via PR.
     - Required checks:
       - `CI / unit-and-lint`.
       - `e2e`.
 - **Vercel + GitHub integration**
-  - [ ] Ensure Vercel only promotes to production when those checks are green (after branch rule is added).
+  - [x] Ensure Vercel only promotes to production when those checks are green (ruleset requires unit-and-lint and e2e before merge).
 
 ### 5.4 Hosting & Ops Documentation
 
@@ -313,8 +313,8 @@
 ### 6.2 CI Verification
 
 - **PR into `main`**
-  - [ ] Open a PR with all launch-related changes.
-  - [ ] Confirm:
+  - [x] Open a PR with all launch-related changes.
+  - [x] Confirm:
     - `CI / unit-and-lint` passes.
     - `e2e` passes.
 

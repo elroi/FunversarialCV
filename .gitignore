@@ -85,5 +85,8 @@ fixtures/broken/**/*.pdf
 # One-time demo CV output (generated for inspection)
 frontend/demo-output/
 
+# pdfjs-dist worker: copied by postinstall from node_modules so it always matches the installed lib version
+frontend/public/pdf.worker.min.mjs
+
 # Optional: keep a minimal .html if it's generated; ignore large or sensitive HTML
 # .html

@@ -410,4 +410,88 @@ describe("POST /api/harden", () => {
     expect(decoded[0]).toBe(0x50);
     expect(decoded[1]).toBe(0x4b);
   }, 15000);
+
+  describe("PDF with PII sent to server (add-only fallback)", () => {
+    const ADD_ONLY_EGG_IDS_LIST = [
+      "invisible-hand",
+      "canary-wing",
+      "metadata-shadow",
+      "incident-mailto",
+    ];
+
+    it("accepts PDF with PII when add-only request (preserveStyles + all add-only eggs) and skips PII guard", async () => {
+      (Processor.process as jest.Mock).mockClear();
+      const piiText = "Email: user@example.com\nPhone: (415) 555-1234";
+      const minimalPdfWithPii = await createDocumentWithText(piiText, MIME_PDF);
+      (vault.containsPii as jest.Mock).mockReturnValueOnce(true);
+      const { extractText } = await import("@/engine/documentExtract");
+      (extractText as jest.Mock).mockResolvedValueOnce(piiText);
+      (Processor.process as jest.Mock).mockResolvedValueOnce({
+        buffer: Buffer.from([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34]),
+        scannerReport: {
+          scan: { hasSuspiciousPatterns: false, matchedPatterns: [] },
+          alerts: [],
+        },
+      });
+
+      const form = await buildPdfFormData(minimalPdfWithPii, "resume.pdf");
+      form.append("preserveStyles", "true");
+      form.append("eggIds", JSON.stringify(ADD_ONLY_EGG_IDS_LIST));
+      const req = new Request("http://localhost:3000/api/harden", {
+        method: "POST",
+        body: form,
+      });
+      const res = await POST(req as never);
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.bufferBase64).toBeDefined();
+      expect(json.mimeType).toBe("application/pdf");
+      expect(Processor.process).toHaveBeenCalled();
+    }, 15000);
+
+    it("returns 400 when PDF contains PII and request is not add-only (no preserveStyles)", async () => {
+      (Processor.process as jest.Mock).mockClear();
+      const piiText = "Email: user@example.com";
+      const minimalPdfWithPii = await createDocumentWithText(piiText, MIME_PDF);
+      (vault.containsPii as jest.Mock).mockReturnValueOnce(true);
+      const { extractText } = await import("@/engine/documentExtract");
+      (extractText as jest.Mock).mockResolvedValueOnce(piiText);
+
+      const form = await buildPdfFormData(minimalPdfWithPii, "resume.pdf");
+      form.append("eggIds", JSON.stringify(ADD_ONLY_EGG_IDS_LIST));
+      const req = new Request("http://localhost:3000/api/harden", {
+        method: "POST",
+        body: form,
+      });
+      const res = await POST(req as never);
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toBe(
+        "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored."
+      );
+      expect(Processor.process).not.toHaveBeenCalled();
+    }, 15000);
+
+    it("returns 400 when PDF contains PII and request has non-add-only egg", async () => {
+      (Processor.process as jest.Mock).mockClear();
+      const piiText = "Email: user@example.com";
+      const minimalPdfWithPii = await createDocumentWithText(piiText, MIME_PDF);
+      (vault.containsPii as jest.Mock).mockReturnValueOnce(true);
+      const { extractText } = await import("@/engine/documentExtract");
+      (extractText as jest.Mock).mockResolvedValueOnce(piiText);
+
+      const form = await buildPdfFormData(minimalPdfWithPii, "resume.pdf");
+      form.append("preserveStyles", "true");
+      form.append("eggIds", JSON.stringify(["invisible-hand", "canary-wing", "llm-trap"]));
+      const req = new Request("http://localhost:3000/api/harden", {
+        method: "POST",
+        body: form,
+      });
+      const res = await POST(req as never);
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toMatch(/dehydrated tokens only|client dehydration/);
+      expect(Processor.process).not.toHaveBeenCalled();
+    }, 15000);
+  });
 });

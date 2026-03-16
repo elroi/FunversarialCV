@@ -3,6 +3,7 @@
  * Wraps the candidate email token in a richly-parameterized mailto: link for incident reporting.
  */
 
+import { PDFDocument, StandardFonts, rgb, PDFName, PDFString } from "pdf-lib";
 import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
 import type {
@@ -88,6 +89,78 @@ function applyMailtoToText(
   return text.replaceAll(token, `${token}${append}`);
 }
 
+/**
+ * Adds a mailto link annotation to a PDF without rebuilding from text.
+ * Places a large clickable link annotation at the typical email position
+ * (upper area of page where contact info usually appears in CVs).
+ * Also draws invisible text for LLM/parser detection.
+ */
+async function addMailtoAnnotationToPdf(
+  buffer: Buffer,
+  mailtoUri: string,
+  label: string
+): Promise<Buffer> {
+  const doc = await PDFDocument.load(new Uint8Array(buffer));
+  const pages = doc.getPages();
+  const page = pages[0];
+  if (!page) return buffer;
+
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const pageHeight = page.getHeight();
+  const pageWidth = page.getWidth();
+
+  // Draw invisible text at top for LLM/parser detection
+  const topY = pageHeight - 14;
+  const displayText = `${label}: ${mailtoUri}`;
+  page.drawText(displayText, {
+    x: 10,
+    y: topY,
+    size: 0.5,
+    font,
+    color: rgb(1, 1, 1), // white (invisible on white background)
+  });
+
+  // Create a clickable link annotation in the typical email contact area.
+  // Most CVs have contact info (including email) in the upper portion,
+  // typically between y=700-780 for A4 (842pt height).
+  // We create a wide annotation that covers where "Email: xxx@xxx" typically appears.
+  // This makes the email address clickable without modifying the visible content.
+  const emailAreaTop = pageHeight - 60;  // ~60pt from top (after name/title)
+  const emailAreaBottom = pageHeight - 120; // ~120pt from top (covers contact section)
+  const emailRect: [number, number, number, number] = [
+    30,                    // left margin
+    emailAreaBottom,       // bottom of annotation
+    pageWidth - 30,        // right margin (full width for the email line)
+    emailAreaTop,          // top of annotation
+  ];
+
+  const linkAnnotation = doc.context.obj({
+    Type: "Annot",
+    Subtype: "Link",
+    Rect: emailRect,
+    Border: [0, 0, 0], // invisible border
+    A: {
+      Type: "Action",
+      S: "URI",
+      URI: PDFString.of(mailtoUri),
+    },
+  });
+  const linkRef = doc.context.register(linkAnnotation);
+  const existingAnnots = page.node.lookup(PDFName.of("Annots"));
+  if (
+    existingAnnots &&
+    "push" in existingAnnots &&
+    typeof (existingAnnots as { push: (r: unknown) => void }).push === "function"
+  ) {
+    (existingAnnots as { push: (r: unknown) => void }).push(linkRef);
+  } else {
+    page.node.set(PDFName.of("Annots"), doc.context.obj([linkRef]));
+  }
+
+  const pdfBytes = await doc.save();
+  return Buffer.from(pdfBytes);
+}
+
 export const incidentMailto: IEgg = {
   id: "incident-mailto",
   name: "Mailto Surprise",
@@ -162,15 +235,15 @@ export const incidentMailto: IEgg = {
     );
     const token = byIndex ? byIndex[0] : null;
 
-    // In preserve-styles DOCX path the document may contain the raw email
+    // In preserve-styles path the document may contain the raw email
     // address instead of a PII token. As a fallback, detect the first email
     // address and use it as the mailto recipient.
     let rawEmail: string | null = null;
-    if (!token && mimeType === MIME_DOCX) {
+    if (!token) {
       const m = text.match(EMAIL_IN_TEXT_PATTERN);
       if (m) rawEmail = m[0];
-      // If word-extractor did not return the email (e.g. CI/env differences), scan document.xml.
-      if (!rawEmail) {
+      // For DOCX, also try scanning document.xml if word-extractor missed it.
+      if (!rawEmail && mimeType === MIME_DOCX) {
         rawEmail = await getFirstEmailFromDocxBody(buffer);
       }
     }
@@ -209,8 +282,15 @@ export const incidentMailto: IEgg = {
     }
     // #endregion agent log
 
-    // PDF: keep existing rebuild behavior (text-based).
+    // PDF: For raw emails (preserve-styles path), add a clickable mailto link annotation
+    // over the contact info area rather than rebuilding from text (which destroys layout).
+    // For tokenized text, use the text rebuild path.
     if (mimeType === MIME_PDF) {
+      if (rawEmail) {
+        // Add mailto link annotation to preserve original PDF structure
+        return addMailtoAnnotationToPdf(buffer, mailtoUri, label);
+      }
+      // Tokenized path: rebuild from text
       const newText = applyMailtoToText(text, token ?? recipient, mailtoUri, mode, label);
       if (newText === text) return buffer;
       return createDocumentWithText(newText, mimeType);

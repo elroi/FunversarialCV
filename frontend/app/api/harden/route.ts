@@ -167,27 +167,15 @@ export async function POST(request: NextRequest) {
     }
 
     const ext = file.name.toLowerCase();
-    if (
-      (detectedMimeType === MIME_PDF && !ext.endsWith(".pdf")) ||
-      (detectedMimeType === MIME_DOCX && !ext.endsWith(".docx"))
-    ) {
+    if (!ext.endsWith(".docx")) {
       return Response.json(
         { error: "File content does not match extension." },
         { status: 400 }
       );
     }
 
-    // Check if this is an add-only request (preserveStyles + all eggs are add-only).
-    // For add-only PDFs, we skip the PII guard because:
-    // 1) Add-only eggs don't modify body text, just add hidden content
-    // 2) Client PDF extraction may have failed, but eggs can still be applied directly
-    // 3) No PII is sent to external services; processing is entirely local
-    const isAddOnlyRequest =
-      preserveStyles &&
-      detectedMimeType === MIME_PDF &&
-      eggIds !== null &&
-      eggIds.length > 0 &&
-      eggIds.every((id) => ADD_ONLY_EGG_IDS.has(id));
+    // DOCX-only: no add-only skip (was PDF-only). PII guard always runs for binary uploads.
+    const isAddOnlyRequest = false;
 
     if (!isAddOnlyRequest) {
       // PII-guard: reject documents that still contain obvious PII.

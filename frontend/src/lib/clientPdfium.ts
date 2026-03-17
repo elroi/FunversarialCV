@@ -4,7 +4,8 @@
  * @see docs/PDF_CLIENT_EXTRACTION_RESEARCH.md
  */
 
-type PdfiumInstance = Awaited<ReturnType<typeof loadPdfium>>;
+// Instance type: loose type to avoid circular reference (Awaited<ReturnType<typeof loadPdfium>>).
+type PdfiumInstance = any; // PDFium init return type not exported
 
 let pdfiumInstance: PdfiumInstance | null = null;
 
@@ -17,7 +18,7 @@ async function loadPdfium(): Promise<PdfiumInstance> {
     "https://cdn.jsdelivr.net/npm/@embedpdf/pdfium@2.8.0/dist/pdfium.wasm";
   const response = await fetch(wasmUrl);
   const wasmBinary = await response.arrayBuffer();
-  pdfiumInstance = await init({ wasmBinary });
+  pdfiumInstance = (await init({ wasmBinary })) as PdfiumInstance;
   pdfiumInstance.PDFiumExt_Init();
   return pdfiumInstance;
 }

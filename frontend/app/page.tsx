@@ -602,8 +602,8 @@ export default function Home() {
       const friendly = isPdfParseIssue
         ? "This PDF could not be read in the browser (parser limitation); using server path. Many other PDFs work client-side."
         : msg;
-      // Use "info" level for expected fallback (PDF parse issues), "warn" for unexpected errors
-      const level = isPdfParseIssue ? "info" : "warn";
+      // Use "info" level for expected fallback (PDF parse issues), "warning" for unexpected errors
+      const level = isPdfParseIssue ? "info" : "warning";
       setLog((prev) => [
         ...prev,
         {

@@ -163,12 +163,8 @@ export async function rehydrateInBrowser(
     return rehydrateDocxBufferInPlace(tokenizedBuffer, piiMap);
   }
   if (mimeType === MIME_PDF) {
-    // In-place replacement for tokens in uncompressed streams.
-    let buf = rehydratePdfBufferInPlace(tokenizedBuffer, piiMap);
-    // Also rehydrate tokens inside FlateDecode streams (preserve-styles path for compressed PDFs).
-    const { rehydratePdfFlateStreams } = await import("./clientPdfStreamTokenize");
-    buf = await rehydratePdfFlateStreams(buf, piiMap);
-    return buf;
+    // In-place replacement for tokens in uncompressed streams (DOCX-only launch: PDF path kept for future use).
+    return rehydratePdfBufferInPlace(tokenizedBuffer, piiMap);
   }
   throw new Error(
     `rehydrateInBrowser: unsupported mimeType ${mimeType}`

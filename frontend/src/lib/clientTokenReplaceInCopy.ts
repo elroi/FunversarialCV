@@ -126,13 +126,7 @@ export async function replacePiiWithTokensInCopy(
 
   if (mimeType === MIME_PDF) {
     const buffer = await file.arrayBuffer();
-    let out = replacePiiWithTokensInPdfBuffer(buffer, piiMap);
-    if (out === null) {
-      const { replacePiiInPdfFlateStreams } = await import(
-        "./clientPdfStreamTokenize"
-      );
-      out = await replacePiiInPdfFlateStreams(buffer, piiMap);
-    }
+    const out = replacePiiWithTokensInPdfBuffer(buffer, piiMap);
     if (out === null) return null;
     const tokenizedFile = new File([out], file.name, { type: file.type });
     return { file: tokenizedFile, buffer: out };

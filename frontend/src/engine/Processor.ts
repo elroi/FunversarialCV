@@ -83,8 +83,8 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
     } catch {
       extractionFailed = true;
     }
-    const scan = extractionFailed
-      ? { hasPromptInjection: false, patterns: [], message: "Text extraction failed; duality check skipped." }
+    const scan: ScanResult = extractionFailed
+      ? { hasSuspiciousPatterns: false, matchedPatterns: [] }
       : await runScan({ text: rawText, buffer, mimeType });
     const scannerReport = buildScannerReport(scan);
     let currentBuffer = buffer;

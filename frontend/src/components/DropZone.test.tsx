@@ -7,16 +7,17 @@ function createFile(name: string, type: string) {
 }
 
 describe("DropZone", () => {
-  it("accepts a .pdf file and calls onFileSelect", () => {
+  it("rejects a .pdf file and shows DOCX-only error", () => {
     const handleSelect = jest.fn();
-    const { getByTestId } = render(<DropZone onFileSelect={handleSelect} />);
+    const { getByTestId, getByText } = render(<DropZone onFileSelect={handleSelect} />);
 
     const input = getByTestId("dropzone-input") as HTMLInputElement;
     const file = createFile("resume.pdf", "application/pdf");
 
     fireEvent.change(input, { target: { files: [file] } });
 
-    expect(handleSelect).toHaveBeenCalledWith(file);
+    expect(handleSelect).not.toHaveBeenCalled();
+    expect(getByText(/only word documents \(\.docx\) are allowed/i)).toBeTruthy();
   });
 
   it("accepts a .docx file and calls onFileSelect", () => {
@@ -46,7 +47,7 @@ describe("DropZone", () => {
     fireEvent.change(input, { target: { files: [file] } });
 
     expect(handleSelect).not.toHaveBeenCalled();
-    expect(getByText(/only \.pdf and \.docx files are allowed/i)).toBeTruthy();
+    expect(getByText(/only word documents \(\.docx\) are allowed/i)).toBeTruthy();
   });
 
   it("rejects files larger than maxSizeBytes and shows a size error", () => {
@@ -56,7 +57,10 @@ describe("DropZone", () => {
     );
 
     const input = getByTestId("dropzone-input") as HTMLInputElement;
-    const file = createFile("resume.pdf", "application/pdf");
+    const file = createFile(
+      "resume.docx",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    );
 
     fireEvent.change(input, { target: { files: [file] } });
 

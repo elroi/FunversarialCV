@@ -28,10 +28,34 @@ function findBytes(haystack: Uint8Array, needle: Uint8Array): number {
   return -1;
 }
 
+/** Normalize PII string for byte search (PDF may use nbsp, en-dash, etc.). */
+function normalizeForPdfSearch(value: string): string {
+  return value
+    .replace(/\u00A0/g, " ")
+    .replace(/\u2013/g, "-")
+    .replace(/\u2014/g, "-")
+    .replace(/\u2009/g, " ");
+}
+
+/** Candidate search strings: exact, NFC, trimmed, normalized, trimmed+normalized. */
+function searchCandidates(value: string): string[] {
+  const candidates: string[] = [value];
+  const nfc = value.normalize("NFC");
+  if (nfc !== value) candidates.push(nfc);
+  const trimmed = value.trim();
+  if (trimmed !== value) candidates.push(trimmed);
+  const normalized = normalizeForPdfSearch(value);
+  if (normalized !== value) candidates.push(normalized);
+  const trimmedNorm = normalizeForPdfSearch(trimmed);
+  if (trimmedNorm !== value && !candidates.includes(trimmedNorm)) candidates.push(trimmedNorm);
+  return candidates;
+}
+
 /**
  * In-place PII → token replacement in a PDF buffer. Preserves layout when PII
  * appears as literal bytes (e.g. uncompressed streams). If token is longer than
  * value we cannot replace without shifting bytes, so we return null and caller rebuilds.
+ * Tries multiple search candidates (exact, NFC, trimmed, normalized) so extraction/PDF encoding mismatches still match.
  */
 function replacePiiWithTokensInPdfBuffer(
   buffer: ArrayBuffer,
@@ -42,28 +66,43 @@ function replacePiiWithTokensInPdfBuffer(
   const entries = Object.values(piiMap.byToken);
   if (entries.length === 0) return buffer;
 
-  // Longer values first to avoid partial replacements (e.g. "a@b.com" inside "x a@b.com y").
   const byValueLength = [...entries].sort(
     (a, b) => encoder.encode(b.value).length - encoder.encode(a.value).length
   );
 
-  for (const entry of byValueLength) {
+  for (let entryIndex = 0; entryIndex < byValueLength.length; entryIndex++) {
+    const entry = byValueLength[entryIndex];
     const valueBytes = encoder.encode(entry.value);
     let tokenBytes = encoder.encode(entry.token);
-    if (tokenBytes.length > valueBytes.length) {
-      return null;
+    const tokenGtValue = tokenBytes.length > valueBytes.length;
+    if (tokenGtValue) return null;
+
+    const candidates = searchCandidates(entry.value);
+    let searchBytes: Uint8Array | null = null;
+    let pos = -1;
+    let candidateIndex = -1;
+    for (let ci = 0; ci < candidates.length; ci++) {
+      const bytes = encoder.encode(candidates[ci]);
+      if (bytes.length > arr.length) continue;
+      pos = findBytes(arr, bytes);
+      if (pos !== -1) {
+        searchBytes = bytes;
+        candidateIndex = ci;
+        break;
+      }
     }
-    if (tokenBytes.length < valueBytes.length) {
-      const padded = new Uint8Array(valueBytes.length);
+    if (pos === -1 || searchBytes === null) return null;
+
+    const replaceLen = searchBytes.length;
+    if (tokenBytes.length < replaceLen) {
+      const padded = new Uint8Array(replaceLen);
       padded.set(tokenBytes);
       padded.fill(0x20, tokenBytes.length);
       tokenBytes = padded;
-    }
-    let pos = findBytes(arr, valueBytes);
-    if (pos === -1) return null;
+    } else if (tokenBytes.length > replaceLen) return null;
     while (pos !== -1) {
       arr.set(tokenBytes, pos);
-      pos = findBytes(arr, valueBytes);
+      pos = findBytes(arr, searchBytes);
     }
   }
   return arr.buffer;
@@ -87,7 +126,13 @@ export async function replacePiiWithTokensInCopy(
 
   if (mimeType === MIME_PDF) {
     const buffer = await file.arrayBuffer();
-    const out = replacePiiWithTokensInPdfBuffer(buffer, piiMap);
+    let out = replacePiiWithTokensInPdfBuffer(buffer, piiMap);
+    if (out === null) {
+      const { replacePiiInPdfFlateStreams } = await import(
+        "./clientPdfStreamTokenize"
+      );
+      out = await replacePiiInPdfFlateStreams(buffer, piiMap);
+    }
     if (out === null) return null;
     const tokenizedFile = new File([out], file.name, { type: file.type });
     return { file: tokenizedFile, buffer: out };

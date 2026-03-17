@@ -321,8 +321,8 @@
 ### 6.3 Production Smoke Tests
 
 - **Manual checks on Vercel production**
-  - [ ] Happy-path for PDF (including download and Duality Monitor).
-  - [ ] Happy-path for DOCX.
+  - [ ] Reject PDF with DOCX-only message (client and/or server).
+  - [ ] Happy-path for DOCX (upload, harden, download, Duality Monitor).
   - [ ] Oversize or invalid upload to confirm user-facing error.
   - [ ] Canary Wing hit to confirm `/api/canary` logs (and analytics, if implemented).
 

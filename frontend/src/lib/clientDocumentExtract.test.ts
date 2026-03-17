@@ -1,9 +1,30 @@
 /**
- * Unit tests for client PDF text extraction (pdfjs-dist + PDFium fallback).
+ * Unit tests for client PDF text extraction (pdfjs-dist + PDFium fallback) and magic-byte detection.
  * TDD: these tests define fallback behavior before implementation.
  */
-import { extractTextFromBuffer, MIME_PDF } from "./clientDocumentExtract";
+import {
+  extractTextFromBuffer,
+  MIME_PDF,
+  detectDocumentTypeFromBuffer,
+} from "./clientDocumentExtract";
 import * as clientPdfium from "./clientPdfium";
+
+describe("detectDocumentTypeFromBuffer", () => {
+  it("returns docx for PK (ZIP/DOCX) magic bytes", () => {
+    const buf = new Uint8Array([0x50, 0x4b, 0x03, 0x04]).buffer;
+    expect(detectDocumentTypeFromBuffer(buf)).toBe("docx");
+  });
+
+  it("returns pdf for %PDF magic bytes", () => {
+    const buf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]).buffer;
+    expect(detectDocumentTypeFromBuffer(buf)).toBe("pdf");
+  });
+
+  it("returns null for empty or unknown content", () => {
+    expect(detectDocumentTypeFromBuffer(new ArrayBuffer(0))).toBeNull();
+    expect(detectDocumentTypeFromBuffer(new Uint8Array([0x00, 0x01]).buffer)).toBeNull();
+  });
+});
 
 jest.mock("pdfjs-dist", () => ({
   __esModule: true,

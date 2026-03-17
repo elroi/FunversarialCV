@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
   } else {
     if (!file || !(file instanceof File)) {
       return Response.json(
-        { error: "Missing or invalid file. Upload a single PDF or DOCX." },
+        { error: "Missing or invalid file. Upload a single Word document (.docx)." },
         { status: 400 }
       );
     }
@@ -149,11 +149,20 @@ export async function POST(request: NextRequest) {
     }
 
     const detectedMimeType = detectDocumentType(rawBuffer);
+    if (detectedMimeType === MIME_PDF) {
+      return Response.json(
+        {
+          error:
+            "We currently support Word documents (.docx) only. PDF support is planned for a future release.",
+        },
+        { status: 400 }
+      );
+    }
     if (!detectedMimeType) {
       const detail =
         rawBuffer.length === 0
-          ? "Document is empty. Please upload a valid PDF or DOCX file."
-          : "Unsupported or invalid document: file must be a valid PDF or DOCX.";
+          ? "Document is empty. Please upload a valid Word document (.docx)."
+          : "Unsupported or invalid document: file must be a valid Word document (.docx).";
       return Response.json({ error: detail }, { status: 400 });
     }
 
@@ -293,7 +302,7 @@ export async function POST(request: NextRequest) {
       name === "InvalidPDFException"
     ) {
       return Response.json(
-        { error: name === "InvalidPDFException" ? "Unsupported or invalid document: file must be a valid PDF or DOCX." : message },
+        { error: name === "InvalidPDFException" ? "Unsupported or invalid document: file must be a valid Word document (.docx)." : message },
         { status: 400 }
       );
     }

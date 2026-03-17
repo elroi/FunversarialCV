@@ -9,6 +9,29 @@ const MIME_DOCX =
 
 export { MIME_PDF, MIME_DOCX };
 
+/**
+ * Detects document type from magic bytes (client-safe, ArrayBuffer).
+ * PDF: %PDF (0x25, 0x50, 0x44, 0x46); DOCX: PK (ZIP, 0x50, 0x4b).
+ * Used to reject non-DOCX files before arming (DOCX-only launch).
+ */
+export function detectDocumentTypeFromBuffer(buffer: ArrayBuffer): "docx" | "pdf" | null {
+  if (!buffer || buffer.byteLength < 2) return null;
+  const arr = new Uint8Array(buffer);
+  if (
+    buffer.byteLength >= 4 &&
+    arr[0] === 0x25 &&
+    arr[1] === 0x50 &&
+    arr[2] === 0x44 &&
+    arr[3] === 0x46
+  ) {
+    return "pdf";
+  }
+  if (arr[0] === 0x50 && arr[1] === 0x4b) {
+    return "docx";
+  }
+  return null;
+}
+
 export async function extractTextFromFileInBrowser(
   file: File | Blob
 ): Promise<{ text: string; mimeType: string }> {

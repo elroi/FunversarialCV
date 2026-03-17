@@ -11,7 +11,7 @@ Built by a Senior Security Architect specialized in AI Governance, this tool ser
 
 The service uses a **two-step flow** so you can configure eggs before hardening:
 
-1. **Upload your CV** — Drop or select a PDF or DOCX file. The file is "armed" (held in memory in your browser only); no processing runs yet.
+1. **Upload your CV** — Drop or select a Word document (.docx). The file is "armed" (held in memory in your browser only); no processing runs yet.
 2. **Configure eggs** — Use the config cards to set options for each egg (e.g. Incident Mailto template, Canary Wing URL or token). You can change these as needed.
 3. **Click Harden** — When ready, click **Harden** to run the pipeline. The file is sent to the server, processed in memory (stateless), and your hardened CV downloads automatically. The Duality Monitor shows the pre-hardening scan result (e.g. existing prompt-injection or canary patterns in your original file).
 
@@ -19,7 +19,7 @@ You can upload a different file at any time to replace the armed CV and configur
 
 **Upload size note:** To stay safely under Vercel’s Serverless Function request limits and avoid opaque platform 413 errors, FunversarialCV currently supports CVs up to **4 MB** per upload.
 
-**Note:** Hardening rebuilds the document from extracted text by default; original PDF or DOCX layout and styling are not preserved in the output unless you enable **Preserve styles** for compatible eggs (Invisible Hand, Canary Wing, Metadata Shadow, and the DOCX path of Incident Mailto).
+**Note:** Hardening rebuilds the document from extracted text by default; original DOCX layout and styling are not preserved in the output unless you enable **Preserve styles** for compatible eggs (Invisible Hand, Canary Wing, Metadata Shadow, and Incident Mailto).
 
 ---
 
@@ -38,7 +38,7 @@ As a tool focused on **Security for AI and AI for Security**, we prioritize data
 
 * **Zero-Retention Architecture:** Files are processed entirely in volatile memory (RAM) and are never written to disk or a database.
 * **PII Sanitization:** Before "hardening," the tool identifies PII patterns (Email, Phone, and common Address formats) to help you redact sensitive data before sharing your CV globally. Detection is heuristic and focused on obvious high-risk patterns (e.g. `user@example.com`, `+1 (555) 123-4567`, `123 Main St …`), not full DLP.
-* **Client PDF extraction:** PDF text extraction in the browser uses pdfjs-dist first; if it fails (e.g. some compression or parsing issues), we try PDFium (WASM) as a fallback so more PDFs can be dehydrated client-side without sending PII to the server. If both fail, you see "Server-side processing required" and may choose to send the PDF to the server. See [docs/PDF_CLIENT_EXTRACTION_RESEARCH.md](docs/PDF_CLIENT_EXTRACTION_RESEARCH.md) for rationale and alternatives.
+* **v1 format:** The service currently supports **Word documents (.docx) only**. PDF support is planned for a future release. Document type is detected from file content (magic bytes), not filename.
 * **Stateless Execution:** Your data exists only for the duration of the request. Once the download is complete, the memory is purged.
 
 For **Canary Wing** specifically, the `/api/canary` endpoint records **ephemeral, token-scoped hits** for analytics:

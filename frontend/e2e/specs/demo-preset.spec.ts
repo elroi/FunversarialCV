@@ -49,39 +49,6 @@ function mockDemoCvAndHarden(
 }
 
 test.describe("Demo preset", () => {
-  test("Clean · PDF: load preset, harden, download yields valid PDF", async ({
-    page,
-  }) => {
-    mockDemoCvAndHarden(page, "pdf");
-
-    await page.goto("/");
-
-    await page.getByRole("button", { name: /clean · pdf/i }).click();
-
-    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText(/FunversarialCV Demo/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: /harden/i })).toBeEnabled();
-
-    await page.getByRole("button", { name: /harden/i }).click();
-
-    await expect(
-      page.getByRole("button", { name: /download/i })
-    ).toBeVisible({ timeout: 30_000 });
-
-    const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("button", { name: /download/i }).click();
-    const download = await downloadPromise;
-
-    expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
-    const buffer = await download.path();
-    expect(buffer).toBeTruthy();
-    const fs = await import("fs");
-    const bytes = fs.readFileSync(buffer);
-    expect(bytes.length).toBeGreaterThan(0);
-    expect(bytes[0]).toBe(0x25); // %PDF
-    expect(bytes[1]).toBe(0x50);
-  });
-
   test("Clean · DOCX: load preset, harden, download yields valid DOCX", async ({
     page,
   }) => {
@@ -111,6 +78,38 @@ test.describe("Demo preset", () => {
     const bytes = fs.readFileSync(buffer);
     expect(bytes.length).toBeGreaterThan(0);
     expect(bytes[0]).toBe(0x50); // PK
+    expect(bytes[1]).toBe(0x4b);
+  });
+
+  test("Dirty · DOCX: load preset, harden, download yields valid DOCX", async ({
+    page,
+  }) => {
+    mockDemoCvAndHarden(page, "docx");
+
+    await page.goto("/");
+
+    await page.getByRole("button", { name: /dirty · docx/i }).click();
+
+    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("button", { name: /harden/i })).toBeEnabled();
+
+    await page.getByRole("button", { name: /harden/i }).click();
+
+    await expect(
+      page.getByRole("button", { name: /download/i })
+    ).toBeVisible({ timeout: 30_000 });
+
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByRole("button", { name: /download/i }).click();
+    const download = await downloadPromise;
+
+    expect(download.suggestedFilename()).toMatch(/\.docx$/i);
+    const buffer = await download.path();
+    expect(buffer).toBeTruthy();
+    const fs = await import("fs");
+    const bytes = fs.readFileSync(buffer);
+    expect(bytes.length).toBeGreaterThan(0);
+    expect(bytes[0]).toBe(0x50);
     expect(bytes[1]).toBe(0x4b);
   });
 });

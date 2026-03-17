@@ -508,7 +508,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
           When the canary link in your hardened CV is opened or clicked, the server records the hit (variant, time, and optional client info). To see your results:
         </p>
         <ol className="text-caption text-noir-foreground/70 list-decimal list-inside space-y-1 mb-2 ml-0.5">
-          <li><strong>Find the egg</strong> — Open your hardened PDF or DOCX. Use Select All (Ctrl/Cmd+A) or search for a URL; the canary is embedded as nearly invisible text and/or a clickable region.</li>
+          <li><strong>Find the egg</strong> — Open your hardened document (DOCX). Use Select All (Ctrl/Cmd+A) or search for a URL; the canary is embedded as nearly invisible text and/or a clickable region.</li>
           <li><strong>Trigger it</strong> — Click the canary link (or have someone/something else open it). The server logs the hit and associates it with your token.</li>
           <li><strong>Watch the result</strong> — Click <strong>Check for triggers</strong> below. You&apos;ll see each trigger with variant (e.g. <code className="text-sm">pdf-clickable</code>) and timestamp; repeated triggers appear in the list.</li>
         </ol>

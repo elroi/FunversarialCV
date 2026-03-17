@@ -9,7 +9,7 @@ export interface DropZoneProps {
   openFilePickerRef?: React.MutableRefObject<(() => void) | null>;
 }
 
-const ACCEPTED_EXTENSIONS = [".pdf", ".docx"];
+const ACCEPTED_EXTENSIONS = [".docx"];
 
 function isAcceptedFile(file: File): boolean {
   const lowerName = file.name.toLowerCase();
@@ -18,7 +18,7 @@ function isAcceptedFile(file: File): boolean {
 
 export const DropZone: React.FC<DropZoneProps> = ({
   onFileSelect,
-  accept = ".pdf,.docx",
+  accept = ".docx",
   maxSizeBytes,
   openFilePickerRef,
 }) => {
@@ -43,7 +43,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
       const file = files[0];
 
       if (!isAcceptedFile(file)) {
-        setError("Only .pdf and .docx files are allowed.");
+        setError("Only Word documents (.docx) are allowed.");
         return;
       }
 
@@ -108,7 +108,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
             Drop your CV here
           </p>
           <p className="text-sm text-noir-foreground/70">
-            .pdf or .docx • Drag &amp; drop or{" "}
+            .docx (Word) • Drag &amp; drop or{" "}
             <span className="text-neon-cyan">browse</span>
           </p>
           <p className="text-caption text-noir-foreground/50">
@@ -122,7 +122,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
       </label>
 
       <span id="cv-upload-hint" className="sr-only">
-        Upload your CV as a .pdf or .docx file. PII handling is Stateless and Volatile: processed in-memory only and never stored.
+        Upload your CV as a Word document (.docx). PII handling is Stateless and Volatile: processed in-memory only and never stored.
       </span>
         <input
           id="cv-upload-input"

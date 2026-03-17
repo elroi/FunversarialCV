@@ -59,7 +59,7 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
 
   // —— Stage 1: Accept buffer ——
   if (!isSupportedMimeType(mimeType)) {
-    throw new Error(`Unsupported document type: ${mimeType}. Use PDF or DOCX.`);
+    throw new Error(`Unsupported document type: ${mimeType}. Use a Word document (.docx).`);
   }
 
   // When no eggs are selected, run scan only and return the original buffer unchanged.
@@ -75,7 +75,7 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
     eggs.every((egg) => ADD_ONLY_EGG_IDS.has(egg.id));
 
   if (allAddOnly) {
-    // Try text extraction for duality scan; if it fails, proceed with eggs anyway (preserving original layout).
+    // Try text extraction for duality scan; if it fails, proceed anyway.
     let rawText = "";
     let extractionFailed = false;
     try {

@@ -13,18 +13,51 @@ import { rehydrateDocxBufferInPlace } from "./clientTokenReplaceInCopy";
 import type { PiiMap } from "./clientVaultTypes";
 import type { DehydrateResult, DehydrateInBrowserResult } from "./clientVaultTypes";
 
-const TOKEN_PATTERN = /\{\{PII_[A-Z_]+\d+\}\}/g;
+/** Matches full tokens {{PII_*_N}} and short tokens {{E0}}, {{P0}}, {{A0}} (with optional trailing spaces for padding). */
+const TOKEN_PATTERN = /\{\{(?:PII_[A-Z_]+\d+|E\d+|P\d+|A\d+)\}\}\s*/g;
+
+/** PII shorter than this is not tokenized (avoids noise; ensures token can fit in binary replace). */
+export const MIN_PII_VALUE_LENGTH = 6;
+
+/** Length of full tokens so we know when to use short form (short form fits in value.length). */
+const FULL_TOKEN_LENS = {
+  E: "{{PII_EMAIL_0}}".length,
+  P: "{{PII_PHONE_0}}".length,
+  A: "{{PII_ADDR_0}}".length,
+} as const;
+
+/**
+ * Returns a token string that is at most value.length (for style-preserving PDF/DOCX replace).
+ * Uses short form (e.g. {{E0}}) when value is shorter than full token; pads with spaces to value.length.
+ */
+function tokenForReplace(
+  fullToken: string,
+  shortPrefix: keyof typeof FULL_TOKEN_LENS,
+  index: number,
+  value: string
+): string {
+  const fullLen = FULL_TOKEN_LENS[shortPrefix];
+  if (value.length >= fullLen) return fullToken;
+  const short = `{{${shortPrefix}${index}}}`;
+  return short.padEnd(value.length, " ");
+}
 
 /**
  * Dehydrates plain text: replaces PII with tokens and returns tokenized text plus a PiiMap.
- * Safe to run in the browser; uses same token format as server vault for compatibility.
+ * Uses short tokens for short PII so token never exceeds value length (preserves styles in PDF/DOCX).
+ * Only tokenizes PII with length >= MIN_PII_VALUE_LENGTH.
  */
 export function dehydrateTextForBrowser(text: string): DehydrateResult {
   const piiMap: PiiMap = { byToken: {} };
-  let counter = 0;
+  let emailCount = 0;
+  let phoneCount = 0;
+  let addrCount = 0;
 
   let tokenizedText = text.replace(PII_REGEX.EMAIL, (match) => {
-    const token = `{{PII_EMAIL_${counter++}}}`;
+    if (match.length < MIN_PII_VALUE_LENGTH) return match;
+    const fullToken = `{{PII_EMAIL_${emailCount}}}`;
+    const token = tokenForReplace(fullToken, "E", emailCount, match);
+    emailCount++;
     piiMap.byToken[token] = {
       token,
       type: "EMAIL",
@@ -34,7 +67,10 @@ export function dehydrateTextForBrowser(text: string): DehydrateResult {
   });
 
   tokenizedText = tokenizedText.replace(PII_REGEX.PHONE, (match) => {
-    const token = `{{PII_PHONE_${counter++}}}`;
+    if (match.length < MIN_PII_VALUE_LENGTH) return match;
+    const fullToken = `{{PII_PHONE_${phoneCount}}}`;
+    const token = tokenForReplace(fullToken, "P", phoneCount, match);
+    phoneCount++;
     piiMap.byToken[token] = {
       token,
       type: "PHONE",
@@ -44,7 +80,10 @@ export function dehydrateTextForBrowser(text: string): DehydrateResult {
   });
 
   tokenizedText = tokenizedText.replace(PII_REGEX.ADDRESS, (match) => {
-    const token = `{{PII_ADDR_${counter++}}}`;
+    if (match.length < MIN_PII_VALUE_LENGTH) return match;
+    const fullToken = `{{PII_ADDR_${addrCount}}}`;
+    const token = tokenForReplace(fullToken, "A", addrCount, match);
+    addrCount++;
     piiMap.byToken[token] = {
       token,
       type: "ADDRESS",
@@ -79,9 +118,11 @@ function rehydratePdfBufferInPlace(
       padded.fill(0x20, valueBytes.length); // space
       valueBytes = padded;
     }
-    const first = findBytes(arr, tokenBytes);
-    if (first !== -1) {
-      arr.set(valueBytes, first);
+    // Replace every occurrence (e.g. visible text and mailto: URIs).
+    let pos = findBytes(arr, tokenBytes);
+    while (pos !== -1) {
+      arr.set(valueBytes, pos);
+      pos = findBytes(arr, tokenBytes);
     }
   }
   return arr.buffer;
@@ -122,15 +163,12 @@ export async function rehydrateInBrowser(
     return rehydrateDocxBufferInPlace(tokenizedBuffer, piiMap);
   }
   if (mimeType === MIME_PDF) {
-    // Try in-place byte replacement first (works if tokens are in uncompressed streams).
-    const inPlace = rehydratePdfBufferInPlace(tokenizedBuffer, piiMap);
-    // NOTE: If tokens live in compressed streams they won't be found in raw bytes.
-    // We do NOT fall back to extract+rebuild because that destroys server-injected
-    // egg content (0.5pt white text, link annotations, etc.). Instead, return the
-    // in-place result as-is — any remaining tokens will be visible but eggs are preserved.
-    // For most CVs this is acceptable; production enhancement could use a PDF library
-    // that decompresses streams, replaces tokens, and recompresses.
-    return inPlace;
+    // In-place replacement for tokens in uncompressed streams.
+    let buf = rehydratePdfBufferInPlace(tokenizedBuffer, piiMap);
+    // Also rehydrate tokens inside FlateDecode streams (preserve-styles path for compressed PDFs).
+    const { rehydratePdfFlateStreams } = await import("./clientPdfStreamTokenize");
+    buf = await rehydratePdfFlateStreams(buf, piiMap);
+    return buf;
   }
   throw new Error(
     `rehydrateInBrowser: unsupported mimeType ${mimeType}`
@@ -139,7 +177,10 @@ export async function rehydrateInBrowser(
 
 function applyRehydrationToText(text: string, piiMap: PiiMap): string {
   const tokensInText = text.match(TOKEN_PATTERN) ?? [];
-  const missing = [...new Set(tokensInText)].filter((t) => !piiMap.byToken[t]);
+  const missing = [...new Set(tokensInText)].filter((t) => {
+    const trimmed = t.replace(/\s+$/, "");
+    return !piiMap.byToken[t] && !piiMap.byToken[trimmed];
+  });
   if (missing.length > 0) {
     throw new Error(
       `rehydrateInBrowser: token(s) not in PiiMap: ${missing.join(", ")}`

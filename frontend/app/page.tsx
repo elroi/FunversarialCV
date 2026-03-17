@@ -16,6 +16,7 @@ import { MetadataShadowConfigCard } from "../src/components/MetadataShadowConfig
 import { dehydrateInBrowser, rehydrateInBrowser } from "../src/lib/clientVault";
 import { createDocumentWithTextInBrowser } from "../src/lib/clientDocumentCreate";
 import { replacePiiWithTokensInCopy } from "../src/lib/clientTokenReplaceInCopy";
+import { detectDocumentTypeFromBuffer } from "../src/lib/clientDocumentExtract";
 import type { PiiMap } from "../src/lib/clientVaultTypes";
 import type { DualityCheckResult } from "../src/engine/dualityCheck";
 import { EGG_OPTIONS, DEFAULT_ENABLED_EGG_IDS } from "../src/eggs/eggMetadata";
@@ -73,7 +74,7 @@ export default function Home() {
   /** True once the user has toggled an egg or preserve-styles; we only persist after that so we never overwrite saved state on load. */
   const userHasChangedCheckboxesRef = useRef(false);
   const [demoVariant, setDemoVariant] = useState<"clean" | "dirty">("clean");
-  const [demoFormat, setDemoFormat] = useState<"pdf" | "docx">("pdf");
+  const [demoFormat, setDemoFormat] = useState<"pdf" | "docx">("docx");
   const [hasDemoLoaded, setHasDemoLoaded] = useState(false);
   const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [clientPiiMap, setClientPiiMap] = useState<PiiMap | null>(null);
@@ -173,11 +174,25 @@ export default function Home() {
     });
   };
 
-  const onFileSelect = (file: File) => {
-    setSelectedFile(file);
-    setSelectedFileName(file.name);
+  const onFileSelect = async (file: File) => {
+    const buf = await file.slice(0, 4).arrayBuffer();
+    const detected = detectDocumentTypeFromBuffer(buf);
+    if (detected === "pdf") {
+      setError(
+        "This file looks like a PDF. We currently support Word documents (.docx) only."
+      );
+      return;
+    }
+    if (detected !== "docx") {
+      setError(
+        "File content is not a valid Word document. Please upload a real .docx file."
+      );
+      return;
+    }
     setError(null);
     setSuccessMessage(null);
+    setSelectedFile(file);
+    setSelectedFileName(file.name);
     lastHardenedBlobRef.current = null;
     lastHardenedConfigRef.current = null;
     setDualityResult(null);
@@ -468,7 +483,7 @@ export default function Home() {
   const startPipelineForFile = async (file: File) => {
     const name = file.name;
     if (file.size === 0) {
-      setError("Document is empty. Please choose a valid PDF or DOCX file.");
+      setError("Document is empty. Please choose a valid Word document (.docx).");
       setProcessingState("error");
       setActiveStage("accept");
       setLog([
@@ -843,7 +858,7 @@ export default function Home() {
             </div>
             <DropZone onFileSelect={onFileSelect} maxSizeBytes={MAX_FILE_SIZE_BYTES} openFilePickerRef={openFilePickerRef} />
             <p className="mt-1 text-caption text-noir-foreground/50">
-              Max 4 MB. PDF or DOCX only.
+              Max 4 MB. DOCX (Word) only.
             </p>
             <p className="mt-1.5 text-caption text-noir-foreground/50 font-mono" title="Open DevTools → Network, trigger Harden, inspect the POST to /api/harden; payload should contain tokens like {{PII_EMAIL_0}}, not raw email or phone.">
               Verify: DevTools → Network → inspect <code className="text-xs">POST /api/harden</code> — payload has tokens only, no raw PII.
@@ -866,35 +881,11 @@ export default function Home() {
                     variant="secondary"
                     className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-neon-cyan/30 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
                     disabled={isDemoLoading}
-                    onClick={() => loadPreset("clean", "pdf")}
-                  >
-                    <span className="font-mono text-neon-cyan">Clean · PDF</span>
-                    <span className="text-xs text-noir-foreground/60">
-                      Baseline sample
-                    </span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-neon-cyan/30 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
-                    disabled={isDemoLoading}
                     onClick={() => loadPreset("clean", "docx")}
                   >
                     <span className="font-mono text-neon-cyan">Clean · DOCX</span>
                     <span className="text-xs text-noir-foreground/60">
-                      Baseline sample (Word)
-                    </span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-amber-300/70 border-dashed bg-noir-panel text-noir-foreground hover:border-amber-400/80 flex flex-col items-start"
-                    disabled={isDemoLoading}
-                    onClick={() => loadPreset("dirty", "pdf")}
-                  >
-                    <span className="font-mono text-neon-green">Dirty · PDF</span>
-                    <span className="text-xs text-noir-foreground/60">
-                      Adversarial sample
+                      Baseline sample
                     </span>
                   </Button>
                   <Button
@@ -906,7 +897,7 @@ export default function Home() {
                   >
                     <span className="font-mono text-neon-green">Dirty · DOCX</span>
                     <span className="text-xs text-noir-foreground/60">
-                      Adversarial sample (Word)
+                      Adversarial sample
                     </span>
                   </Button>
                 </div>
@@ -980,7 +971,7 @@ export default function Home() {
                     <span>Preserve styles</span>
                   </label>
                   <p id="preserve-styles-desc" className="text-caption text-noir-foreground/50 ml-6 -mt-1">
-                    DOCX: we keep layout via in-place structure edits when possible. PDF: we rebuild from text so layout may change. If an egg changes body text we rebuild and styles may not be preserved; the log will indicate which path was used.
+                    We keep layout via in-place structure edits when possible. If an egg changes body text we rebuild and styles may not be preserved; the log will indicate which path was used.
                   </p>
                 </div>
                 <div className="mt-3">

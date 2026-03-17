@@ -56,6 +56,7 @@ test.describe("Demo preset", () => {
 
     await page.goto("/");
 
+    await page.getByRole("button", { name: /use sample cv to test/i }).click();
     await page.getByRole("button", { name: /clean · docx/i }).click();
 
     await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
@@ -88,6 +89,7 @@ test.describe("Demo preset", () => {
 
     await page.goto("/");
 
+    await page.getByRole("button", { name: /use sample cv to test/i }).click();
     await page.getByRole("button", { name: /dirty · docx/i }).click();
 
     await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });

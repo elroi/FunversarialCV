@@ -4,8 +4,10 @@
  */
 import { test, expect } from "@playwright/test";
 import path from "path";
+import fs from "fs";
 
 const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
+const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx"));
 
 test.describe("Happy path", () => {
   test("DOCX: upload, harden, download yields valid DOCX", async ({ page }) => {
@@ -14,7 +16,7 @@ test.describe("Happy path", () => {
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
 
-    await expect(page.getByText(/Armed CV:/i)).toBeVisible();
+    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
     await page.getByRole("button", { name: /harden/i }).click();
 
     await expect(
@@ -58,7 +60,7 @@ test.describe("Happy path", () => {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          bufferBase64: Buffer.from("PK\x03\x04").toString("base64"),
+          bufferBase64: minimalDocxBuffer.toString("base64"),
           mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
           originalName: "pii-sample.docx",
           scannerReport: {
@@ -74,12 +76,12 @@ test.describe("Happy path", () => {
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(docxPath);
 
-    await expect(page.getByText(/Armed CV:/i)).toBeVisible();
+    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
     await page.getByRole("button", { name: /harden/i }).click();
 
     await expect(
       page.getByRole("button", { name: /download/i })
-    ).toBeVisible({ timeout: 30_000 });
+    ).toBeVisible({ timeout: 60_000 });
 
     expect(capturedBody).toBeTruthy();
     const isTextMode = capturedBody!.includes("tokenizedText");

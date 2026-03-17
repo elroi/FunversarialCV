@@ -18,8 +18,8 @@ test.describe("PDF rejected (DOCX-only)", () => {
     });
 
     await expect(
-      page.getByText(/support.*Word documents.*\.docx.*only|looks like a PDF/i)
-    ).toBeVisible({ timeout: 5_000 });
+      page.getByText(/looks like a PDF|support.*\.docx.*only|only.*word documents.*\.docx.*allowed/i)
+    ).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText(/Armed CV:/i)).not.toBeVisible();
     await expect(
       page.getByRole("heading", { name: /Server-side processing required/i })

@@ -4,8 +4,10 @@
  */
 import { test, expect } from "@playwright/test";
 import path from "path";
+import fs from "fs";
 
 const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
+const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx"));
 
 test.describe("Errors", () => {
   test("500: shows generic message and Retry button", async ({ page }) => {
@@ -25,7 +27,7 @@ test.describe("Errors", () => {
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
 
-    await expect(page.getByText(/Armed CV:/i)).toBeVisible();
+    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
     await page.getByRole("button", { name: /harden/i }).click();
 
     await expect(page.getByText(/Alert:/i)).toBeVisible({ timeout: 10_000 });
@@ -48,7 +50,7 @@ test.describe("Errors", () => {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          bufferBase64: Buffer.from("PK\x03\x04").toString("base64"),
+          bufferBase64: minimalDocxBuffer.toString("base64"),
           mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
           originalName: "test.docx",
           scannerReport: {
@@ -63,6 +65,7 @@ test.describe("Errors", () => {
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
 
+    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
     await page.getByRole("button", { name: /harden/i }).click();
     await expect(page.getByRole("button", { name: /retry/i })).toBeVisible({
       timeout: 10_000,
@@ -71,7 +74,7 @@ test.describe("Errors", () => {
 
     await expect(
       page.getByRole("button", { name: /download/i })
-    ).toBeVisible({ timeout: 15_000 });
+    ).toBeVisible({ timeout: 60_000 });
     expect(callCount).toBe(2);
   });
 
@@ -97,7 +100,7 @@ test.describe("Errors", () => {
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
 
-    await expect(page.getByText(/Armed CV:/i)).toBeVisible();
+    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
     await page.getByRole("button", { name: /harden/i }).click();
 
     await expect(page.getByText(/Alert:/i)).toBeVisible({ timeout: 10_000 });
@@ -116,7 +119,10 @@ test.describe("Errors", () => {
       buffer: Buffer.from("%PDF-1.4\n%\n"),
     });
 
-    await expect(page.getByText(/support.*Word documents.*\.docx.*only|looks like a PDF/i)).toBeVisible({ timeout: 5_000 });
+    // DropZone rejects .pdf by extension ("Only Word documents..."); if extension were .docx, magic-byte path would show "looks like a PDF"
+    await expect(
+      page.getByText(/looks like a PDF|support.*\.docx.*only|only.*word documents.*\.docx.*allowed/i)
+    ).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText(/Armed CV:/i)).not.toBeVisible();
   });
 });

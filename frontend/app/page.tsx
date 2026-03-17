@@ -9,6 +9,7 @@ import {
   type ProcessingStageId,
   type ProcessingState,
 } from "../src/components/DualityMonitor";
+import { AudienceSwitcher } from "../src/components/AudienceSwitcher";
 import { IncidentMailtoConfigCard } from "../src/components/IncidentMailtoConfigCard";
 import { CanaryWingConfigCard } from "../src/components/CanaryWingConfigCard";
 import { InvisibleHandConfigCard } from "../src/components/InvisibleHandConfigCard";
@@ -23,9 +24,65 @@ import { EGG_OPTIONS, DEFAULT_ENABLED_EGG_IDS } from "../src/eggs/eggMetadata";
 import { Button } from "../src/components/ui/Button";
 import { Card } from "../src/components/ui/Card";
 import { CollapsibleCard } from "../src/components/ui/CollapsibleCard";
+import { useCopy } from "../src/copy";
+import { useAudience } from "../src/contexts/AudienceContext";
 
 /** Must match API route MAX_BODY_BYTES so client rejects before sending. */
 const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
+
+/** PII notice paragraph; security audience gets blueish accent + inline "How to verify" expandable. */
+function PiiNoticeBlock({
+  copy,
+  audience,
+}: {
+  copy: ReturnType<typeof useCopy>;
+  audience: "security" | "hr";
+}) {
+  const [verifyExpanded, setVerifyExpanded] = useState(false);
+  const isSecurity = audience === "security";
+
+  return (
+    <div className="mb-4">
+      <p
+        className={
+          isSecurity
+            ? "text-caption text-accent border-l-2 border-accent/60 pl-3 py-1"
+            : "text-caption text-accent/90 border-l-2 border-accent/50 pl-3 py-1"
+        }
+      >
+        {copy.piiNotice}
+        {isSecurity && (
+          <>
+            {" "}
+            <button
+              type="button"
+              onClick={() => setVerifyExpanded((e) => !e)}
+              aria-expanded={verifyExpanded ? "true" : "false"}
+              aria-controls="pii-verify-content"
+              id="pii-verify-trigger"
+              className="font-mono text-accent underline underline-offset-2 hover:text-accent/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-1 focus-visible:ring-offset-bg rounded"
+            >
+              {copy.verifyHowToAnchor}
+              <span aria-hidden="true" className="ml-0.5">
+                {verifyExpanded ? " ▼" : " ▸"}
+              </span>
+            </button>
+          </>
+        )}
+      </p>
+      {isSecurity && (
+        <div
+          id="pii-verify-content"
+          role="region"
+          aria-labelledby="pii-verify-trigger"
+          className={verifyExpanded ? "mt-1.5 pl-3 border-l-2 border-accent/40 text-caption font-mono text-accent/90" : "hidden"}
+        >
+          {copy.verifyPayloadHint}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /** localStorage key for persisting checkbox state (Preserve styles + Eggs to run). */
 const CHECKBOX_STORAGE_KEY = "funversarialcv-checkboxes";
@@ -81,6 +138,9 @@ export default function Home() {
 
   /** Egg metadata from GET /api/eggs (id -> { name, manualCheckAndValidation }). */
   const [eggMetadataById, setEggMetadataById] = useState<Record<string, { name: string; manualCheckAndValidation: string }>>({});
+
+  const copy = useCopy();
+  const { audience } = useAudience();
 
   /** When set, show confirmation dialog: PDF and eggs can only be processed by the server. */
   const [serverPdfConfirm, setServerPdfConfirm] = useState<{
@@ -724,29 +784,29 @@ export default function Home() {
     <>
       {serverPdfConfirm && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-noir-bg/90 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-bg/90 p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="server-pdf-confirm-title"
           aria-describedby="server-pdf-confirm-desc"
         >
-          <Card className="w-full max-w-md border-neon-cyan/50 bg-noir-panel p-5 shadow-lg">
-            <h2 id="server-pdf-confirm-title" className="mb-2 text-base font-semibold text-neon-cyan">
-              Server-side processing required
+          <Card className="w-full max-w-md border-accent/50 bg-panel p-5 shadow-lg">
+            <h2 id="server-pdf-confirm-title" className="mb-2 text-base font-semibold text-accent">
+              {copy.serverPdfConfirmTitle}
             </h2>
-            <p id="server-pdf-confirm-desc" className="mb-4 text-sm text-noir-foreground/80">
-              This PDF could not be processed in the browser. The file and the selected eggs can only be processed by the server.
+            <p id="server-pdf-confirm-desc" className="mb-4 text-sm text-foreground/80">
+              {copy.serverPdfConfirmDesc}
             </p>
-            <p className="mb-3 text-caption text-noir-foreground/60">
-              Selected eggs that will run on the server:{" "}
-              <span className="font-mono text-neon-cyan/90">
+            <p className="mb-3 text-caption text-foreground/60">
+              {copy.serverPdfConfirmEggsLabel}{" "}
+              <span className="font-mono text-accent/90">
                 {serverPdfConfirm.enabledEggIds
-                  .map((id) => EGG_OPTIONS.find((o) => o.id === id)?.name ?? id)
+                  .map((id) => eggMetadataById[id]?.name ?? EGG_OPTIONS.find((o) => o.id === id)?.name ?? id)
                   .join(", ")}
               </span>
             </p>
-            <p className="mb-4 text-caption text-noir-foreground/50">
-              You can continue with the server processing these eggs, or uncheck them and continue without eggs.
+            <p className="mb-4 text-caption text-foreground/50">
+              {copy.serverPdfConfirmNote}
             </p>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -766,7 +826,7 @@ export default function Home() {
                   });
                 }}
               >
-                Continue (use server)
+                {copy.serverPdfConfirmContinue}
               </Button>
               <Button
                 type="button"
@@ -787,7 +847,7 @@ export default function Home() {
                   });
                 }}
               >
-                Uncheck eggs and continue
+                {copy.serverPdfConfirmUncheckContinue}
               </Button>
               <Button
                 type="button"
@@ -797,121 +857,115 @@ export default function Home() {
                   setProcessingState("idle");
                 }}
               >
-                Cancel
+                {copy.serverPdfConfirmCancel}
               </Button>
             </div>
           </Card>
         </div>
       )}
 
-      <main id="main-content" className="min-h-screen bg-noir-bg text-noir-foreground">
+      <main id="main-content" className="min-h-screen bg-bg text-foreground">
         <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
-        <header className="mb-4 flex flex-wrap items-start justify-between gap-2 border-b border-noir-border pb-4">
+        <header className="mb-4 flex flex-wrap items-start justify-between gap-2 border-b border-border pb-4">
           <div>
             <h1 className="text-2xl font-semibold">
-              <span className="bg-gradient-to-r from-neon-green via-neon-cyan to-neon-green bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-success via-accent to-success bg-clip-text text-transparent">
                 FunversarialCV
               </span>
             </h1>
-            <p className="text-sm text-noir-foreground/70">
-              Adversarial CV hardening console for hungry LLMs.
+            <p className="text-sm text-foreground/70">
+              {copy.tagline}
             </p>
           </div>
         </header>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-caption sm:text-xs font-mono uppercase tracking-[0.2em] text-neon-cyan/80">
-            PII Mode: Stateless &amp; Volatile
+          <p className="text-caption sm:text-xs font-mono uppercase tracking-[0.2em] text-accent/80">
+            {copy.piiModeBadge}
           </p>
           <div className="flex items-center gap-2">
-            <span className="shrink-0 rounded-full border border-neon-green/60 bg-noir-panel px-3 py-1 text-caption sm:text-xs uppercase tracking-[0.2em] text-neon-green engine-online-pulse">
-              Engine Online
+            <AudienceSwitcher />
+            <span className="shrink-0 rounded-full border border-success/60 bg-panel px-3 py-1 text-caption sm:text-xs uppercase tracking-[0.2em] text-success engine-online-pulse">
+              {copy.engineOnline}
             </span>
             <Link
               href="/resources"
-              className="rounded-full border border-neon-cyan/70 px-3 py-1 text-caption sm:text-xs uppercase tracking-[0.2em] text-neon-cyan hover:border-neon-green hover:text-neon-green focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+              className="rounded-full border border-accent/70 px-3 py-1 text-caption sm:text-xs uppercase tracking-[0.2em] text-accent hover:border-success hover:text-success focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
             >
-              Resources
+              {copy.resourcesLink}
             </Link>
           </div>
         </div>
-        <p className="mb-6 text-sm text-noir-foreground/80">
-          FunversarialCV is an educational tool for exploring how CVs behave in
-          AI-heavy hiring flows. It hardens documents with OWASP-aligned,
-          LLM-targeted easter eggs while keeping your data inside a Stateless
-          &amp; Volatile vault model: documents are processed in-memory only –
-          with PII dehydration, adversarial layers, and rehydration into a final
-          stream – so nothing is retained after your hardened CV is generated.
-          When <strong>Preserve styles</strong> is on, we keep your layout where
-          possible; when that isn’t possible we fall back to a rebuild path and
-          explain it in the UI.
+        <p className="mb-6 text-sm text-foreground/80">
+          {copy.intro}
         </p>
-        <p className="mb-4 text-caption text-neon-cyan/90 border-l-2 border-neon-cyan/50 pl-3 py-1">
-          Your CV is processed in your browser first. Before anything leaves your device,
-          we replace email, phone, and other identifiers with short-lived tokens. Our
-          server only sees tokens, never your raw contact details.
-        </p>
+        <PiiNoticeBlock copy={copy} audience={audience} />
 
         <section className="flex flex-1 flex-col gap-8 md:flex-row">
           <div className="flex-1">
-            <div className="mb-4 text-caption uppercase tracking-[0.2em] text-neon-cyan">
-              Input Channel
+            <div className="mb-4 text-caption uppercase tracking-[0.2em] text-accent">
+              {copy.inputChannel}
             </div>
             <DropZone onFileSelect={onFileSelect} maxSizeBytes={MAX_FILE_SIZE_BYTES} openFilePickerRef={openFilePickerRef} />
-            <p className="mt-1 text-caption text-noir-foreground/50">
-              Max 4 MB. DOCX (Word) only.
-            </p>
-            <p className="mt-1.5 text-caption text-noir-foreground/50 font-mono" title="Open DevTools → Network, trigger Harden, inspect the POST to /api/harden; payload should contain tokens like {{PII_EMAIL_0}}, not raw email or phone.">
-              Verify: DevTools → Network → inspect <code className="text-xs">POST /api/harden</code> — payload has tokens only, no raw PII.
+            <p className="mt-1 text-caption text-foreground/50">
+              {copy.maxFileHint}
             </p>
             <CollapsibleCard
               className="mt-3"
-              title="Use Sample CV to Test"
+              title={copy.sampleCvTitle}
               titleId="sample-cv-preset-title"
               contentId="sample-cv-preset-content"
-              ariaLabel="Expand Use Sample CV to Test"
+              ariaLabel={copy.sampleCvAriaLabel}
               defaultExpanded={false}
             >
-              <div className="space-y-3 text-caption text-noir-foreground/60">
-                <p className="text-caption text-noir-foreground/60">
-                  Load a synthetic demo CV instead of your own — use <span className="text-neon-cyan font-mono">Clean</span> for a safe baseline, or <span className="text-neon-green font-mono">Dirty</span> to explore adversarial content.
+              <div className="space-y-3 text-caption text-foreground/60">
+                <p className="text-caption text-foreground/60">
+                  {copy.sampleCvDescription.split(/\b(Clean|Dirty)\b/).map((segment, i) =>
+                    segment === "Clean" ? (
+                      <span key={i} className="text-accent font-mono">Clean</span>
+                    ) : segment === "Dirty" ? (
+                      <span key={i} className="text-success font-mono">Dirty</span>
+                    ) : (
+                      <span key={i}>{segment}</span>
+                    )
+                  )}
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     type="button"
                     variant="secondary"
-                    className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-neon-cyan/30 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                    className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-accent/30 bg-panel text-foreground hover:border-accent/60 hover:shadow-accent/40 flex flex-col items-start"
                     disabled={isDemoLoading}
                     onClick={() => loadPreset("clean", "docx")}
                   >
-                    <span className="font-mono text-neon-cyan">Clean · DOCX</span>
-                    <span className="text-xs text-noir-foreground/60">
-                      Baseline sample
+                    <span className="font-mono text-accent">{copy.cleanLabel}</span>
+                    <span className="text-xs text-foreground/60">
+                      {copy.cleanSublabel}
                     </span>
                   </Button>
                   <Button
                     type="button"
                     variant="secondary"
-                    className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-amber-300/70 border-dashed bg-noir-panel text-noir-foreground hover:border-amber-400/80 flex flex-col items-start"
+                    className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-amber-300/70 border-dashed bg-panel text-foreground hover:border-amber-400/80 flex flex-col items-start"
                     disabled={isDemoLoading}
                     onClick={() => loadPreset("dirty", "docx")}
                   >
-                    <span className="font-mono text-neon-green">Dirty · DOCX</span>
-                    <span className="text-xs text-noir-foreground/60">
-                      Adversarial sample
+                    <span className="font-mono text-success">{copy.dirtyLabel}</span>
+                    <span className="text-xs text-foreground/60">
+                      {copy.dirtySublabel}
                     </span>
                   </Button>
                 </div>
                 {isDemoLoading && (
                   <p
-                    className="text-caption text-neon-cyan/80 font-mono"
+                    className="text-caption text-accent/80 font-mono"
                     aria-live="polite"
                   >
-                    &gt; Generating demo CV… this may take a few seconds.
+                    {copy.demoLoadingMessage}
                   </p>
                 )}
-                <p className="text-caption text-noir-foreground/60">
-                  &gt; Last preset:{" "}
-                  <span className="font-mono text-neon-green">
+                <p className="text-caption text-foreground/60">
+                  {copy.lastPresetLabel}{" "}
+                  <span className="font-mono text-success">
                     {demoVariant === "clean" ? "clean" : "dirty"} ·{" "}
                     {demoFormat.toUpperCase()}
                   </span>
@@ -920,23 +974,21 @@ export default function Home() {
             </CollapsibleCard>
             {selectedFileName && (
               <div ref={armedSectionRef}>
-                <p className="mt-3 text-sm text-neon-green">
-                  &gt; Armed CV: <span className="font-semibold">{selectedFileName}</span>
+                <p className="mt-3 text-sm text-success">
+                  {copy.armedCvLabel} <span className="font-semibold">{selectedFileName}</span>
                 </p>
                 <div className="mt-1 flex flex-col items-start gap-1">
                   <button
                     type="button"
                     className={`px-0 text-caption underline underline-offset-2 ${
                       hasDemoLoaded
-                        ? "text-neon-cyan hover:text-neon-green"
-                        : "text-noir-foreground/40 cursor-not-allowed"
+                        ? "text-accent hover:text-success"
+                        : "text-foreground/40 cursor-not-allowed"
                     }`}
                     onClick={hasDemoLoaded ? downloadCurrentDemo : undefined}
                     disabled={!hasDemoLoaded}
                   >
-                    {hasDemoLoaded
-                      ? "Download to view current demo as-is"
-                      : "Select demo document and click here to view as-is"}
+                    {hasDemoLoaded ? copy.downloadDemoLabel : copy.selectDemoLabel}
                   </button>
                   <Button
                     variant="secondary"
@@ -945,19 +997,19 @@ export default function Home() {
                       openFilePickerRef.current?.();
                     }}
                     className="min-h-[44px] py-2 px-3 text-caption sm:text-xs"
-                    aria-label="Change file"
+                    aria-label={copy.changeFileButton}
                   >
-                    Change file
+                    {copy.changeFileButton}
                   </Button>
                 </div>
-                <p className="mt-1 text-caption text-noir-foreground/60">
-                  Configure eggs below, then click Harden.
+                <p className="mt-1 text-caption text-foreground/60">
+                  {copy.configureThenHarden}
                 </p>
-                <p className="mt-0.5 text-caption text-noir-foreground/50">
-                  Output uses plain-text layout unless &quot;Preserve styles&quot; is on (add-only eggs only).
+                <p className="mt-0.5 text-caption text-foreground/50">
+                  {copy.outputPlainTextHint}
                 </p>
                 <div className="mt-2">
-                  <label className="flex min-h-[44px] cursor-pointer items-center gap-2 py-2 text-sm text-noir-foreground/80">
+                  <label className="flex min-h-[44px] cursor-pointer items-center gap-2 py-2 text-sm text-foreground/80">
                     <input
                       type="checkbox"
                       checked={preserveStyles}
@@ -965,38 +1017,46 @@ export default function Home() {
                         userHasChangedCheckboxesRef.current = true;
                         setPreserveStyles((p) => !p);
                       }}
-                      className="rounded border-noir-border text-neon-cyan focus:ring-neon-cyan/50"
+                      className="rounded border-border text-accent focus:ring-accent/50"
                       aria-describedby="preserve-styles-desc"
                     />
-                    <span>Preserve styles</span>
+                    <span>{copy.preserveStylesLabel}</span>
                   </label>
-                  <p id="preserve-styles-desc" className="text-caption text-noir-foreground/50 ml-6 -mt-1">
-                    We keep layout via in-place structure edits when possible. If an egg changes body text we rebuild and styles may not be preserved; the log will indicate which path was used.
+                  <p id="preserve-styles-desc" className="text-caption text-foreground/50 ml-6 -mt-1">
+                    {copy.preserveStylesDesc}
                   </p>
                 </div>
                 <div className="mt-3">
                   <Card className="px-4 py-3">
-                    <p className="border-b border-noir-border/60 pb-2 text-caption font-medium uppercase tracking-[0.2em] text-noir-foreground/70 mb-3">
-                      Eggs to run
+                    <p className="border-b border-border/60 pb-2 text-caption font-medium uppercase tracking-[0.2em] text-foreground/70 mb-3">
+                      {copy.eggsToRunTitle}
                     </p>
                     <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                     {EGG_OPTIONS.map((egg) => (
                       <label
                         key={egg.id}
-                        className="flex min-h-[44px] cursor-pointer items-center gap-3 py-2 pr-2 text-sm text-noir-foreground/80"
+                        className="flex min-h-[44px] cursor-pointer items-center gap-3 py-2 pr-2 text-sm text-foreground/80"
                       >
                         <input
                           type="checkbox"
                           checked={enabledEggIds.has(egg.id)}
                           onChange={() => toggleEgg(egg.id)}
-                          className="mt-0.5 shrink-0 rounded border-noir-border text-neon-cyan focus:ring-neon-cyan/50"
+                          className="mt-0.5 shrink-0 rounded border-border text-accent focus:ring-accent/50"
                         />
                         <span className="flex flex-col gap-0.5 leading-snug">
-                          <span>{egg.name}</span>
-                          <span className="text-xs font-mono text-noir-foreground/50">
+                          <span>
+                            {egg.id === "invisible-hand"
+                              ? copy.eggInvisibleHandTitle
+                              : egg.id === "incident-mailto"
+                                ? copy.eggIncidentMailtoTitle
+                                : egg.id === "canary-wing"
+                                  ? copy.eggCanaryWingTitle
+                                  : copy.eggMetadataShadowTitle}
+                          </span>
+                          <span className="text-xs font-mono text-foreground/50">
                             {egg.id === "invisible-hand" || egg.id === "canary-wing"
-                              ? "STYLE-AFFECTING"
-                              : "STYLE-SAFE"}
+                              ? copy.styleAffecting
+                              : copy.styleSafe}
                           </span>
                         </span>
                       </label>
@@ -1007,7 +1067,7 @@ export default function Home() {
                 <Button
                   onClick={runHarden}
                   disabled={processingState === "processing"}
-                  aria-label={processingState === "processing" ? "Harden (processing…)" : "Harden"}
+                  aria-label={processingState === "processing" ? copy.hardenAriaProcessing : copy.hardenAriaDefault}
                   className="mt-4 w-full flex items-center justify-center gap-2"
                 >
                   {processingState === "processing" && (
@@ -1015,12 +1075,12 @@ export default function Home() {
                       {[1, 2, 3, 4, 5].map((i) => (
                         <span
                           key={i}
-                          className="music-loading-bar w-0.5 h-3 bg-neon-cyan rounded-full origin-bottom"
+                          className="music-loading-bar w-0.5 h-3 bg-accent rounded-full origin-bottom"
                         />
                       ))}
                     </span>
                   )}
-                  {processingState === "processing" ? "Processing…" : "Harden"}
+                  {processingState === "processing" ? copy.hardenProcessing : copy.hardenButton}
                 </Button>
               </div>
             )}
@@ -1029,12 +1089,11 @@ export default function Home() {
                 <p
                   ref={successMessageRef}
                   tabIndex={-1}
-                  className="text-sm text-neon-green"
+                  className="text-sm text-success"
                 >
-                  &gt;{" "}
                   {lastHardenedConfigRef.current?.eggIds?.length === 0
-                    ? "Scan complete (no eggs applied — document unchanged):"
-                    : "Hardened CV ready:"}{" "}
+                    ? copy.successScanComplete
+                    : copy.successHardenedReady}{" "}
                   <span className="font-mono">{successMessage}</span>
                 </p>
                 <div className="mt-1 flex flex-wrap gap-2">
@@ -1044,33 +1103,33 @@ export default function Home() {
                     className="min-h-[44px] py-2"
                     aria-label={`Download ${successMessage}`}
                   >
-                    Download
+                    {copy.downloadButton}
                   </Button>
                   <Button
                     variant="secondary"
                     onClick={runHarden}
                     disabled={processingState === "processing" || !haveEggsChanged()}
                     className="min-h-[44px] py-2"
-                    aria-label="Re-process with current egg config"
+                    aria-label={copy.reprocessAria}
                   >
-                    Re-process
+                    {copy.reprocessButton}
                   </Button>
                 </div>
               </div>
             )}
             {error && (
               <div ref={errorRef} className="mt-2" role="alert">
-                <p className="text-sm text-neon-red">
-                  &gt; Alert: {error}
+                <p className="text-sm text-error">
+                  {copy.errorAlertPrefix} {error}
                 </p>
                 <Button
                   ref={retryButtonRef}
                   variant="secondary"
                   onClick={runHarden}
                   className="mt-1 text-sm px-2 py-1 min-h-[44px]"
-                  aria-label="Retry"
+                  aria-label={copy.retryAria}
                 >
-                  Retry
+                  {copy.retryButton}
                 </Button>
               </div>
             )}
@@ -1108,20 +1167,20 @@ export default function Home() {
             </div>
           </div>
 
-          <aside className="mt-8 w-full text-sm text-noir-foreground/80 md:mt-0 md:w-80 md:shrink-0 md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-3rem)] md:overflow-y-auto">
-            <div className="mb-4 text-caption uppercase tracking-[0.2em] text-neon-cyan">
-              Pipeline Status
+          <aside className="mt-8 w-full text-sm text-foreground/80 md:mt-0 md:w-80 md:shrink-0 md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-3rem)] md:overflow-y-auto">
+            <div className="mb-4 text-caption uppercase tracking-[0.2em] text-accent">
+              {copy.pipelineStatusTitle}
             </div>
             <div className="block md:hidden mb-2">
               <button
                 type="button"
                 onClick={() => setDualityMonitorOpen((o) => !o)}
-                className="flex w-full min-h-[44px] items-center justify-between rounded px-3 py-3 text-caption sm:text-xs uppercase tracking-[0.2em] text-neon-cyan focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50"
-                aria-expanded={dualityMonitorOpen}
+                className="flex w-full min-h-[44px] items-center justify-between rounded px-3 py-3 text-caption sm:text-xs uppercase tracking-[0.2em] text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                aria-expanded={dualityMonitorOpen ? "true" : "false"}
                 aria-controls="duality-monitor-content"
                 id="duality-monitor-toggle"
               >
-                <span>Pipeline status</span>
+                <span>{copy.pipelineStatusToggle}</span>
                 <span aria-hidden="true">{dualityMonitorOpen ? "▼" : "▶"}</span>
               </button>
             </div>

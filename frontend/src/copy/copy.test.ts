@@ -31,5 +31,10 @@ describe("copy", () => {
       expect(hrCopy.engineOnline).toBe("Ready");
       expect(securityCopy.engineOnline).toBe("Engine Online");
     });
+
+    it("engineConfigTitle is set for both audiences", () => {
+      expect(getCopy("security").engineConfigTitle).toBe("Engine Configuration");
+      expect(getCopy("hr").engineConfigTitle).toBe("How it runs");
+    });
   });
 });

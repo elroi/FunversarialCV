@@ -3,7 +3,8 @@
  * fetch is mocked to control success/error responses.
  */
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
+import { renderWithAudience } from "../src/test-utils";
 import Home from "./page";
 import * as ClientVault from "../src/lib/clientVault";
 import * as ClientDocumentCreate from "../src/lib/clientDocumentCreate";
@@ -60,7 +61,7 @@ describe("Home page", () => {
 
   describe("intro and resources nav", () => {
     it("renders a short intro paragraph explaining FunversarialCV and its stateless, OWASP-aligned model", () => {
-      render(<Home />);
+      renderWithAudience(<Home />);
       expect(
         screen.getByText(/FunversarialCV is an educational tool/i)
       ).toBeInTheDocument();
@@ -71,10 +72,16 @@ describe("Home page", () => {
     });
 
     it("includes a Resources link in the header that points to \\/resources", () => {
-      render(<Home />);
+      renderWithAudience(<Home />);
       const link = screen.getByRole("link", { name: /resources/i });
       expect(link).toBeInTheDocument();
       expect((link as HTMLAnchorElement).getAttribute("href")).toBe("/resources");
+    });
+
+    it("renders Engine Configuration section heading and egg config content", () => {
+      renderWithAudience(<Home />);
+      expect(screen.getByText("Engine Configuration")).toBeInTheDocument();
+      expect(screen.getByText(/The Invisible Hand/i)).toBeInTheDocument();
     });
   });
 
@@ -84,7 +91,7 @@ describe("Home page", () => {
   });
 
   it("shows the max file size hint matching the API limit", () => {
-    render(<Home />);
+    renderWithAudience(<Home />);
     expect(
       screen.getByText(/Max 4 MB\. DOCX \(Word\) only\./i)
     ).toBeInTheDocument();
@@ -93,7 +100,7 @@ describe("Home page", () => {
   describe("success message after download", () => {
     it("shows success message with filename and Download button after successful harden", async () => {
       global.fetch = mockFetchSuccess("my-cv.docx");
-      render(<Home />);
+      renderWithAudience(<Home />);
 
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
@@ -150,7 +157,7 @@ describe("Home page", () => {
 
       global.fetch = mockFetchSuccess("my-cv.docx");
 
-      render(<Home />);
+      renderWithAudience(<Home />);
 
       const input = screen.getByTestId("dropzone-input");
       const docxFile = createDocxFile("my-cv.docx");
@@ -218,7 +225,7 @@ describe("Home page", () => {
         } as unknown as Response;
       });
       global.fetch = fetchMock;
-      render(<Home />);
+      renderWithAudience(<Home />);
 
       const dropInput = screen.getByTestId("dropzone-input");
       fireEvent.change(dropInput, {
@@ -247,7 +254,7 @@ describe("Home page", () => {
 
   describe("clear / change file", () => {
     it("shows Clear file control when a file is selected and clears selection when clicked", async () => {
-      render(<Home />);
+      renderWithAudience(<Home />);
 
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
@@ -278,7 +285,7 @@ describe("Home page", () => {
       global.fetch = jest.fn().mockReturnValue(fetchPromise) as jest.MockedFunction<
         typeof global.fetch
       >;
-      render(<Home />);
+      renderWithAudience(<Home />);
 
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
@@ -313,7 +320,7 @@ describe("Home page", () => {
 
   describe("egg-checkbox link", () => {
     it("disables config card when its egg is unchecked in Eggs to run", async () => {
-      render(<Home />);
+      renderWithAudience(<Home />);
 
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
@@ -351,7 +358,7 @@ describe("Home page", () => {
           preserveStyles: true,
         })
       );
-      render(<Home />);
+      renderWithAudience(<Home />);
 
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
@@ -380,7 +387,7 @@ describe("Home page", () => {
           preserveStyles: false,
         })
       );
-      render(<Home />);
+      renderWithAudience(<Home />);
 
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
@@ -400,7 +407,7 @@ describe("Home page", () => {
 
   describe("mobile UI (touch targets and layout)", () => {
     it("main wrapper has responsive padding classes for mobile", () => {
-      render(<Home />);
+      renderWithAudience(<Home />);
       const main = document.getElementById("main-content");
       expect(main).toBeInTheDocument();
       const wrapper = main?.firstElementChild;
@@ -410,7 +417,7 @@ describe("Home page", () => {
     });
 
     it("Change file button has 44px minimum touch target when file is selected", async () => {
-      render(<Home />);
+      renderWithAudience(<Home />);
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
         target: { files: [createDocxFile("resume.docx")] },
@@ -424,7 +431,7 @@ describe("Home page", () => {
 
     it("Download and Re-process buttons have 44px minimum touch target when hardened", async () => {
       global.fetch = mockFetchSuccess("out.docx");
-      render(<Home />);
+      renderWithAudience(<Home />);
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
         target: { files: [createDocxFile("cv.docx")] },
@@ -440,7 +447,7 @@ describe("Home page", () => {
 
     it("Retry button has 44px minimum touch target when error is shown", async () => {
       global.fetch = mockFetchError("Server error");
-      render(<Home />);
+      renderWithAudience(<Home />);
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
         target: { files: [createDocxFile("cv.docx")] },
@@ -453,13 +460,13 @@ describe("Home page", () => {
     });
 
     it("Pipeline status toggle has touch-friendly minimum height", () => {
-      render(<Home />);
+      renderWithAudience(<Home />);
       const toggle = screen.getByRole("button", { name: /pipeline status/i });
       expect(toggle).toHaveClass("min-h-[44px]");
     });
 
     it("egg checkbox labels have touch-friendly row padding", async () => {
-      render(<Home />);
+      renderWithAudience(<Home />);
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
         target: { files: [createDocxFile("resume.docx")] },
@@ -473,7 +480,7 @@ describe("Home page", () => {
       const scrollIntoViewMock = jest.fn();
       HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
       global.fetch = mockFetchSuccess("out.docx");
-      render(<Home />);
+      renderWithAudience(<Home />);
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
         target: { files: [createDocxFile("cv.docx")] },
@@ -488,7 +495,7 @@ describe("Home page", () => {
       const scrollIntoViewMock = jest.fn();
       HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
       global.fetch = mockFetchError("Failed");
-      render(<Home />);
+      renderWithAudience(<Home />);
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
         target: { files: [createDocxFile("cv.docx")] },
@@ -502,7 +509,7 @@ describe("Home page", () => {
 
   describe("demo presets visual distinction", () => {
     it("styles Dirty presets with a distinct hazard accent compared to Clean presets", () => {
-      render(<Home />);
+      renderWithAudience(<Home />);
       const cleanDocx = screen.getByRole("button", { name: /clean · docx/i });
       const dirtyDocx = screen.getByRole("button", { name: /dirty · docx/i });
 
@@ -523,7 +530,7 @@ describe("Home page", () => {
         typeof global.fetch
       >;
 
-      render(<Home />);
+      renderWithAudience(<Home />);
       const cleanDocx = screen.getByRole("button", { name: /clean · docx/i });
       fireEvent.click(cleanDocx);
 
@@ -553,14 +560,14 @@ describe("Home page", () => {
   describe("Manual test list (automated coverage)", () => {
     describe("1. Layout and viewport", () => {
       it("main wrapper has max-width constraint to avoid horizontal scroll", () => {
-        render(<Home />);
+        renderWithAudience(<Home />);
         const main = document.getElementById("main-content");
         const wrapper = main?.firstElementChild;
         expect(wrapper).toHaveClass("max-w-4xl");
       });
 
       it("main wrapper has responsive padding (px-4, sm:px-6)", () => {
-        render(<Home />);
+        renderWithAudience(<Home />);
         const main = document.getElementById("main-content");
         const wrapper = main?.firstElementChild;
         expect(wrapper).toHaveClass("px-4");
@@ -570,19 +577,19 @@ describe("Home page", () => {
 
     describe("2. Header", () => {
       it("header has flex-wrap so title and badge fit on narrow widths", () => {
-        render(<Home />);
+        renderWithAudience(<Home />);
         const header = document.querySelector("header");
         expect(header).toHaveClass("flex-wrap");
       });
 
       it("Engine Online badge has shrink-0 so it does not overflow", () => {
-        render(<Home />);
+        renderWithAudience(<Home />);
         const badge = screen.getByText("Engine Online");
         expect(badge).toHaveClass("shrink-0");
       });
 
       it("PII Mode and Engine Online text are present", () => {
-        render(<Home />);
+        renderWithAudience(<Home />);
         expect(screen.getByText(/PII Mode: Stateless/i)).toBeInTheDocument();
         expect(screen.getByText("Engine Online")).toBeInTheDocument();
       });
@@ -590,13 +597,13 @@ describe("Home page", () => {
 
     describe("4. Pipeline status panel", () => {
       it("Pipeline status toggle is collapsed by default (aria-expanded false)", () => {
-        render(<Home />);
+        renderWithAudience(<Home />);
         const toggle = screen.getByRole("button", { name: /pipeline status/i });
         expect(toggle).toHaveAttribute("aria-expanded", "false");
       });
 
       it("Pipeline status expands on click and collapses on second click", () => {
-        render(<Home />);
+        renderWithAudience(<Home />);
         const toggle = screen.getByRole("button", { name: /pipeline status/i });
         fireEvent.click(toggle);
         expect(toggle).toHaveAttribute("aria-expanded", "true");
@@ -607,7 +614,7 @@ describe("Home page", () => {
 
     describe("6. Forms and inputs — egg config cards", () => {
       it("all four egg config cards are collapsed by default when file is selected", async () => {
-        render(<Home />);
+        renderWithAudience(<Home />);
         const input = screen.getByTestId("dropzone-input");
         fireEvent.change(input, {
           target: { files: [createDocxFile("resume.docx")] },
@@ -624,7 +631,7 @@ describe("Home page", () => {
       });
 
       it("expanding Invisible Hand card shows trap text area", async () => {
-        render(<Home />);
+        renderWithAudience(<Home />);
         const dropInput = screen.getByTestId("dropzone-input");
         fireEvent.change(dropInput, {
           target: { files: [createDocxFile("resume.docx")] },
@@ -639,21 +646,21 @@ describe("Home page", () => {
 
     describe("8. Focus and accessibility", () => {
       it("main content has id main-content for Skip to main content link target", () => {
-        render(<Home />);
+        renderWithAudience(<Home />);
         expect(document.getElementById("main-content")).toBeInTheDocument();
       });
     });
 
     describe("9. Regression", () => {
       it("section has md:flex-row for two-column layout at desktop", () => {
-        render(<Home />);
+        renderWithAudience(<Home />);
         const section = document.querySelector("main section");
         expect(section).toHaveClass("md:flex-row");
       });
 
       it("full flow: upload, harden, download", async () => {
         global.fetch = mockFetchSuccess("hardened-cv.docx");
-        render(<Home />);
+        renderWithAudience(<Home />);
         fireEvent.change(screen.getByTestId("dropzone-input"), {
           target: { files: [createDocxFile("cv.docx")] },
         });

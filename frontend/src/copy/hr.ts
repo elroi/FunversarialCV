@@ -39,6 +39,7 @@ export const hrCopy: Copy = {
   preserveStylesDesc:
     "We keep your layout and formatting when possible. If an option changes the main text, we may have to rebuild the document and some formatting might change; the log will say which approach was used.",
   eggsToRunTitle: "Options to add",
+  engineConfigTitle: "How it runs",
   styleAffecting: "May change layout",
   styleSafe: "Layout-safe",
   hardenButton: "Add signals",

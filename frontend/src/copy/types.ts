@@ -37,6 +37,7 @@ export interface Copy {
   preserveStylesLabel: string;
   preserveStylesDesc: string;
   eggsToRunTitle: string;
+  engineConfigTitle: string;
   styleAffecting: string;
   styleSafe: string;
   hardenButton: string;

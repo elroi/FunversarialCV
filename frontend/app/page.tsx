@@ -972,6 +972,9 @@ export default function Home() {
                 </p>
               </div>
             </CollapsibleCard>
+            <div className="mt-8 mb-4 text-caption uppercase tracking-[0.2em] text-accent">
+              {copy.engineConfigTitle}
+            </div>
             {selectedFileName && (
               <div ref={armedSectionRef}>
                 <p className="mt-3 text-sm text-success">

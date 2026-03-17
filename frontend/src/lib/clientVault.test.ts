@@ -2,6 +2,7 @@ import {
   dehydrateTextForBrowser,
   dehydrateInBrowser,
   rehydrateInBrowser,
+  MIN_PII_VALUE_LENGTH,
 } from "./clientVault";
 import type { PiiMap } from "./clientVaultTypes";
 import * as clientDocumentExtract from "./clientDocumentExtract";
@@ -38,7 +39,7 @@ describe("clientVault", () => {
         "Phone (555) 123-4567. Address: 123 Main St, Springfield.";
       const { tokenizedText, piiMap } = dehydrateTextForBrowser(text);
       expect(tokenizedText).not.toContain("(555) 123-4567");
-      expect(tokenizedText).toMatch(/\{\{PII_PHONE_0\}\}/);
+      expect(tokenizedText).toMatch(/\{\{PII_PHONE_0\}\}|\{\{P\d+\}\}\s*/);
       expect(tokenizedText).toMatch(/\{\{PII_ADDR_\d+\}\}/);
       const tokens = Object.values(piiMap.byToken);
       expect(tokens.some((t) => t.type === "PHONE")).toBe(true);
@@ -50,6 +51,24 @@ describe("clientVault", () => {
       const { tokenizedText, piiMap } = dehydrateTextForBrowser(text);
       expect(tokenizedText).toBe(text);
       expect(Object.keys(piiMap.byToken)).toHaveLength(0);
+    });
+
+    it("does not tokenize PII shorter than MIN_PII_VALUE_LENGTH", () => {
+      const text = "Short: a@b.c or x@y.z";
+      const { tokenizedText, piiMap } = dehydrateTextForBrowser(text);
+      expect(tokenizedText).toContain("a@b.c");
+      expect(tokenizedText).toContain("x@y.z");
+      expect(Object.keys(piiMap.byToken)).toHaveLength(0);
+    });
+
+    it("uses short token (e.g. {{E0}}) padded to value length when value shorter than full token", () => {
+      const text = "Contact: a@b.co.uk";
+      const { tokenizedText, piiMap } = dehydrateTextForBrowser(text);
+      expect(tokenizedText).not.toContain("a@b.co.uk");
+      const token = Object.keys(piiMap.byToken)[0];
+      expect(token.length).toBeLessThanOrEqual("a@b.co.uk".length);
+      expect(piiMap.byToken[token].value).toBe("a@b.co.uk");
+      expect(piiMap.byToken[token].type).toBe("EMAIL");
     });
 
     it("round-trips with rehydrateInBrowser for text/plain", async () => {

@@ -8,6 +8,7 @@ import { MAX_BODY_BYTES } from "./constants";
 import { containsPii } from "@/lib/vault";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { logInfo, logError } from "@/lib/log";
+import { ADD_ONLY_EGG_IDS } from "@/engine/Processor";
 
 function getClientIp(req: NextRequest): string {
   const xff = req.headers.get("x-forwarded-for");
@@ -135,7 +136,7 @@ export async function POST(request: NextRequest) {
   } else {
     if (!file || !(file instanceof File)) {
       return Response.json(
-        { error: "Missing or invalid file. Upload a single PDF or DOCX." },
+        { error: "Missing or invalid file. Upload a single Word document (.docx)." },
         { status: 400 }
       );
     }
@@ -148,44 +149,55 @@ export async function POST(request: NextRequest) {
     }
 
     const detectedMimeType = detectDocumentType(rawBuffer);
+    if (detectedMimeType === MIME_PDF) {
+      return Response.json(
+        {
+          error:
+            "We currently support Word documents (.docx) only. PDF support is planned for a future release.",
+        },
+        { status: 400 }
+      );
+    }
     if (!detectedMimeType) {
       const detail =
         rawBuffer.length === 0
-          ? "Document is empty. Please upload a valid PDF or DOCX file."
-          : "Unsupported or invalid document: file must be a valid PDF or DOCX.";
+          ? "Document is empty. Please upload a valid Word document (.docx)."
+          : "Unsupported or invalid document: file must be a valid Word document (.docx).";
       return Response.json({ error: detail }, { status: 400 });
     }
 
     const ext = file.name.toLowerCase();
-    if (
-      (detectedMimeType === MIME_PDF && !ext.endsWith(".pdf")) ||
-      (detectedMimeType === MIME_DOCX && !ext.endsWith(".docx"))
-    ) {
+    if (!ext.endsWith(".docx")) {
       return Response.json(
         { error: "File content does not match extension." },
         { status: 400 }
       );
     }
 
-    // PII-guard: reject documents that still contain obvious PII.
-    try {
-      const text = await extractText(rawBuffer, detectedMimeType);
-      if (text && containsPii(text)) {
-        logInfo("/api/harden", "pii_guard_rejected", {
-          mimeType: detectedMimeType,
-          ip,
-          mode: "binary",
-        });
-        return Response.json(
-          {
-            error:
-              "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored.",
-          },
-          { status: 400 }
-        );
+    // DOCX-only: no add-only skip (was PDF-only). PII guard always runs for binary uploads.
+    const isAddOnlyRequest = false;
+
+    if (!isAddOnlyRequest) {
+      // PII-guard: reject documents that still contain obvious PII.
+      try {
+        const text = await extractText(rawBuffer, detectedMimeType);
+        if (text && containsPii(text)) {
+          logInfo("/api/harden", "pii_guard_rejected", {
+            mimeType: detectedMimeType,
+            ip,
+            mode: "binary",
+          });
+          return Response.json(
+            {
+              error:
+                "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored.",
+            },
+            { status: 400 }
+          );
+        }
+      } catch {
+        // If text extraction fails, skip PII-guard rather than breaking valid requests.
       }
-    } catch {
-      // If text extraction fails, skip PII-guard rather than breaking valid requests.
     }
 
     buffer = rawBuffer;
@@ -278,7 +290,7 @@ export async function POST(request: NextRequest) {
       name === "InvalidPDFException"
     ) {
       return Response.json(
-        { error: name === "InvalidPDFException" ? "Unsupported or invalid document: file must be a valid PDF or DOCX." : message },
+        { error: name === "InvalidPDFException" ? "Unsupported or invalid document: file must be a valid Word document (.docx)." : message },
         { status: 400 }
       );
     }

@@ -97,51 +97,45 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
 
   return (
     <section className="flex flex-col gap-4 rounded-xl border border-noir-border bg-noir-panel/60 p-4 text-sm text-noir-foreground/80">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="text-caption sm:text-xs uppercase tracking-[0.2em] text-neon-cyan">
-            Duality Monitor
+      <header className="flex min-h-10 flex-wrap items-center justify-between gap-x-6 gap-y-2">
+        <h2 className="whitespace-nowrap text-caption font-medium uppercase tracking-[0.2em] text-neon-cyan sm:text-xs">
+          Duality Monitor
+        </h2>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCopyLog}
+              className="inline-flex shrink-0 items-center justify-center rounded border border-noir-border/60 bg-noir-bg/60 px-2.5 py-1 text-xs font-medium uppercase tracking-[0.2em] text-noir-foreground/60 hover:border-neon-cyan/60 hover:text-neon-cyan focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+              aria-label="Copy log to clipboard"
+            >
+              &gt; Copy log
+            </button>
+            {copyStatus === "success" && (
+              <span className="text-xs text-neon-green">Copied.</span>
+            )}
+            {copyStatus === "error" && (
+              <span className="text-xs text-neon-red">Copy failed.</span>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={handleCopyLog}
-            className="inline-flex items-center justify-center rounded border border-noir-border/60 bg-noir-bg/60 px-1.5 py-0.5 text-xs uppercase tracking-[0.2em] text-noir-foreground/60 hover:text-neon-cyan hover:border-neon-cyan/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
-            aria-label="Copy log to clipboard"
+          <span
+            aria-hidden="true"
+            className="h-4 w-px shrink-0 bg-noir-border/60"
+          />
+          <div
+            className={clsx(
+              "shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium uppercase tracking-wider",
+              processingState === "completed" && "border-neon-green/60 text-neon-green",
+              processingState === "processing" && "border-neon-cyan/60 text-neon-cyan",
+              processingState === "idle" && "border-noir-border text-noir-foreground/70",
+              processingState === "error" && "border-neon-red/70 text-neon-red"
+            )}
           >
-            &gt; Copy Log
-          </button>
-          {copyStatus === "success" && (
-            <span className="text-xs text-neon-green">
-              Copied local audit log.
-            </span>
-          )}
-          {copyStatus === "error" && (
-            <span className="text-xs text-neon-red">
-              Unable to copy log.
-            </span>
-          )}
-        </div>
-        <div
-          className={clsx(
-            "rounded-full px-2 py-0.5 text-caption sm:text-xs font-medium",
-            processingState === "completed" && "border border-neon-green/60",
-            processingState === "processing" && "border border-neon-cyan/60",
-            processingState === "idle" && "border border-noir-border",
-            processingState === "error" && "border border-neon-red/70"
-          )}
-        >
-          {processingState === "idle" && (
-            <span className="text-noir-foreground/70">Idle</span>
-          )}
-          {processingState === "processing" && (
-            <span className="text-neon-cyan">Processing</span>
-          )}
-          {processingState === "completed" && (
-            <span className="text-neon-green">Completed</span>
-          )}
-          {processingState === "error" && (
-            <span className="text-neon-red">Error</span>
-          )}
+            {processingState === "idle" && "Idle"}
+            {processingState === "processing" && "Processing"}
+            {processingState === "completed" && "Completed"}
+            {processingState === "error" && "Error"}
+          </div>
         </div>
       </header>
 

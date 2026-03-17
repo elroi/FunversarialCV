@@ -6,6 +6,7 @@
  */
 
 import { PDFDocument, rgb, StandardFonts, PDFName, PDFString } from "pdf-lib";
+import { toWinAnsiSafe } from "../lib/pdfWinAnsi";
 import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
 import { injectHiddenParagraphIntoDocx } from "../engine/docxInject";
@@ -130,7 +131,7 @@ export const canaryWing: IEgg = {
   owaspMapping: OwaspMapping.LLM10_Model_Theft,
 
   manualCheckAndValidation:
-    "Quick check: Open the hardened PDF or DOCX and press Ctrl/Cmd+A (or search for a URL); the canary link appears as highlighted text. Manual check: In a PDF use Select All or search for a URL; in DOCX inspect the hidden paragraph or enable showing hidden content to find the canary URL. When clickable link is enabled (DOCX or PDF), the canary is a real hyperlink: in Word click the hidden link or use Show Hidden; in PDF the invisible region is clickable. Validation: Run the transform and verify the canary URL appears in the output; optionally GET the URL to confirm the canary endpoint logs the hit.",
+    "Quick check: Open the hardened document (DOCX) and press Ctrl/Cmd+A (or search for a URL); the canary link appears as highlighted text. Manual check: In Word (DOCX) inspect the hidden paragraph or enable showing hidden content to find the canary URL. When clickable link is enabled, the canary is a real hyperlink: in Word click the hidden link or use Show Hidden. Validation: Run the transform and verify the canary URL appears in the output; optionally GET the URL to confirm the canary endpoint logs the hit.",
 
   validatePayload(payload: string): boolean {
     if (payload.length > MAX_PAYLOAD_LENGTH) return false;
@@ -216,28 +217,30 @@ export const canaryWing: IEgg = {
       const page = pages[0];
       if (!page) return buffer;
       const font = await doc.embedFont(StandardFonts.Helvetica);
-      const margin = 40;
-      const y = page.getHeight() - margin;
+      // Draw at very top of page (above typical content area) so it doesn't overlap existing text
+      const topY = page.getHeight() - 12;
       const pdfClickable = config.pdfClickableLink ?? (config.pdfLinkStyle === "clickable");
       const pdfDrawText = config.pdfHiddenText !== false || pdfClickable;
       const pdfTextUrl = urlForVariant("pdf-text");
       const pdfLinkUrl = urlForVariant("pdf-clickable");
+      const safePdfTextUrl = toWinAnsiSafe(pdfTextUrl);
+      const safePdfLinkUrl = toWinAnsiSafe(pdfLinkUrl);
       if (pdfDrawText) {
-        page.drawText(pdfTextUrl, {
-          x: margin,
-          y,
+        page.drawText(safePdfTextUrl, {
+          x: 10,
+          y: topY,
           size: 0.5,
           font,
-          color: rgb(1, 1, 1),
+          color: rgb(1, 1, 1), // white (invisible on white background)
         });
       }
       if (pdfClickable) {
-        const textWidth = font.widthOfTextAtSize(pdfLinkUrl, 0.5);
+        const textWidth = font.widthOfTextAtSize(safePdfLinkUrl, 0.5);
         const rect: [number, number, number, number] = [
-          margin,
-          y - 2,
-          margin + textWidth + 2,
-          y + 2,
+          10,
+          topY - 2,
+          10 + textWidth + 2,
+          topY + 2,
         ];
         const linkAnnotation = doc.context.obj({
           Type: "Annot",
@@ -247,7 +250,7 @@ export const canaryWing: IEgg = {
           A: {
             Type: "Action",
             S: "URI",
-            URI: PDFString.of(pdfLinkUrl),
+            URI: PDFString.of(safePdfLinkUrl),
           },
         });
         const linkRef = doc.context.register(linkAnnotation);

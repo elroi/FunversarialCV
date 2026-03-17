@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import {
   buildStyledDemoCvDocx,
-  buildStyledDemoCvPdf,
+  buildUncompressedDemoCvPdf,
 } from "@/lib/demoCvBuilders";
 import { MIME_DOCX, MIME_PDF, detectDocumentType } from "@/engine/documentExtract";
 
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   const buffer =
     format === "docx"
       ? await buildStyledDemoCvDocx(variant)
-      : await buildStyledDemoCvPdf(variant);
+      : buildUncompressedDemoCvPdf(variant);
   if (!buffer || buffer.length === 0) {
     return Response.json(
       { error: "Failed to generate demo CV document." },

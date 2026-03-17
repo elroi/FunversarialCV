@@ -16,11 +16,13 @@ import { MetadataShadowConfigCard } from "../src/components/MetadataShadowConfig
 import { dehydrateInBrowser, rehydrateInBrowser } from "../src/lib/clientVault";
 import { createDocumentWithTextInBrowser } from "../src/lib/clientDocumentCreate";
 import { replacePiiWithTokensInCopy } from "../src/lib/clientTokenReplaceInCopy";
+import { detectDocumentTypeFromBuffer } from "../src/lib/clientDocumentExtract";
 import type { PiiMap } from "../src/lib/clientVaultTypes";
 import type { DualityCheckResult } from "../src/engine/dualityCheck";
 import { EGG_OPTIONS, DEFAULT_ENABLED_EGG_IDS } from "../src/eggs/eggMetadata";
 import { Button } from "../src/components/ui/Button";
 import { Card } from "../src/components/ui/Card";
+import { CollapsibleCard } from "../src/components/ui/CollapsibleCard";
 
 /** Must match API route MAX_BODY_BYTES so client rejects before sending. */
 const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
@@ -72,13 +74,22 @@ export default function Home() {
   /** True once the user has toggled an egg or preserve-styles; we only persist after that so we never overwrite saved state on load. */
   const userHasChangedCheckboxesRef = useRef(false);
   const [demoVariant, setDemoVariant] = useState<"clean" | "dirty">("clean");
-  const [demoFormat, setDemoFormat] = useState<"pdf" | "docx">("pdf");
+  const [demoFormat, setDemoFormat] = useState<"pdf" | "docx">("docx");
   const [hasDemoLoaded, setHasDemoLoaded] = useState(false);
   const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [clientPiiMap, setClientPiiMap] = useState<PiiMap | null>(null);
 
   /** Egg metadata from GET /api/eggs (id -> { name, manualCheckAndValidation }). */
   const [eggMetadataById, setEggMetadataById] = useState<Record<string, { name: string; manualCheckAndValidation: string }>>({});
+
+  /** When set, show confirmation dialog: PDF and eggs can only be processed by the server. */
+  const [serverPdfConfirm, setServerPdfConfirm] = useState<{
+    fileToSend: File;
+    name: string;
+    payloadsForEnabled: Record<string, string>;
+    enabledEggIds: string[];
+    preserveStyles: boolean;
+  } | null>(null);
 
   useEffect(() => {
     if (typeof fetch !== "function") return;
@@ -163,11 +174,25 @@ export default function Home() {
     });
   };
 
-  const onFileSelect = (file: File) => {
-    setSelectedFile(file);
-    setSelectedFileName(file.name);
+  const onFileSelect = async (file: File) => {
+    const buf = await file.slice(0, 4).arrayBuffer();
+    const detected = detectDocumentTypeFromBuffer(buf);
+    if (detected === "pdf") {
+      setError(
+        "This file looks like a PDF. We currently support Word documents (.docx) only."
+      );
+      return;
+    }
+    if (detected !== "docx") {
+      setError(
+        "File content is not a valid Word document. Please upload a real .docx file."
+      );
+      return;
+    }
     setError(null);
     setSuccessMessage(null);
+    setSelectedFile(file);
+    setSelectedFileName(file.name);
     lastHardenedBlobRef.current = null;
     lastHardenedConfigRef.current = null;
     setDualityResult(null);
@@ -249,10 +274,216 @@ export default function Home() {
     void startPipelineForFile(selectedFile);
   };
 
+  /** Builds formData, POSTs to /api/harden, and handles response. Used by main flow and server-PDF confirm dialog. */
+  const runSubmitToServer = useCallback(
+    async (params: {
+      fileToSend: File;
+      name: string;
+      eggIdsToUse: string[];
+      payloadsForEnabled: Record<string, string>;
+      preserveStyles: boolean;
+      piiMapForRehydrate: PiiMap | null;
+      rehydrateMimeType: string | null;
+    }) => {
+      const {
+        fileToSend,
+        name,
+        eggIdsToUse,
+        payloadsForEnabled,
+        preserveStyles,
+        piiMapForRehydrate,
+        rehydrateMimeType,
+      } = params;
+      const formData = new FormData();
+      formData.append("file", fileToSend);
+      formData.append("payloads", JSON.stringify(payloadsForEnabled));
+      formData.append("eggIds", JSON.stringify(eggIdsToUse));
+      if (preserveStyles) {
+        formData.append("preserveStyles", "true");
+      }
+
+      try {
+        const res = await fetch("/api/harden", { method: "POST", body: formData });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          const errMsg =
+            typeof data?.error === "string" ? data.error : "Processing failed.";
+          setError(errMsg);
+          setProcessingState("error");
+          setActiveStage("duality-check");
+          setLog((prev) => [
+            ...prev,
+            {
+              id: "duality-err",
+              stage: "duality-check",
+              level: "error",
+              message: `[ERROR] ${errMsg}`,
+            },
+          ]);
+          retryButtonRef.current?.focus();
+          return;
+        }
+
+        const bufferBase64 = data.bufferBase64;
+        if (typeof bufferBase64 !== "string") {
+          setError("Invalid response from server: missing document data.");
+          setProcessingState("error");
+          setActiveStage("duality-check");
+          setLog((prev) => [
+            ...prev,
+            {
+              id: "invalid-resp",
+              stage: "duality-check",
+              level: "error",
+              message: "[ERROR] Invalid response from server.",
+            },
+          ]);
+          retryButtonRef.current?.focus();
+          return;
+        }
+
+        const mimeTypeFromServer = data.mimeType as string;
+        const originalName = (data.originalName as string) || name;
+        const scannerScan = data.scannerReport?.scan;
+
+        let blob: Blob;
+        try {
+          const binaryString = atob(bufferBase64);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+
+          if (piiMapForRehydrate && rehydrateMimeType) {
+            const tokenizedBuffer = bytes.buffer.slice(
+              bytes.byteOffset,
+              bytes.byteOffset + bytes.byteLength
+            );
+            const rehydratedBuffer = await rehydrateInBrowser(
+              tokenizedBuffer,
+              rehydrateMimeType,
+              piiMapForRehydrate
+            );
+            const rehydratedBytes = new Uint8Array(rehydratedBuffer);
+            blob = new Blob([rehydratedBytes], { type: rehydrateMimeType });
+            setLog((prev) => [
+              ...prev,
+              {
+                id: "client-rehydrate",
+                stage: "rehydration",
+                level: "success",
+                message:
+                  "[CLIENT] Rehydrated tokens back into original PII in-browser; server only saw tokenized content.",
+              },
+            ]);
+          } else {
+            blob = new Blob([bytes], { type: mimeTypeFromServer });
+          }
+        } catch {
+          setError("Invalid response from server: invalid document data.");
+          setProcessingState("error");
+          setActiveStage("duality-check");
+          setLog((prev) => [
+            ...prev,
+            {
+              id: "invalid-resp",
+              stage: "duality-check",
+              level: "error",
+              message: "[ERROR] Invalid response from server.",
+            },
+          ]);
+          retryButtonRef.current?.focus();
+          return;
+        }
+
+        lastHardenedBlobRef.current = blob;
+        lastHardenedConfigRef.current = {
+          payloads: { ...payloadsForEnabled },
+          eggIds: [...eggIdsToUse],
+          preserveStyles,
+        };
+
+        const canaryTokenUsed = data.canaryTokenUsed;
+        if (typeof canaryTokenUsed === "string" && canaryTokenUsed.trim() !== "") {
+          try {
+            const current = canaryWingPayload.trim() ? JSON.parse(canaryWingPayload) as Record<string, unknown> : {};
+            setCanaryWingPayload(JSON.stringify({ ...current, token: canaryTokenUsed }));
+          } catch {
+            // leave as-is
+          }
+        }
+
+        if (scannerScan && typeof scannerScan === "object") {
+          setDualityResult({
+            hasSuspiciousPatterns: !!scannerScan.hasSuspiciousPatterns,
+            matchedPatterns: Array.isArray(scannerScan.matchedPatterns)
+              ? scannerScan.matchedPatterns
+              : [],
+            details: Array.isArray(scannerScan.details) ? scannerScan.details : undefined,
+          });
+        } else {
+          setDualityResult({ hasSuspiciousPatterns: false, matchedPatterns: [] });
+        }
+
+        setProcessingState("completed");
+        setActiveStage("rehydration");
+        const noEggsApplied = eggIdsToUse.length === 0;
+        setSuccessMessage(noEggsApplied ? originalName : buildFinalFileName(originalName));
+        successMessageRef.current?.focus();
+        setLog((prev) => [
+          ...prev,
+          {
+            id: "duality",
+            stage: "duality-check",
+            level: "info",
+            message:
+              "[DUALITY] Scanning original CV for existing prompt-injection patterns…",
+          },
+          {
+            id: "dehydrate",
+            stage: "dehydration",
+            level: "info",
+            message:
+              "[DEHYDRATE] PII dehydrated into Stateless & Volatile vault tokens (in-memory only; never stored).",
+          },
+          {
+            id: "inject",
+            stage: "injection",
+            level: "success",
+            message: "[INJECT] Funversarial eggs applied to dehydrated document.",
+          },
+          {
+            id: "rehydrate",
+            stage: "rehydration",
+            level: "success",
+            message:
+              "[REHYDRATE] PII rehydrated into final hardened CV stream. Stateless & Volatile handling complete; nothing persisted.",
+          },
+        ]);
+      } catch (_err) {
+        setError("Network error. Please try again.");
+        setProcessingState("error");
+        setActiveStage("accept");
+        retryButtonRef.current?.focus();
+        setLog((prev) => [
+          ...prev,
+          {
+            id: "network-err",
+            stage: "accept",
+            level: "error",
+            message: "[ERROR] Network error.",
+          },
+        ]);
+      }
+    },
+    [canaryWingPayload]
+  );
+
   const startPipelineForFile = async (file: File) => {
     const name = file.name;
     if (file.size === 0) {
-      setError("Document is empty. Please choose a valid PDF or DOCX file.");
+      setError("Document is empty. Please choose a valid Word document (.docx).");
       setProcessingState("error");
       setActiveStage("accept");
       setLog([
@@ -293,11 +524,38 @@ export default function Home() {
         payloadsForEnabled[id] = payloads[id as keyof typeof payloads];
       }
     }
-    const formData = new FormData();
 
     let rehydrateMimeType: string | null = null;
     let piiMapForRehydrate: PiiMap | null = null;
     let fileToSend: File = file;
+
+    // E2E hook: force server-PDF confirmation dialog without calling dehydrateInBrowser (for Playwright).
+    if (
+      typeof window !== "undefined" &&
+      window.location.search.includes("e2eServerPdf=1") &&
+      file.type === "application/pdf" &&
+      enabledEggIds.size > 0
+    ) {
+      setLog((prev) => [
+        ...prev,
+        {
+          id: "client-server-only-confirm",
+          stage: "dehydration",
+          level: "info",
+          message:
+            "[CLIENT] This PDF and the selected eggs can only be processed by the server. Confirm to continue or uncheck eggs.",
+        },
+      ]);
+      setServerPdfConfirm({
+        fileToSend: file,
+        name,
+        payloadsForEnabled: { ...payloadsForEnabled },
+        enabledEggIds: [...enabledEggIds],
+        preserveStyles,
+      });
+      return;
+    }
+
     try {
       const result = await dehydrateInBrowser(file);
       rehydrateMimeType = result.mimeType;
@@ -340,204 +598,57 @@ export default function Home() {
         e instanceof Error
           ? e.message
           : "Client-side dehydration failed. Falling back to server path.";
-      const friendly =
-        /defineProperty|non-object/i.test(msg)
-          ? "PDF could not be read in the browser; file was sent to the server for processing instead."
-          : msg;
+      const isPdfParseIssue = /defineProperty|non-object|Invalid PDF/i.test(msg);
+      const friendly = isPdfParseIssue
+        ? "This PDF could not be read in the browser (parser limitation); using server path. Many other PDFs work client-side."
+        : msg;
+      // Use "info" level for expected fallback (PDF parse issues), "warning" for unexpected errors
+      const level = isPdfParseIssue ? "info" : "warning";
       setLog((prev) => [
         ...prev,
         {
-          id: "client-dehydrate-error",
+          id: "client-dehydrate-fallback",
           stage: "dehydration",
-          level: "error",
+          level,
           message: `[CLIENT] ${friendly}`,
         },
       ]);
-    }
-
-    formData.append("file", fileToSend);
-    formData.append("payloads", JSON.stringify(payloadsForEnabled));
-    formData.append("eggIds", JSON.stringify([...enabledEggIds]));
-    if (preserveStyles) {
-      formData.append("preserveStyles", "true");
-    }
-
-    try {
-      const res = await fetch("/api/harden", { method: "POST", body: formData });
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        const errMsg =
-          typeof data?.error === "string" ? data.error : "Processing failed.";
-        setError(errMsg);
-        setProcessingState("error");
-        setActiveStage("duality-check");
+      // When PDF and eggs are enabled, require confirmation before sending to server
+      if (
+        isPdfParseIssue &&
+        file.type === "application/pdf" &&
+        enabledEggIds.size > 0
+      ) {
         setLog((prev) => [
           ...prev,
           {
-            id: "duality-err",
-            stage: "duality-check",
-            level: "error",
-            message: `[ERROR] ${errMsg}`,
+            id: "client-server-only-confirm",
+            stage: "dehydration",
+            level: "info",
+            message:
+              "[CLIENT] This PDF and the selected eggs can only be processed by the server. Confirm to continue or uncheck eggs.",
           },
         ]);
-        retryButtonRef.current?.focus();
-        return;
-      }
-
-      const bufferBase64 = data.bufferBase64;
-      if (typeof bufferBase64 !== "string") {
-        setError("Invalid response from server: missing document data.");
-        setProcessingState("error");
-        setActiveStage("duality-check");
-        setLog((prev) => [
-          ...prev,
-          {
-            id: "invalid-resp",
-            stage: "duality-check",
-            level: "error",
-            message: "[ERROR] Invalid response from server.",
-          },
-        ]);
-        retryButtonRef.current?.focus();
-        return;
-      }
-
-      const mimeTypeFromServer = data.mimeType as string;
-      const originalName = (data.originalName as string) || name;
-      const scannerScan = data.scannerReport?.scan;
-
-      let blob: Blob;
-      try {
-        const binaryString = atob(bufferBase64);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-
-        // If we dehydrated on the client and held a PiiMap, rehydrate in-browser before download.
-        if (piiMapForRehydrate && rehydrateMimeType) {
-          const tokenizedBuffer = bytes.buffer.slice(
-            bytes.byteOffset,
-            bytes.byteOffset + bytes.byteLength
-          );
-          const rehydratedBuffer = await rehydrateInBrowser(
-            tokenizedBuffer,
-            rehydrateMimeType,
-            piiMapForRehydrate
-          );
-          const rehydratedBytes = new Uint8Array(rehydratedBuffer);
-          blob = new Blob([rehydratedBytes], { type: rehydrateMimeType });
-          setLog((prev) => [
-            ...prev,
-            {
-              id: "client-rehydrate",
-              stage: "rehydration",
-              level: "success",
-              message:
-                "[CLIENT] Rehydrated tokens back into original PII in-browser; server only saw tokenized content.",
-            },
-          ]);
-        } else {
-          blob = new Blob([bytes], { type: mimeTypeFromServer });
-        }
-      } catch {
-        setError("Invalid response from server: invalid document data.");
-        setProcessingState("error");
-        setActiveStage("duality-check");
-        setLog((prev) => [
-          ...prev,
-          {
-            id: "invalid-resp",
-            stage: "duality-check",
-            level: "error",
-            message: "[ERROR] Invalid response from server.",
-          },
-        ]);
-        retryButtonRef.current?.focus();
-        return;
-      }
-
-      lastHardenedBlobRef.current = blob;
-      lastHardenedConfigRef.current = {
-        payloads: { ...payloadsForEnabled },
-        eggIds: [...enabledEggIds],
-        preserveStyles,
-      };
-
-      // If server generated a canary token (empty token in payload), sync it to the card so "Check for triggers" works.
-      const canaryTokenUsed = data.canaryTokenUsed;
-      if (typeof canaryTokenUsed === "string" && canaryTokenUsed.trim() !== "") {
-        try {
-          const current = canaryWingPayload.trim() ? JSON.parse(canaryWingPayload) as Record<string, unknown> : {};
-          setCanaryWingPayload(JSON.stringify({ ...current, token: canaryTokenUsed }));
-        } catch {
-          // leave canary payload as-is
-        }
-      }
-
-      if (scannerScan && typeof scannerScan === "object") {
-        setDualityResult({
-          hasSuspiciousPatterns: !!scannerScan.hasSuspiciousPatterns,
-          matchedPatterns: Array.isArray(scannerScan.matchedPatterns)
-            ? scannerScan.matchedPatterns
-            : [],
-          details: Array.isArray(scannerScan.details) ? scannerScan.details : undefined,
+        setServerPdfConfirm({
+          fileToSend: file,
+          name,
+          payloadsForEnabled: { ...payloadsForEnabled },
+          enabledEggIds: [...enabledEggIds],
+          preserveStyles,
         });
-      } else {
-        setDualityResult({ hasSuspiciousPatterns: false, matchedPatterns: [] });
+        return;
       }
-
-      setProcessingState("completed");
-      setActiveStage("rehydration");
-      const noEggsApplied = enabledEggIds.size === 0;
-      setSuccessMessage(noEggsApplied ? originalName : buildFinalFileName(originalName));
-      successMessageRef.current?.focus();
-      setLog((prev) => [
-        ...prev,
-        {
-          id: "duality",
-          stage: "duality-check",
-          level: "info",
-          message:
-            "[DUALITY] Scanning original CV for existing prompt-injection patterns…",
-        },
-        {
-          id: "dehydrate",
-          stage: "dehydration",
-          level: "info",
-          message:
-            "[DEHYDRATE] PII dehydrated into Stateless & Volatile vault tokens (in-memory only; never stored).",
-        },
-        {
-          id: "inject",
-          stage: "injection",
-          level: "success",
-          message: "[INJECT] Funversarial eggs applied to dehydrated document.",
-        },
-        {
-          id: "rehydrate",
-          stage: "rehydration",
-          level: "success",
-          message:
-            "[REHYDRATE] PII rehydrated into final hardened CV stream. Stateless & Volatile handling complete; nothing persisted.",
-        },
-      ]);
-    } catch (_err) {
-      setError("Network error. Please try again.");
-      setProcessingState("error");
-      setActiveStage("accept");
-      retryButtonRef.current?.focus();
-      setLog((prev) => [
-        ...prev,
-        {
-          id: "network-err",
-          stage: "accept",
-          level: "error",
-          message: "[ERROR] Network error.",
-        },
-      ]);
     }
+
+    await runSubmitToServer({
+      fileToSend,
+      name,
+      eggIdsToUse: [...enabledEggIds],
+      payloadsForEnabled,
+      preserveStyles,
+      piiMapForRehydrate,
+      rehydrateMimeType,
+    });
   };
 
   const loadDemoCv = async (variant: "clean" | "dirty", format: "pdf" | "docx") => {
@@ -610,8 +721,91 @@ export default function Home() {
   };
 
   return (
-    <main id="main-content" className="min-h-screen bg-noir-bg text-noir-foreground">
-      <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
+    <>
+      {serverPdfConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-noir-bg/90 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="server-pdf-confirm-title"
+          aria-describedby="server-pdf-confirm-desc"
+        >
+          <Card className="w-full max-w-md border-neon-cyan/50 bg-noir-panel p-5 shadow-lg">
+            <h2 id="server-pdf-confirm-title" className="mb-2 text-base font-semibold text-neon-cyan">
+              Server-side processing required
+            </h2>
+            <p id="server-pdf-confirm-desc" className="mb-4 text-sm text-noir-foreground/80">
+              This PDF could not be processed in the browser. The file and the selected eggs can only be processed by the server.
+            </p>
+            <p className="mb-3 text-caption text-noir-foreground/60">
+              Selected eggs that will run on the server:{" "}
+              <span className="font-mono text-neon-cyan/90">
+                {serverPdfConfirm.enabledEggIds
+                  .map((id) => EGG_OPTIONS.find((o) => o.id === id)?.name ?? id)
+                  .join(", ")}
+              </span>
+            </p>
+            <p className="mb-4 text-caption text-noir-foreground/50">
+              You can continue with the server processing these eggs, or uncheck them and continue without eggs.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() => {
+                  const conf = serverPdfConfirm;
+                  setServerPdfConfirm(null);
+                  void runSubmitToServer({
+                    fileToSend: conf.fileToSend,
+                    name: conf.name,
+                    eggIdsToUse: conf.enabledEggIds,
+                    payloadsForEnabled: conf.payloadsForEnabled,
+                    preserveStyles: conf.preserveStyles,
+                    piiMapForRehydrate: null,
+                    rehydrateMimeType: null,
+                  });
+                }}
+              >
+                Continue (use server)
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  const conf = serverPdfConfirm;
+                  userHasChangedCheckboxesRef.current = true;
+                  setEnabledEggIds(new Set());
+                  setServerPdfConfirm(null);
+                  void runSubmitToServer({
+                    fileToSend: conf.fileToSend,
+                    name: conf.name,
+                    eggIdsToUse: [],
+                    payloadsForEnabled: {},
+                    preserveStyles: conf.preserveStyles,
+                    piiMapForRehydrate: null,
+                    rehydrateMimeType: null,
+                  });
+                }}
+              >
+                Uncheck eggs and continue
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setServerPdfConfirm(null);
+                  setProcessingState("idle");
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      <main id="main-content" className="min-h-screen bg-noir-bg text-noir-foreground">
+        <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
         <header className="mb-4 flex flex-wrap items-start justify-between gap-2 border-b border-noir-border pb-4">
           <div>
             <h1 className="text-2xl font-semibold">
@@ -664,84 +858,66 @@ export default function Home() {
             </div>
             <DropZone onFileSelect={onFileSelect} maxSizeBytes={MAX_FILE_SIZE_BYTES} openFilePickerRef={openFilePickerRef} />
             <p className="mt-1 text-caption text-noir-foreground/50">
-              Max 4 MB. PDF or DOCX only.
+              Max 4 MB. DOCX (Word) only.
             </p>
             <p className="mt-1.5 text-caption text-noir-foreground/50 font-mono" title="Open DevTools → Network, trigger Harden, inspect the POST to /api/harden; payload should contain tokens like {{PII_EMAIL_0}}, not raw email or phone.">
               Verify: DevTools → Network → inspect <code className="text-xs">POST /api/harden</code> — payload has tokens only, no raw PII.
             </p>
-            <div className="mt-3 space-y-2 text-caption text-noir-foreground/60">
-              <p className="uppercase tracking-[0.2em] text-neon-cyan">
-                Sample CV Preset
-              </p>
-              <p className="text-caption text-noir-foreground/60">
-                Load a synthetic demo CV instead of your own — use <span className="text-neon-cyan font-mono">Clean</span> for a safe baseline, or <span className="text-neon-green font-mono">Dirty</span> to explore adversarial content.
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-neon-cyan/30 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
-                  disabled={isDemoLoading}
-                  onClick={() => loadPreset("clean", "pdf")}
-                >
-                  <span className="font-mono text-neon-cyan">Clean · PDF</span>
-                  <span className="text-xs text-noir-foreground/60">
-                    Baseline sample
-                  </span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-neon-cyan/30 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
-                  disabled={isDemoLoading}
-                  onClick={() => loadPreset("clean", "docx")}
-                >
-                  <span className="font-mono text-neon-cyan">Clean · DOCX</span>
-                  <span className="text-xs text-noir-foreground/60">
-                    Baseline sample (Word)
-                  </span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-amber-300/70 border-dashed bg-noir-panel text-noir-foreground hover:border-amber-400/80 flex flex-col items-start"
-                  disabled={isDemoLoading}
-                  onClick={() => loadPreset("dirty", "pdf")}
-                >
-                  <span className="font-mono text-neon-green">Dirty · PDF</span>
-                  <span className="text-xs text-noir-foreground/60">
-                    Adversarial sample
-                  </span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-amber-300/70 border-dashed bg-noir-panel text-noir-foreground hover:border-amber-400/80 flex flex-col items-start"
-                  disabled={isDemoLoading}
-                  onClick={() => loadPreset("dirty", "docx")}
-                >
-                  <span className="font-mono text-neon-green">Dirty · DOCX</span>
-                  <span className="text-xs text-noir-foreground/60">
-                    Adversarial sample (Word)
-                  </span>
-                </Button>
-              </div>
-              {isDemoLoading && (
-                <p
-                  className="text-caption text-neon-cyan/80 font-mono"
-                  aria-live="polite"
-                >
-                  &gt; Generating demo CV… this may take a few seconds.
+            <CollapsibleCard
+              className="mt-3"
+              title="Use Sample CV to Test"
+              titleId="sample-cv-preset-title"
+              contentId="sample-cv-preset-content"
+              ariaLabel="Expand Use Sample CV to Test"
+              defaultExpanded={false}
+            >
+              <div className="space-y-3 text-caption text-noir-foreground/60">
+                <p className="text-caption text-noir-foreground/60">
+                  Load a synthetic demo CV instead of your own — use <span className="text-neon-cyan font-mono">Clean</span> for a safe baseline, or <span className="text-neon-green font-mono">Dirty</span> to explore adversarial content.
                 </p>
-              )}
-              <p className="text-caption text-noir-foreground/60">
-                &gt; Last preset:{" "}
-                <span className="font-mono text-neon-green">
-                  {demoVariant === "clean" ? "clean" : "dirty"} ·{" "}
-                  {demoFormat.toUpperCase()}
-                </span>
-              </p>
-            </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-neon-cyan/30 bg-noir-panel text-noir-foreground hover:border-neon-cyan/60 hover:shadow-neon-cyan/40 flex flex-col items-start"
+                    disabled={isDemoLoading}
+                    onClick={() => loadPreset("clean", "docx")}
+                  >
+                    <span className="font-mono text-neon-cyan">Clean · DOCX</span>
+                    <span className="text-xs text-noir-foreground/60">
+                      Baseline sample
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-amber-300/70 border-dashed bg-noir-panel text-noir-foreground hover:border-amber-400/80 flex flex-col items-start"
+                    disabled={isDemoLoading}
+                    onClick={() => loadPreset("dirty", "docx")}
+                  >
+                    <span className="font-mono text-neon-green">Dirty · DOCX</span>
+                    <span className="text-xs text-noir-foreground/60">
+                      Adversarial sample
+                    </span>
+                  </Button>
+                </div>
+                {isDemoLoading && (
+                  <p
+                    className="text-caption text-neon-cyan/80 font-mono"
+                    aria-live="polite"
+                  >
+                    &gt; Generating demo CV… this may take a few seconds.
+                  </p>
+                )}
+                <p className="text-caption text-noir-foreground/60">
+                  &gt; Last preset:{" "}
+                  <span className="font-mono text-neon-green">
+                    {demoVariant === "clean" ? "clean" : "dirty"} ·{" "}
+                    {demoFormat.toUpperCase()}
+                  </span>
+                </p>
+              </div>
+            </CollapsibleCard>
             {selectedFileName && (
               <div ref={armedSectionRef}>
                 <p className="mt-3 text-sm text-neon-green">
@@ -759,7 +935,7 @@ export default function Home() {
                     disabled={!hasDemoLoaded}
                   >
                     {hasDemoLoaded
-                      ? "View current demo as-is"
+                      ? "Download to view current demo as-is"
                       : "Select demo document and click here to view as-is"}
                   </button>
                   <Button
@@ -795,27 +971,27 @@ export default function Home() {
                     <span>Preserve styles</span>
                   </label>
                   <p id="preserve-styles-desc" className="text-caption text-noir-foreground/50 ml-6 -mt-1">
-                    DOCX: we keep layout via in-place structure edits when possible. PDF: we rebuild from text so layout may change. If an egg changes body text we rebuild and styles may not be preserved; the log will indicate which path was used.
+                    We keep layout via in-place structure edits when possible. If an egg changes body text we rebuild and styles may not be preserved; the log will indicate which path was used.
                   </p>
                 </div>
                 <div className="mt-3">
-                  <Card className="px-3 py-2">
-                    <p className="text-caption uppercase tracking-[0.2em] text-noir-foreground/60 mb-2">
+                  <Card className="px-4 py-3">
+                    <p className="border-b border-noir-border/60 pb-2 text-caption font-medium uppercase tracking-[0.2em] text-noir-foreground/70 mb-3">
                       Eggs to run
                     </p>
-                    <div className="flex flex-wrap gap-x-4 gap-y-0">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                     {EGG_OPTIONS.map((egg) => (
                       <label
                         key={egg.id}
-                        className="flex min-h-[44px] cursor-pointer items-center gap-2 py-2 pr-2 text-sm text-noir-foreground/80"
+                        className="flex min-h-[44px] cursor-pointer items-center gap-3 py-2 pr-2 text-sm text-noir-foreground/80"
                       >
                         <input
                           type="checkbox"
                           checked={enabledEggIds.has(egg.id)}
                           onChange={() => toggleEgg(egg.id)}
-                          className="rounded border-noir-border text-neon-cyan focus:ring-neon-cyan/50"
+                          className="mt-0.5 shrink-0 rounded border-noir-border text-neon-cyan focus:ring-neon-cyan/50"
                         />
-                        <span className="flex flex-col leading-tight">
+                        <span className="flex flex-col gap-0.5 leading-snug">
                           <span>{egg.name}</span>
                           <span className="text-xs font-mono text-noir-foreground/50">
                             {egg.id === "invisible-hand" || egg.id === "canary-wing"
@@ -964,6 +1140,7 @@ export default function Home() {
           </aside>
         </section>
       </div>
-    </main>
+      </main>
+    </>
   );
 }

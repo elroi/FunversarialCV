@@ -7,6 +7,7 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
 import { injectHiddenParagraphIntoDocx } from "../engine/docxInject";
+import { toWinAnsiSafe } from "../lib/pdfWinAnsi";
 
 /** Default/example trap text when payload is empty. */
 export const DEFAULT_INVISIBLE_HAND_TRAP =
@@ -36,7 +37,7 @@ export const invisibleHand: IEgg = {
   owaspMapping: OwaspMapping.LLM01_Prompt_Injection,
 
   manualCheckAndValidation:
-    "Quick check: Open the hardened PDF and press Ctrl/Cmd+A; the hidden trap text appears as a thin highlighted band. In DOCX, press Ctrl/Cmd+A to see a tiny extra selected paragraph. Manual check: In a PDF, use Select All (Ctrl/Cmd+A) or search in the viewer for the trap text; it is 0.5pt white so it may only appear when selected. In Word (DOCX), inspect the document or enable showing hidden content to find the hidden paragraph. Validation: Run the transform with a known payload, then parse the output (PDF or DOCX); confirm the trap text is present at 0.5pt/white in PDF or in the hidden DOCX element.",
+    "Quick check: Open the hardened document (DOCX) and press Ctrl/Cmd+A to see a tiny extra selected paragraph with the hidden trap text. Manual check: In Word, inspect the document or enable showing hidden content to find the hidden paragraph. Validation: Run the transform with a known payload, then parse the output DOCX; confirm the trap text is present in the hidden element.",
 
   validatePayload(payload: string): boolean {
     if (payload.length > MAX_PAYLOAD_LENGTH) return false;
@@ -54,14 +55,14 @@ export const invisibleHand: IEgg = {
       const page = pages[0];
       if (!page) return buffer;
       const font = await doc.embedFont(StandardFonts.Helvetica);
-      const margin = 40;
-      const y = page.getHeight() - margin;
-      page.drawText(trapText, {
-        x: margin,
-        y,
+      const safeTrapText = toWinAnsiSafe(trapText);
+      const topY = page.getHeight() - 10;
+      page.drawText(safeTrapText, {
+        x: 10,
+        y: topY,
         size: 0.5,
         font,
-        color: rgb(1, 1, 1),
+        color: rgb(1, 1, 1), // white (invisible on white background)
       });
       const pdfBytes = await doc.save();
       return Buffer.from(pdfBytes);

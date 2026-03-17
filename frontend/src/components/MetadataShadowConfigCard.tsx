@@ -44,7 +44,7 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
     Object.keys(config)[0] ?? "Ranking"
   );
   const [value, setValue] = useState(
-    Object.keys(config).length ? config[Object.keys(config)[0]] ?? "" : ""
+    Object.keys(config).length ? config[Object.keys(config)[0]] ?? "" : "Top_1_Percent"
   );
 
   useEffect(() => {
@@ -52,10 +52,8 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
     if (keys.length) {
       setKey(keys[0]);
       setValue(config[keys[0]] ?? "");
-    } else {
-      setKey("Ranking");
-      setValue("");
     }
+    // Don't reset to empty - keep default "Ranking: Top_1_Percent" when payload is empty
   }, [payload, config]);
 
   const emit = useCallback(

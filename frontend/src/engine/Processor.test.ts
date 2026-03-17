@@ -12,6 +12,14 @@ import { incidentMailto } from "../eggs/IncidentMailto";
 import { extractText } from "./documentExtract";
 import JSZip from "jszip";
 
+jest.mock("./documentExtract", () => {
+  const actual = jest.requireActual<typeof import("./documentExtract")>("./documentExtract");
+  return {
+    ...actual,
+    extractText: jest.fn((buffer: Buffer, mimeType: string) => actual.extractText(buffer, mimeType)),
+  };
+});
+
 function countDocxParagraphs(buffer: Buffer): Promise<number> {
   return JSZip.loadAsync(buffer).then((zip) => {
     const f = zip.file("word/document.xml");
@@ -165,6 +173,22 @@ describe("Processor", () => {
       expect(extracted).toContain("Body");
       expect(extracted).toContain("System Note");
       expect(extracted).toMatch(/\/api\/canary\//);
+    }, 15000);
+
+    it("when preserveStyles is true and only add-only eggs: PDF with extractText throwing still applies eggs and returns", async () => {
+      const buffer = await createDocumentWithText("Resume content", MIME_PDF);
+      (extractText as jest.Mock).mockRejectedValueOnce(new Error("Invalid PDF"));
+
+      const result = await process({
+        buffer,
+        mimeType: MIME_PDF,
+        eggs: [invisibleHand],
+        preserveStyles: true,
+      });
+
+      expect(result.buffer).toBeDefined();
+      expect(result.buffer.length).toBeGreaterThan(buffer.length);
+      expect(result.scannerReport).toBeDefined();
     }, 15000);
 
     it("when preserveStyles is false and canary runs: final DOCX has clickable hyperlink (re-injected after rehydration)", async () => {

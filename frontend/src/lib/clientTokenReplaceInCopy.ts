@@ -1,11 +1,11 @@
 /**
  * In-place PII → token replacement in a copy of the original file.
- * Preserves document layout (DOCX: word/document.xml only; PDF deferred).
+ * Preserves document layout (DOCX: word/document.xml; PDF: raw buffer when PII found).
  * Server receives the tokenized copy; rehydration happens on the client after response.
  */
 
 import JSZip from "jszip";
-import { MIME_DOCX } from "./clientDocumentExtract";
+import { MIME_DOCX, MIME_PDF } from "./clientDocumentExtract";
 import type { PiiMap } from "./clientVaultTypes";
 
 const DOCUMENT_XML_PATH = "word/document.xml";
@@ -13,20 +13,125 @@ const DOCUMENT_RELS_PATH = "word/_rels/document.xml.rels";
 
 export type TokenizedCopyResult = { file: File; buffer: ArrayBuffer };
 
+function findBytes(haystack: Uint8Array, needle: Uint8Array): number {
+  if (needle.length === 0 || needle.length > haystack.length) return -1;
+  for (let i = 0; i <= haystack.length - needle.length; i++) {
+    let match = true;
+    for (let j = 0; j < needle.length; j++) {
+      if (haystack[i + j] !== needle[j]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) return i;
+  }
+  return -1;
+}
+
+/** Normalize PII string for byte search (PDF may use nbsp, en-dash, etc.). */
+function normalizeForPdfSearch(value: string): string {
+  return value
+    .replace(/\u00A0/g, " ")
+    .replace(/\u2013/g, "-")
+    .replace(/\u2014/g, "-")
+    .replace(/\u2009/g, " ");
+}
+
+/** Candidate search strings: exact, NFC, trimmed, normalized, trimmed+normalized. */
+function searchCandidates(value: string): string[] {
+  const candidates: string[] = [value];
+  const nfc = value.normalize("NFC");
+  if (nfc !== value) candidates.push(nfc);
+  const trimmed = value.trim();
+  if (trimmed !== value) candidates.push(trimmed);
+  const normalized = normalizeForPdfSearch(value);
+  if (normalized !== value) candidates.push(normalized);
+  const trimmedNorm = normalizeForPdfSearch(trimmed);
+  if (trimmedNorm !== value && !candidates.includes(trimmedNorm)) candidates.push(trimmedNorm);
+  return candidates;
+}
+
 /**
- * Replaces PII with tokens inside a copy of the file. Only DOCX is supported;
- * for PDF/text the caller should use createDocumentWithTextInBrowser (rebuild path).
+ * In-place PII → token replacement in a PDF buffer. Preserves layout when PII
+ * appears as literal bytes (e.g. uncompressed streams). If token is longer than
+ * value we cannot replace without shifting bytes, so we return null and caller rebuilds.
+ * Tries multiple search candidates (exact, NFC, trimmed, normalized) so extraction/PDF encoding mismatches still match.
+ */
+function replacePiiWithTokensInPdfBuffer(
+  buffer: ArrayBuffer,
+  piiMap: PiiMap
+): ArrayBuffer | null {
+  const encoder = new TextEncoder();
+  const arr = new Uint8Array(buffer);
+  const entries = Object.values(piiMap.byToken);
+  if (entries.length === 0) return buffer;
+
+  const byValueLength = [...entries].sort(
+    (a, b) => encoder.encode(b.value).length - encoder.encode(a.value).length
+  );
+
+  for (let entryIndex = 0; entryIndex < byValueLength.length; entryIndex++) {
+    const entry = byValueLength[entryIndex];
+    const valueBytes = encoder.encode(entry.value);
+    let tokenBytes = encoder.encode(entry.token);
+    const tokenGtValue = tokenBytes.length > valueBytes.length;
+    if (tokenGtValue) return null;
+
+    const candidates = searchCandidates(entry.value);
+    let searchBytes: Uint8Array | null = null;
+    let pos = -1;
+    let candidateIndex = -1;
+    for (let ci = 0; ci < candidates.length; ci++) {
+      const bytes = encoder.encode(candidates[ci]);
+      if (bytes.length > arr.length) continue;
+      pos = findBytes(arr, bytes);
+      if (pos !== -1) {
+        searchBytes = bytes;
+        candidateIndex = ci;
+        break;
+      }
+    }
+    if (pos === -1 || searchBytes === null) return null;
+
+    const replaceLen = searchBytes.length;
+    if (tokenBytes.length < replaceLen) {
+      const padded = new Uint8Array(replaceLen);
+      padded.set(tokenBytes);
+      padded.fill(0x20, tokenBytes.length);
+      tokenBytes = padded;
+    } else if (tokenBytes.length > replaceLen) return null;
+    while (pos !== -1) {
+      arr.set(tokenBytes, pos);
+      pos = findBytes(arr, searchBytes);
+    }
+  }
+  return arr.buffer;
+}
+
+/**
+ * Replaces PII with tokens inside a copy of the file.
  *
- * DOCX: loads the file as ZIP, replaces each PII value with its token in
- * word/document.xml, saves the ZIP and returns the tokenized File and its buffer.
+ * DOCX: loads as ZIP, replaces in word/document.xml, returns tokenized File.
+ * PDF: in-place replacement in raw buffer when PII appears as literal bytes (preserves
+ * layout). If PDF has compressed streams, token longer than value, or PII not found,
+ * returns null → caller uses createDocumentWithTextInBrowser (rebuild, no style preservation).
  *
- * @returns The tokenized result (file + buffer), or null if format not supported (use rebuild).
+ * @returns The tokenized result (file + buffer), or null if format not supported or in-place not possible (use rebuild).
  */
 export async function replacePiiWithTokensInCopy(
   file: File,
   piiMap: PiiMap
 ): Promise<TokenizedCopyResult | null> {
   const mimeType = file.type;
+
+  if (mimeType === MIME_PDF) {
+    const buffer = await file.arrayBuffer();
+    const out = replacePiiWithTokensInPdfBuffer(buffer, piiMap);
+    if (out === null) return null;
+    const tokenizedFile = new File([out], file.name, { type: file.type });
+    return { file: tokenizedFile, buffer: out };
+  }
+
   if (mimeType !== MIME_DOCX) {
     return null;
   }

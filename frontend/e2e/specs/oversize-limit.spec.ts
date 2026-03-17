@@ -22,12 +22,12 @@ test.describe("Oversize uploads", () => {
     const fileInput = page.getByTestId("dropzone-input");
     const oversizeBuffer = Buffer.alloc(4 * 1024 * 1024 + 1024, 0x20); // just over 4 MB
     await fileInput.setInputFiles({
-      name: "too-large.pdf",
-      mimeType: "application/pdf",
+      name: "too-large.docx",
+      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       buffer: oversizeBuffer,
     });
 
-    await expect(page.getByText(/file is too large/i)).toBeVisible();
+    await expect(page.getByText(/file is too large/i)).toBeVisible({ timeout: 5_000 });
     // Should not arm the CV or enable harden flow.
     await expect(page.getByText(/Armed CV:/i)).toHaveCount(0);
     expect(hardenCallCount).toBe(0);

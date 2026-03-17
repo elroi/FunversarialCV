@@ -63,6 +63,19 @@ describe("POST /api/harden", () => {
     expect(json.error.toLowerCase()).toMatch(/missing|invalid|file/);
   });
 
+  it("returns 400 when content is PDF (DOCX only)", async () => {
+    const minimalPdf = await createDocumentWithText("Resume", MIME_PDF);
+    const form = await buildPdfFormData(minimalPdf);
+    const req = new Request("http://localhost:3000/api/harden", {
+      method: "POST",
+      body: form,
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toMatch(/support.*Word documents.*\.docx.*only|PDF support is planned/i);
+  });
+
   it("returns 400 when content is not PDF or DOCX (magic bytes)", async () => {
     const form = new FormData();
     form.append(
@@ -79,12 +92,12 @@ describe("POST /api/harden", () => {
     expect(res.status).toBe(400);
     const json = await res.json();
     expect(json.error).toBeDefined();
-    expect(json.error.toLowerCase()).toMatch(/unsupported|invalid|pdf|docx/);
+    expect(json.error.toLowerCase()).toMatch(/unsupported|invalid|word document|\.docx/);
   });
 
   it("returns 400 when payloads is invalid JSON", async () => {
-    const minimalPdf = await createDocumentWithText("Resume", MIME_PDF);
-    const form = await buildPdfFormData(minimalPdf);
+    const minimalDocx = await createDocumentWithText("Resume", MIME_DOCX);
+    const form = await buildDocxFormData(minimalDocx);
     form.set("payloads", "not json");
     const req = new Request("http://localhost:3000/api/harden", {
       method: "POST",
@@ -125,8 +138,8 @@ describe("POST /api/harden", () => {
     process.env.RATE_LIMIT_HARDEN_MAX = "1";
     process.env.RATE_LIMIT_HARDEN_WINDOW_MS = "60000";
 
-    const minimalPdf = await createDocumentWithText("Resume", MIME_PDF);
-    const form = await buildPdfFormData(minimalPdf);
+    const minimalDocx = await createDocumentWithText("Resume", MIME_DOCX);
+    const form = await buildDocxFormData(minimalDocx);
 
     const makeRequest = async () =>
       POST(
@@ -239,37 +252,6 @@ describe("POST /api/harden", () => {
     );
     expect(Processor.process).not.toHaveBeenCalled();
   });
-
-  it("returns 200 with bufferBase64 and scannerReport for valid PDF (mocked process — pdf-parse fails on pdf-lib output in Node)", async () => {
-    const minimalPdf = await createDocumentWithText("Resume content", MIME_PDF);
-    (Processor.process as jest.Mock).mockResolvedValueOnce({
-      buffer: Buffer.from([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34]), // %PDF-1.4
-      scannerReport: {
-        scan: { hasSuspiciousPatterns: false, matchedPatterns: [] },
-        alerts: [],
-      },
-    });
-    const form = await buildPdfFormData(minimalPdf);
-    const req = new Request("http://localhost:3000/api/harden", {
-      method: "POST",
-      body: form,
-    });
-    const res = await POST(req as never);
-    expect(res.status).toBe(200);
-    const json = await res.json();
-    expect(json.bufferBase64).toBeDefined();
-    expect(typeof json.bufferBase64).toBe("string");
-    expect(json.mimeType).toBe("application/pdf");
-    expect(json.scannerReport).toBeDefined();
-    expect(json.scannerReport.scan).toBeDefined();
-    expect(json.scannerReport.scan).toHaveProperty("hasSuspiciousPatterns");
-    expect(json.scannerReport.scan).toHaveProperty("matchedPatterns");
-    expect(json.originalName).toBe("test.pdf");
-    const decoded = Buffer.from(json.bufferBase64, "base64");
-    expect(decoded.length).toBeGreaterThan(0);
-    expect(decoded[0]).toBe(0x25);
-    expect(decoded[1]).toBe(0x50);
-  }, 15000);
 
   it("returns 200 with bufferBase64 and scannerReport for valid DOCX", async () => {
     const minimalDocx = await createDocumentWithText("Resume content", MIME_DOCX);
@@ -410,4 +392,80 @@ describe("POST /api/harden", () => {
     expect(decoded[0]).toBe(0x50);
     expect(decoded[1]).toBe(0x4b);
   }, 15000);
+
+  describe("DOCX with PII (PII guard)", () => {
+    const ADD_ONLY_EGG_IDS_LIST = [
+      "invisible-hand",
+      "canary-wing",
+      "metadata-shadow",
+      "incident-mailto",
+    ];
+
+    it("returns 400 when DOCX contains PII (PII guard runs for DOCX)", async () => {
+      (Processor.process as jest.Mock).mockClear();
+      const piiText = "Email: user@example.com\nPhone: (415) 555-1234";
+      const minimalDocxWithPii = await createDocumentWithText(piiText, MIME_DOCX);
+      (vault.containsPii as jest.Mock).mockReturnValueOnce(true);
+      const { extractText } = await import("@/engine/documentExtract");
+      (extractText as jest.Mock).mockResolvedValueOnce(piiText);
+
+      const form = await buildDocxFormData(minimalDocxWithPii, "resume.docx");
+      form.append("preserveStyles", "true");
+      form.append("eggIds", JSON.stringify(ADD_ONLY_EGG_IDS_LIST));
+      const req = new Request("http://localhost:3000/api/harden", {
+        method: "POST",
+        body: form,
+      });
+      const res = await POST(req as never);
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toMatch(/dehydrated tokens only|client dehydration/);
+      expect(Processor.process).not.toHaveBeenCalled();
+    }, 15000);
+
+    it("returns 400 when DOCX contains PII and request is not add-only (no preserveStyles)", async () => {
+      (Processor.process as jest.Mock).mockClear();
+      const piiText = "Email: user@example.com";
+      const minimalDocxWithPii = await createDocumentWithText(piiText, MIME_DOCX);
+      (vault.containsPii as jest.Mock).mockReturnValueOnce(true);
+      const { extractText } = await import("@/engine/documentExtract");
+      (extractText as jest.Mock).mockResolvedValueOnce(piiText);
+
+      const form = await buildDocxFormData(minimalDocxWithPii, "resume.docx");
+      form.append("eggIds", JSON.stringify(ADD_ONLY_EGG_IDS_LIST));
+      const req = new Request("http://localhost:3000/api/harden", {
+        method: "POST",
+        body: form,
+      });
+      const res = await POST(req as never);
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toBe(
+        "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored."
+      );
+      expect(Processor.process).not.toHaveBeenCalled();
+    }, 15000);
+
+    it("returns 400 when DOCX contains PII and request has non-add-only egg", async () => {
+      (Processor.process as jest.Mock).mockClear();
+      const piiText = "Email: user@example.com";
+      const minimalDocxWithPii = await createDocumentWithText(piiText, MIME_DOCX);
+      (vault.containsPii as jest.Mock).mockReturnValueOnce(true);
+      const { extractText } = await import("@/engine/documentExtract");
+      (extractText as jest.Mock).mockResolvedValueOnce(piiText);
+
+      const form = await buildDocxFormData(minimalDocxWithPii, "resume.docx");
+      form.append("preserveStyles", "true");
+      form.append("eggIds", JSON.stringify(["invisible-hand", "canary-wing", "llm-trap"]));
+      const req = new Request("http://localhost:3000/api/harden", {
+        method: "POST",
+        body: form,
+      });
+      const res = await POST(req as never);
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toMatch(/dehydrated tokens only|client dehydration/);
+      expect(Processor.process).not.toHaveBeenCalled();
+    }, 15000);
+  });
 });

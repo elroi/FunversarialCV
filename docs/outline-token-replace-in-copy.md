@@ -2,9 +2,11 @@
 
 **Goal:** Preserve the original document layout. Work on a **copy** of the uploaded file, replace PII → tokens **in that copy**, send the modified copy to the server, then rehydrate the server response before download.
 
+**v1 scope:** DOCX only; PDF support is postponed.
+
 **Flow:**
 1. **Client:** Make a copy of the original file (bytes).
-2. **Client:** Replace PII with tokens **inside** the copy (same format: PDF or DOCX; structure/layout unchanged).
+2. **Client:** Replace PII with tokens **inside** the copy (same format: DOCX; structure/layout unchanged).
 3. **Client:** Send the modified copy to the server as `file`.
 4. **Server:** Treats it as a normal upload: extract text, PII-guard (sees only tokens), run eggs, return enriched buffer.
 5. **Client:** Rehydrate the response (tokens → PII) and serve the result to the user.

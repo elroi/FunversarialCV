@@ -7,16 +7,25 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import Home from "./page";
 import * as ClientVault from "../src/lib/clientVault";
 import * as ClientDocumentCreate from "../src/lib/clientDocumentCreate";
+import * as ClientTokenReplace from "../src/lib/clientTokenReplaceInCopy";
 
 const createFile = (name: string, type: string) =>
   new File(["dummy"], name, { type });
 
-function mockFetchSuccess(originalName: string = "resume.pdf") {
+/** DOCX magic bytes (PK) so client magic-byte check accepts the file. */
+const DOCX_MAGIC = new Uint8Array([0x50, 0x4b, 0x03, 0x04]);
+function createDocxFile(name: string) {
+  return new File([DOCX_MAGIC], name, {
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  });
+}
+
+function mockFetchSuccess(originalName: string = "resume.docx") {
   return jest.fn().mockResolvedValue({
     ok: true,
     json: async () => ({
-      bufferBase64: Buffer.from("fake-pdf-bytes").toString("base64"),
-      mimeType: "application/pdf",
+      bufferBase64: Buffer.from("fake-docx-bytes").toString("base64"),
+      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       originalName,
       scannerReport: { scan: { hasSuspiciousPatterns: false, matchedPatterns: [] } },
     }),
@@ -40,6 +49,13 @@ describe("Home page", () => {
     revokeObjectURL = jest.fn();
     global.URL.createObjectURL = createObjectURL;
     global.URL.revokeObjectURL = revokeObjectURL;
+    // In Jest, File.prototype.slice().arrayBuffer() may not resolve with correct bytes; mock so magic-byte check sees DOCX.
+    const docxMagicBuffer = new Uint8Array([0x50, 0x4b, 0x03, 0x04]).buffer;
+    jest.spyOn(File.prototype, "slice").mockImplementation(function (this: File) {
+      return {
+        arrayBuffer: () => Promise.resolve(docxMagicBuffer),
+      } as unknown as Blob;
+    });
   });
 
   describe("intro and resources nav", () => {
@@ -70,18 +86,18 @@ describe("Home page", () => {
   it("shows the max file size hint matching the API limit", () => {
     render(<Home />);
     expect(
-      screen.getByText(/Max 4 MB\. PDF or DOCX only\./i)
+      screen.getByText(/Max 4 MB\. DOCX \(Word\) only\./i)
     ).toBeInTheDocument();
   });
 
   describe("success message after download", () => {
     it("shows success message with filename and Download button after successful harden", async () => {
-      global.fetch = mockFetchSuccess("my-cv.pdf");
+      global.fetch = mockFetchSuccess("my-cv.docx");
       render(<Home />);
 
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
-        target: { files: [createFile("my-cv.pdf", "application/pdf")] },
+        target: { files: [createDocxFile("my-cv.docx")] },
       });
 
       await waitFor(() => {
@@ -92,7 +108,7 @@ describe("Home page", () => {
       fireEvent.click(hardenBtn);
 
       await waitFor(() => {
-        expect(screen.getByText(/my-cv_final\.pdf/i)).toBeInTheDocument();
+        expect(screen.getByText(/my-cv_final\.docx/i)).toBeInTheDocument();
       });
 
       const downloadBtn = screen.getByRole("button", { name: /download/i });
@@ -105,11 +121,13 @@ describe("Home page", () => {
 
   describe("client-side PII dehydration and rehydration wiring", () => {
     it("dehydrates in browser, rebuilds tokenized file, sends file, then rehydrates response", async () => {
+      jest.spyOn(ClientTokenReplace, "replacePiiWithTokensInCopy").mockResolvedValue(null);
+
       const spyDehydrate = jest
         .spyOn(ClientVault, "dehydrateInBrowser")
         .mockResolvedValue({
           tokenizedBuffer: new TextEncoder().encode("Hello {{PII_EMAIL_0}}").buffer,
-          mimeType: "application/pdf",
+          mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
           piiMap: {
             byToken: {
               "{{PII_EMAIL_0}}": {
@@ -130,13 +148,13 @@ describe("Home page", () => {
         .spyOn(ClientVault, "rehydrateInBrowser")
         .mockResolvedValue(new ArrayBuffer(0));
 
-      global.fetch = mockFetchSuccess("my-cv.pdf");
+      global.fetch = mockFetchSuccess("my-cv.docx");
 
       render(<Home />);
 
       const input = screen.getByTestId("dropzone-input");
-      const pdfFile = createFile("my-cv.pdf", "application/pdf");
-      fireEvent.change(input, { target: { files: [pdfFile] } });
+      const docxFile = createDocxFile("my-cv.docx");
+      fireEvent.change(input, { target: { files: [docxFile] } });
 
       await waitFor(() => {
         expect(screen.getByText(/Armed CV:/i)).toBeInTheDocument();
@@ -149,11 +167,11 @@ describe("Home page", () => {
       });
 
       expect(
-        screen.getByText(/\[CLIENT\] Dehydrated PII in-browser/i)
+        screen.getByText(/\[CLIENT\] Dehydrated PII in-browser,.+sending to server\./i)
       ).toBeInTheDocument();
       expect(ClientDocumentCreate.createDocumentWithTextInBrowser).toHaveBeenCalledWith(
         "Hello {{PII_EMAIL_0}}",
-        "application/pdf"
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
       );
 
       await waitFor(() => {
@@ -204,7 +222,7 @@ describe("Home page", () => {
 
       const dropInput = screen.getByTestId("dropzone-input");
       fireEvent.change(dropInput, {
-        target: { files: [createFile("resume.pdf", "application/pdf")] },
+        target: { files: [createDocxFile("resume.docx")] },
       });
 
       await waitFor(() => {
@@ -233,7 +251,7 @@ describe("Home page", () => {
 
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
-        target: { files: [createFile("resume.pdf", "application/pdf")] },
+        target: { files: [createDocxFile("resume.docx")] },
       });
 
       await waitFor(() => {
@@ -264,7 +282,7 @@ describe("Home page", () => {
 
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
-        target: { files: [createFile("resume.pdf", "application/pdf")] },
+        target: { files: [createDocxFile("resume.docx")] },
       });
 
       await waitFor(() => {
@@ -299,7 +317,7 @@ describe("Home page", () => {
 
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
-        target: { files: [createFile("resume.pdf", "application/pdf")] },
+        target: { files: [createDocxFile("resume.docx")] },
       });
 
       await waitFor(() => {
@@ -337,7 +355,7 @@ describe("Home page", () => {
 
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
-        target: { files: [createFile("resume.pdf", "application/pdf")] },
+        target: { files: [createDocxFile("resume.docx")] },
       });
 
       await waitFor(() => {
@@ -366,7 +384,7 @@ describe("Home page", () => {
 
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
-        target: { files: [createFile("resume.pdf", "application/pdf")] },
+        target: { files: [createDocxFile("resume.docx")] },
       });
 
       await waitFor(() => {
@@ -395,7 +413,7 @@ describe("Home page", () => {
       render(<Home />);
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
-        target: { files: [createFile("resume.pdf", "application/pdf")] },
+        target: { files: [createDocxFile("resume.docx")] },
       });
       await waitFor(() => {
         expect(screen.getByRole("button", { name: /clear file|change file/i })).toBeInTheDocument();
@@ -405,11 +423,11 @@ describe("Home page", () => {
     });
 
     it("Download and Re-process buttons have 44px minimum touch target when hardened", async () => {
-      global.fetch = mockFetchSuccess("out.pdf");
+      global.fetch = mockFetchSuccess("out.docx");
       render(<Home />);
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
-        target: { files: [createFile("cv.pdf", "application/pdf")] },
+        target: { files: [createDocxFile("cv.docx")] },
       });
       await waitFor(() => screen.getByRole("button", { name: /harden/i }));
       fireEvent.click(screen.getByRole("button", { name: /harden/i }));
@@ -425,7 +443,7 @@ describe("Home page", () => {
       render(<Home />);
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
-        target: { files: [createFile("cv.pdf", "application/pdf")] },
+        target: { files: [createDocxFile("cv.docx")] },
       });
       await waitFor(() => screen.getByRole("button", { name: /harden/i }));
       fireEvent.click(screen.getByRole("button", { name: /harden/i }));
@@ -444,7 +462,7 @@ describe("Home page", () => {
       render(<Home />);
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
-        target: { files: [createFile("resume.pdf", "application/pdf")] },
+        target: { files: [createDocxFile("resume.docx")] },
       });
       await waitFor(() => screen.getByText(/Eggs to run/i));
       const label = screen.getByRole("checkbox", { name: /Invisible Hand/i }).closest("label");
@@ -454,11 +472,11 @@ describe("Home page", () => {
     it("scrolls focused element into view when harden succeeds", async () => {
       const scrollIntoViewMock = jest.fn();
       HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
-      global.fetch = mockFetchSuccess("out.pdf");
+      global.fetch = mockFetchSuccess("out.docx");
       render(<Home />);
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
-        target: { files: [createFile("cv.pdf", "application/pdf")] },
+        target: { files: [createDocxFile("cv.docx")] },
       });
       await waitFor(() => screen.getByRole("button", { name: /harden/i }));
       fireEvent.click(screen.getByRole("button", { name: /harden/i }));
@@ -473,7 +491,7 @@ describe("Home page", () => {
       render(<Home />);
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
-        target: { files: [createFile("cv.pdf", "application/pdf")] },
+        target: { files: [createDocxFile("cv.docx")] },
       });
       await waitFor(() => screen.getByRole("button", { name: /harden/i }));
       fireEvent.click(screen.getByRole("button", { name: /harden/i }));
@@ -485,12 +503,12 @@ describe("Home page", () => {
   describe("demo presets visual distinction", () => {
     it("styles Dirty presets with a distinct hazard accent compared to Clean presets", () => {
       render(<Home />);
-      const cleanPdf = screen.getByRole("button", { name: /clean · pdf/i });
-      const dirtyPdf = screen.getByRole("button", { name: /dirty · pdf/i });
+      const cleanDocx = screen.getByRole("button", { name: /clean · docx/i });
+      const dirtyDocx = screen.getByRole("button", { name: /dirty · docx/i });
 
-      expect(cleanPdf).not.toHaveClass("border-amber-300/70");
-      expect(dirtyPdf).toHaveClass("border-amber-300/70");
-      expect(dirtyPdf).toHaveClass("border-dashed");
+      expect(cleanDocx).not.toHaveClass("border-amber-300/70");
+      expect(dirtyDocx).toHaveClass("border-amber-300/70");
+      expect(dirtyDocx).toHaveClass("border-dashed");
     });
   });
 
@@ -506,8 +524,8 @@ describe("Home page", () => {
       >;
 
       render(<Home />);
-      const cleanPdf = screen.getByRole("button", { name: /clean · pdf/i });
-      fireEvent.click(cleanPdf);
+      const cleanDocx = screen.getByRole("button", { name: /clean · docx/i });
+      fireEvent.click(cleanDocx);
 
       await waitFor(() => {
         expect(
@@ -515,7 +533,7 @@ describe("Home page", () => {
         ).toBeInTheDocument();
       });
 
-      const buttons = screen.getAllByRole("button", { name: /clean · pdf|clean · docx|dirty · pdf|dirty · docx/i });
+      const buttons = screen.getAllByRole("button", { name: /clean · docx|dirty · docx/i });
       buttons.forEach((btn) => {
         expect(btn).toBeDisabled();
       });
@@ -592,7 +610,7 @@ describe("Home page", () => {
         render(<Home />);
         const input = screen.getByTestId("dropzone-input");
         fireEvent.change(input, {
-          target: { files: [createFile("resume.pdf", "application/pdf")] },
+          target: { files: [createDocxFile("resume.docx")] },
         });
         await waitFor(() => screen.getByText(/Eggs to run/i));
         const invisibleHand = screen.getByRole("button", { name: /expand.*Invisible Hand/i });
@@ -609,7 +627,7 @@ describe("Home page", () => {
         render(<Home />);
         const dropInput = screen.getByTestId("dropzone-input");
         fireEvent.change(dropInput, {
-          target: { files: [createFile("resume.pdf", "application/pdf")] },
+          target: { files: [createDocxFile("resume.docx")] },
         });
         await waitFor(() => screen.getByRole("button", { name: /expand.*Invisible Hand/i }));
         const trigger = screen.getByRole("button", { name: /expand.*Invisible Hand/i });
@@ -634,10 +652,10 @@ describe("Home page", () => {
       });
 
       it("full flow: upload, harden, download", async () => {
-        global.fetch = mockFetchSuccess("hardened-cv.pdf");
+        global.fetch = mockFetchSuccess("hardened-cv.docx");
         render(<Home />);
         fireEvent.change(screen.getByTestId("dropzone-input"), {
-          target: { files: [createFile("cv.pdf", "application/pdf")] },
+          target: { files: [createDocxFile("cv.docx")] },
         });
         await waitFor(() => screen.getByRole("button", { name: /harden/i }));
         fireEvent.click(screen.getByRole("button", { name: /harden/i }));

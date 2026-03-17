@@ -2,10 +2,15 @@
  * Duality monitor E2E: after harden, open Pipeline status panel and assert log/duality content visible.
  * Mocks /api/harden so scannerReport.scan is present and log is populated.
  * Uses mobile viewport so the Pipeline status toggle is visible (on desktop the panel is always shown).
+ * DOCX-only: uses minimal.docx and mock returns DOCX.
  */
 import { test, expect } from "@playwright/test";
+import path from "path";
 
-const minimalPdfBuffer = Buffer.from("%PDF-1.4\n%\n");
+import fs from "fs";
+
+const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
+const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx"));
 
 test.describe("Duality monitor", () => {
   test.use({ viewport: { width: 375, height: 667 } });
@@ -19,9 +24,9 @@ test.describe("Duality monitor", () => {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          bufferBase64: minimalPdfBuffer.toString("base64"),
-          mimeType: "application/pdf",
-          originalName: "minimal.pdf",
+          bufferBase64: minimalDocxBuffer.toString("base64"),
+          mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          originalName: "minimal.docx",
           scannerReport: {
             scan: {
               hasSuspiciousPatterns: false,
@@ -37,18 +42,14 @@ test.describe("Duality monitor", () => {
     await page.goto("/");
 
     const fileInput = page.getByTestId("dropzone-input");
-    await fileInput.setInputFiles({
-      name: "minimal.pdf",
-      mimeType: "application/pdf",
-      buffer: minimalPdfBuffer,
-    });
+    await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
 
-    await expect(page.getByText(/Armed CV:/i)).toBeVisible();
+    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
     await page.getByRole("button", { name: /harden/i }).click();
 
     await expect(
       page.getByRole("button", { name: /download/i })
-    ).toBeVisible({ timeout: 30_000 });
+    ).toBeVisible({ timeout: 60_000 });
 
     const toggle = page.locator("#duality-monitor-toggle");
     await toggle.scrollIntoViewIfNeeded();

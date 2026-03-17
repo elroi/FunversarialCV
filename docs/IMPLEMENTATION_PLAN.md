@@ -69,7 +69,7 @@ The following personas shape acceptance criteria, edge cases, and documentation.
 **Contract**
 
 - **Request:** `multipart/form-data`
-  - `file` (required): single PDF or DOCX. **Usability is determined by in-file content (magic bytes), not only by filename or `Content-Type`.** Same allowed extensions as DropZone (`.pdf`, `.docx`) for UX; server must re-validate from buffer.
+  - `file` (required): single Word document (.docx). **Usability is determined by in-file content (magic bytes), not only by filename or `Content-Type`.** v1 supports DOCX only; server rejects PDF with a clear message. DropZone accepts `.docx` only; server re-validates from buffer.
   - `payloads` (optional): JSON string `Record<string, string>`. Keys = egg ids (`invisible-hand`, `incident-mailto`, `canary-wing`). If omitted, use `{}`.
 - **Response (success):** JSON:
   - `bufferBase64: string`
@@ -85,7 +85,7 @@ The following personas shape acceptance criteria, edge cases, and documentation.
 2. Buffer: `Buffer.from(await file.arrayBuffer())`. **Determine format from in-file properties (magic bytes), not from `file.name` or `file.type`:**  
    - PDF: `buffer.length >= 4 && buffer[0]===0x25 && buffer[1]===0x50 && buffer[2]===0x44 && buffer[3]===0x46` (`%PDF`).  
    - DOCX: `buffer.length >= 2 && buffer[0]===0x50 && buffer[1]===0x4b` (`PK`, ZIP/DOCX).  
-   Set `mimeType` from detected format (`MIME_PDF` / `MIME_DOCX` from `engine/documentExtract`). If buffer matches neither signature, return 400 with a clear message (e.g. "Unsupported or invalid document: file must be a valid PDF or DOCX."). Optionally: if extension (from `file.name`) disagrees with detected type, return 400 (e.g. "File content does not match extension.") to avoid silent mislabeling.
+   Set `mimeType` from detected format (`MIME_PDF` / `MIME_DOCX` from `engine/documentExtract`). If buffer is PDF, return 400 with "We currently support Word documents (.docx) only. PDF support is planned for a future release." If buffer matches neither signature, return 400 (e.g. "Unsupported or invalid document: file must be a valid Word document (.docx)."). If extension (from `file.name`) disagrees with detected type, return 400 (e.g. "File content does not match extension.").
 3. Payloads: `formData.get("payloads")` as string → `JSON.parse` → `Record<string, string>`, default `{}`. On parse error → 400. **Persona (Security/Maintainer):** Filter payloads to keys that exist in `AVAILABLE_EGGS.map(e => e.id)`; ignore unknown keys.
 4. `process({ buffer, mimeType, eggs: AVAILABLE_EGGS, payloads })` from engine + registry.
 5. Return JSON: `result.buffer.toString("base64")`, `mimeType`, `result.scannerReport`, `file.name`. Do not persist.

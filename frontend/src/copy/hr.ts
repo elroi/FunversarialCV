@@ -9,7 +9,11 @@ export const hrCopy: Copy = {
   backHome: "Back home",
 
   intro:
-    "FunversarialCV is an educational tool that helps you see how your CV is handled by AI-powered hiring systems. It adds hidden, test signals to your document (aligned with industry security standards) while keeping your data private: everything is processed in memory only, with your contact details replaced by temporary placeholders before anything is sent, so nothing is stored after your new CV is generated. When “Preserve styles” is on, we keep your layout where possible; when we can’t, we rebuild and explain it in the interface.",
+    "**FunversarialCV** is an educational tool that helps you see how your CV is handled by AI-powered hiring systems.\n\n" +
+    "It adds hidden, test signals to your document (aligned with industry security standards) while keeping your data private.\n" +
+    "Everything is processed **in memory only**, with your contact details replaced by **temporary placeholders** before anything is sent – so nothing is stored after your new CV is generated.\n\n" +
+    "When **Preserve styles** is on, we keep your layout where possible.\n" +
+    "When we can't, we rebuild and explain it in the interface.",
   piiNotice:
     "Your CV is processed in your browser first. Before anything leaves your device, we replace your email, phone, and other contact details (we call this PII) with temporary placeholders. Our server only sees those placeholders, never your real contact information.",
 

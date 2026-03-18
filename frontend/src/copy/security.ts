@@ -8,7 +8,10 @@ export const securityCopy: Copy = {
   backHome: "Back home",
 
   intro:
-    "FunversarialCV is an educational tool for exploring how CVs behave in AI-heavy hiring flows. It hardens documents with OWASP-aligned, LLM-targeted easter eggs while keeping your data inside a Stateless & Volatile vault model: documents are processed in-memory only – with PII dehydration, adversarial layers, and rehydration into a final stream – so nothing is retained after your hardened CV is generated. When Preserve styles is on, we keep your layout where possible; when that isn't possible we fall back to a rebuild path and explain it in the UI.",
+    "**FunversarialCV**: A fun adversarial simulation console for arming resumes against **LLM-driven** hiring flows.\n\n" +
+    "This educational tool demonstrates how hiring pipelines become **attack vectors** by layering **OWASP-aligned** payloads into standard documents.\n" +
+    "Designed for **security awareness** and **LLM research**, it operates on a **zero-retention** model: **PII** is **dehydrated** in-memory and **rehydrated** only for the final output stream.\n\n" +
+    "Arm your CV, download the payload, and perform a **forensic comparison** between the clean and armed versions to reveal the hidden adversarial layers.",
   piiNotice:
     "Your CV is processed in your browser first. Before anything leaves your device, we replace email, phone, and other identifiers with short-lived tokens. Our server only sees tokens, never your raw contact details.",
 

@@ -84,6 +84,36 @@ function PiiNoticeBlock({
   );
 }
 
+/** Parse **bold** in a string into <strong> nodes. */
+function parseBold(s: string): React.ReactNode {
+  const parts = s.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={i} className="font-semibold text-foreground/90">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+}
+
+/** Render intro copy with paragraphs (\n\n), line breaks (\n), and **bold**. */
+function renderIntro(text: string): React.ReactNode {
+  const paragraphs = text.split(/\n\n+/).filter(Boolean);
+  return paragraphs.map((para, i) => (
+    <p key={i} className="mb-3 text-sm text-foreground/80 last:mb-6">
+      {para.split("\n").map((line, j) => (
+        <React.Fragment key={j}>
+          {j > 0 && <br />}
+          {parseBold(line)}
+        </React.Fragment>
+      ))}
+    </p>
+  ));
+}
+
 /** localStorage key for persisting checkbox state (Preserve styles + Eggs to run). */
 const CHECKBOX_STORAGE_KEY = "funversarialcv-checkboxes";
 
@@ -895,9 +925,9 @@ export default function Home() {
             </Link>
           </div>
         </div>
-        <p className="mb-6 text-sm text-foreground/80">
-          {copy.intro}
-        </p>
+        <div className="mb-6">
+          {renderIntro(copy.intro)}
+        </div>
         <PiiNoticeBlock copy={copy} audience={audience} />
 
         <section className="flex flex-1 flex-col gap-8 md:flex-row">

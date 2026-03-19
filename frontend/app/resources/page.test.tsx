@@ -1,10 +1,11 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithAudience } from "../../src/test-utils";
 import ResourcesPage from "./page";
 
 describe("Resources page", () => {
   it("renders the main Resources heading", () => {
-    render(<ResourcesPage />);
+    renderWithAudience(<ResourcesPage />);
     expect(
       screen.getByRole("heading", { name: /funversarialcv/i, level: 1 })
     ).toBeInTheDocument();
@@ -13,7 +14,7 @@ describe("Resources page", () => {
   });
 
   it("explains why Funversarial CVs exist", () => {
-    render(<ResourcesPage />);
+    renderWithAudience(<ResourcesPage />);
     expect(
       screen.getByText(/why funversarial cvs\?/i)
     ).toBeInTheDocument();
@@ -22,7 +23,7 @@ describe("Resources page", () => {
   });
 
   it("includes an ethical use disclaimer making usage the user's responsibility", () => {
-    render(<ResourcesPage />);
+    renderWithAudience(<ResourcesPage />);
     expect(
       screen.getByRole("heading", {
         name: /usage and responsibility/i,
@@ -38,7 +39,7 @@ describe("Resources page", () => {
   });
 
   it("has dedicated sections for candidates and hiring teams", () => {
-    render(<ResourcesPage />);
+    renderWithAudience(<ResourcesPage />);
     expect(
       screen.getByRole("heading", { name: /for candidates/i, level: 2 })
     ).toBeInTheDocument();
@@ -48,14 +49,14 @@ describe("Resources page", () => {
   });
 
   it("provides a Back home link to the main app", () => {
-    render(<ResourcesPage />);
+    renderWithAudience(<ResourcesPage />);
     const link = screen.getByRole("link", { name: /back home/i });
     expect(link).toBeInTheDocument();
     expect((link as HTMLAnchorElement).getAttribute("href")).toBe("/");
   });
 
   it("documents the Stateless Vault, PII dehydration, and zero-retention model", () => {
-    render(<ResourcesPage />);
+    renderWithAudience(<ResourcesPage />);
     expect(
       screen.getByText(/Stateless Vault model/i)
     ).toBeInTheDocument();
@@ -68,7 +69,7 @@ describe("Resources page", () => {
   });
 
   it("states that dehydration and rehydration occur in the browser and gives verification steps for security reviewers", () => {
-    render(<ResourcesPage />);
+    renderWithAudience(<ResourcesPage />);
     expect(
       screen.getByText(/dehydration and rehydration occur in your browser/i)
     ).toBeInTheDocument();
@@ -81,7 +82,7 @@ describe("Resources page", () => {
   });
 
   it("links out to OWASP Top 10 for LLM Applications and a recommended talk", () => {
-    render(<ResourcesPage />);
+    renderWithAudience(<ResourcesPage />);
     expect(
       screen.getByRole("link", { name: /owasp top 10 for llm applications/i })
     ).toBeInTheDocument();
@@ -91,7 +92,7 @@ describe("Resources page", () => {
   });
 
   it("describes the Stateless Vault processing flow in sequence", () => {
-    render(<ResourcesPage />);
+    renderWithAudience(<ResourcesPage />);
     expect(
       screen.getByText(/processing flow \(stateless vault\)/i)
     ).toBeInTheDocument();
@@ -100,7 +101,7 @@ describe("Resources page", () => {
   });
 
   it("renders a simple system diagram that matches the Stateless Vault flow", () => {
-    render(<ResourcesPage />);
+    renderWithAudience(<ResourcesPage />);
     const heading = screen.getByText(/system diagram/i);
     expect(heading).toBeInTheDocument();
     const asciiBlock = heading
@@ -113,7 +114,7 @@ describe("Resources page", () => {
   });
 
   it("explains what eggs are and references easter eggs", () => {
-    render(<ResourcesPage />);
+    renderWithAudience(<ResourcesPage />);
     const headings = screen.getAllByRole("heading", {
       name: /what are eggs\?/i,
       level: 2,
@@ -126,7 +127,7 @@ describe("Resources page", () => {
   });
 
   it("provides a Get started section including guidance to use demo CVs", () => {
-    render(<ResourcesPage />);
+    renderWithAudience(<ResourcesPage />);
     expect(
       screen.getByRole("heading", { name: /get started/i, level: 2 })
     ).toBeInTheDocument();

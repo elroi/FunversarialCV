@@ -9,6 +9,6 @@ describe("Card", () => {
     const card = screen.getByTestId("card");
     expect(card).toHaveClass("noir-shell");
     expect(card).toHaveClass("rounded-xl");
-    expect(card).toHaveClass("border-noir-border");
+    expect(card).toHaveClass("border-border");
   });
 });

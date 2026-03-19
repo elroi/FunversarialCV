@@ -23,6 +23,7 @@ You are an expert Fullstack Security Engineer and AI Architect. You are assistin
 ## 🧠 Planning & Personas
 - For any non-trivial **plan** (architecture, roadmap, implementation plan, experiment plan, or similar), always:
   - Identify the relevant personas for the task (e.g., Security Architect, Hiring Manager, Candidate, LLM/Agent, DevOps/Platform, Privacy/Compliance).
+  - Add user stories for the relevant perspectives: for each identified persona, write at least one user story in the form "As a [persona], I want [goal] so that [benefit]." Use these to ground the persona review and to derive acceptance criteria (and tests where applicable).
   - Explicitly review the plan from each persona’s perspective, calling out risks, trade-offs, and constraints.
   - Incorporate that feedback into the plan before proceeding to implementation.
   - Treat “plan first, then implement” as the default workflow unless the user explicitly asks for a quick-and-dirty change.

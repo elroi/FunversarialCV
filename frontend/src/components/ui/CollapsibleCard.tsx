@@ -41,7 +41,7 @@ export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
   return (
     <div
       className={clsx(
-        "rounded-xl border border-noir-border bg-noir-panel/70 noir-shell overflow-hidden",
+        "rounded-xl border border-border bg-panel/70 noir-shell overflow-hidden",
         disabled && "opacity-60 pointer-events-none",
         className
       )}
@@ -53,12 +53,12 @@ export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
         aria-controls={contentId}
         aria-label={ariaLabel}
         onClick={() => setExpanded((e) => !e)}
-        className="flex w-full min-h-[44px] flex-shrink-0 items-center justify-between gap-2 px-4 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50 focus-visible:ring-inset"
+        className="flex w-full min-h-[44px] flex-shrink-0 items-center justify-between gap-2 px-4 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-inset"
       >
-        <span className="text-caption sm:text-xs font-semibold uppercase tracking-[0.2em] text-neon-cyan">
+        <span className="text-caption sm:text-xs font-semibold uppercase tracking-[0.2em] text-accent">
           {title}
         </span>
-        <span className="shrink-0 text-neon-cyan" aria-hidden="true">
+        <span className="shrink-0 text-accent" aria-hidden="true">
           {expanded ? "▼" : "▶"}
         </span>
       </button>
@@ -66,7 +66,7 @@ export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
         id={contentId}
         role="region"
         aria-labelledby={titleId}
-        className={expanded ? "block border-t border-noir-border p-4" : "hidden"}
+        className={expanded ? "block border-t border-border p-4" : "hidden"}
       >
         {children}
       </div>

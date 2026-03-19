@@ -11,6 +11,16 @@ const config: Config = {
         caption: ["0.8125rem", { lineHeight: "1.4" }],
       },
       colors: {
+        /* Semantic theme tokens (CSS variables for audience switching) */
+        bg: "var(--color-bg)",
+        panel: "var(--color-panel)",
+        border: "var(--color-border)",
+        foreground: "var(--color-foreground)",
+        accent: "var(--color-accent)",
+        "accent-foreground": "var(--color-accent-foreground)",
+        success: "var(--color-success)",
+        error: "var(--color-error)",
+        /* Legacy noir/neon (still used where semantic not yet applied) */
         "noir-bg": "#050814",
         "noir-panel": "#050b18",
         "noir-border": "#1f2937",

@@ -10,9 +10,9 @@ export interface ButtonProps
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "border border-neon-green bg-noir-panel text-neon-green hover:bg-neon-green/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50",
+    "border border-success bg-panel text-success hover:bg-success/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50",
   secondary:
-    "border border-noir-border bg-noir-panel text-neon-cyan hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50",
+    "border border-border bg-panel text-accent hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

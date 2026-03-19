@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import clsx from "clsx";
 import { CollapsibleCard } from "./ui/CollapsibleCard";
 import { CheckAndValidateBlock } from "./CheckAndValidateBlock";
+import { useCopy } from "../copy";
 
 const KEY_PATTERN = /^[a-zA-Z0-9_]*$/;
 const MAX_VALUE_LENGTH = 200;
@@ -39,12 +39,13 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
   className,
   manualCheckAndValidation,
 }) => {
+  const copy = useCopy();
   const config = parsePayloadSafe(payload);
   const [key, setKey] = useState(
-    Object.keys(config)[0] ?? "Ranking"
+    Object.keys(config)[0] ?? copy.metadataShadowPlaceholderKey
   );
   const [value, setValue] = useState(
-    Object.keys(config).length ? config[Object.keys(config)[0]] ?? "" : "Top_1_Percent"
+    Object.keys(config).length ? config[Object.keys(config)[0]] ?? "" : copy.metadataShadowPlaceholderValue
   );
 
   useEffect(() => {
@@ -89,84 +90,84 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
     <CollapsibleCard
       title={
         <span className="flex flex-col gap-0.5">
-          <span>The Metadata Shadow (LLM02)</span>
-          <span className="text-xs font-mono text-noir-foreground/60">
-            STYLE-SAFE
+          <span>{copy.eggMetadataShadowTitle}</span>
+          <span className="text-xs font-mono text-foreground/60">
+            {copy.styleSafe}
           </span>
         </span>
       }
       titleId="metadata-shadow-card-title"
       contentId="metadata-shadow-card-content"
-      ariaLabel="Expand Metadata Shadow config"
+      ariaLabel={`Expand ${copy.eggMetadataShadowTitle} config`}
       defaultExpanded={false}
       disabled={disabled}
       className={className}
     >
-      <p className="text-caption sm:text-sm text-noir-foreground/70 mb-4">
-        Add a custom document property (e.g. Ranking: Top_1%). Keys: letters, numbers, underscore only. No PII in values.
+      <p className="text-caption sm:text-sm text-foreground/70 mb-4">
+        {copy.metadataShadowDescription}
       </p>
 
       <fieldset className="space-y-3">
         <div>
-          <label className="block text-caption text-noir-foreground/70 mb-1">
-            Property name
+          <label className="block text-caption text-foreground/70 mb-1">
+            {copy.metadataShadowPropertyName}
           </label>
           <input
             type="text"
             value={key}
             onChange={handleKeyChange}
-            placeholder="Ranking"
+            placeholder={copy.metadataShadowPlaceholderKey}
             disabled={disabled}
-            className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-sm text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
+            className="w-full rounded border border-border bg-bg px-2 py-1.5 text-sm text-foreground placeholder:text-foreground/40 focus:border-accent focus:outline-none"
             aria-describedby="meta-key-hint"
           />
-          <p id="meta-key-hint" className="text-caption text-noir-foreground/50 mt-1">
+          <p id="meta-key-hint" className="text-caption text-foreground/50 mt-1">
             Letters, numbers, underscore only.
           </p>
         </div>
         <div>
-          <label className="block text-caption text-noir-foreground/70 mb-1">
-            Value
+          <label className="block text-caption text-foreground/70 mb-1">
+            {copy.metadataShadowPropertyValue}
           </label>
           <input
             type="text"
             value={value}
             onChange={handleValueChange}
-            placeholder="Top_1%"
+            placeholder={copy.metadataShadowPlaceholderValue}
             maxLength={MAX_VALUE_LENGTH}
             disabled={disabled}
-            className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-sm text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none"
+            className="w-full rounded border border-border bg-bg px-2 py-1.5 text-sm text-foreground placeholder:text-foreground/40 focus:border-accent focus:outline-none"
             aria-describedby="meta-value-hint"
           />
-          <p id="meta-value-hint" className="text-caption text-noir-foreground/50 mt-1">
+          <p id="meta-value-hint" className="text-caption text-foreground/50 mt-1">
             {value.length}/{MAX_VALUE_LENGTH}. No email or phone.
           </p>
         </div>
       </fieldset>
 
       <div
-        className="mt-4 pt-4 border-t border-noir-border"
+        className="mt-4 pt-4 border-t border-border"
         role="region"
         aria-labelledby="metadata-shadow-check-validate-title"
       >
         <h4
           id="metadata-shadow-check-validate-title"
-          className="text-caption uppercase tracking-wider text-noir-foreground/80 mb-2"
+          className="text-caption uppercase tracking-wider text-foreground/80 mb-2"
         >
-          How to check &amp; validate
+          {copy.metadataShadowHowToTitle}
         </h4>
         {manualCheckAndValidation ? (
           <CheckAndValidateBlock
             content={manualCheckAndValidation}
-            className="text-caption text-noir-foreground/70"
+            className="text-caption text-foreground/70"
             fallback={
-              <p className="text-caption text-noir-foreground/50 italic">
+              <p className="text-caption text-foreground/50 italic">
                 Instructions not available. Ensure the app can reach /api/eggs.
               </p>
             }
           />
         ) : (
-          <p className="text-caption text-noir-foreground/50 italic">
+          <p className="text-caption text-foreground/50 italic">
             Instructions not available. Ensure the app can reach /api/eggs.
           </p>
         )}

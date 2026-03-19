@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { CollapsibleCard } from "./ui/CollapsibleCard";
 import { CheckAndValidateBlock } from "./CheckAndValidateBlock";
+import { useCopy, replaceCopyPlaceholders } from "../copy";
 
 const MAX_PAYLOAD_LENGTH = 500;
 
@@ -24,6 +25,7 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
   className,
   manualCheckAndValidation,
 }) => {
+  const copy = useCopy();
   const [trapText, setTrapText] = useState(payload);
 
   useEffect(() => {
@@ -45,66 +47,66 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
     <CollapsibleCard
       title={
         <span className="flex flex-col gap-0.5">
-          <span>The Invisible Hand (LLM01)</span>
-          <span className="text-xs font-mono text-noir-foreground/60">
-            STYLE-AFFECTING
+          <span>{copy.eggInvisibleHandTitle}</span>
+          <span className="text-xs font-mono text-foreground/60">
+            {copy.styleAffecting}
           </span>
         </span>
       }
       titleId="invisible-hand-card-title"
       contentId="invisible-hand-card-content"
-      ariaLabel="Expand The Invisible Hand config"
+      ariaLabel={`Expand ${copy.eggInvisibleHandTitle} config`}
       defaultExpanded={false}
       disabled={disabled}
       className={className}
     >
       <p
-        className="text-caption sm:text-sm text-noir-foreground/70 mb-4"
-        title="Leave blank to use the default system note."
+        className="text-caption sm:text-sm text-foreground/70 mb-4"
+        title={copy.invisibleHandPlaceholder}
       >
-        Optional custom trap text for AI parsers. Leave blank to use the default system note (0.5pt white, invisible to humans).
+        {copy.invisibleHandDescription}
       </p>
 
       <label className="block">
-        <span className="sr-only">Trap text (optional)</span>
+        <span className="sr-only">{copy.invisibleHandTrapLabel}</span>
         <textarea
           value={trapText}
           onChange={handleChange}
-          placeholder="Leave blank to use default system note."
+          placeholder={copy.invisibleHandPlaceholder}
           maxLength={MAX_PAYLOAD_LENGTH}
           rows={3}
           disabled={disabled}
-          className="w-full rounded border border-noir-border bg-noir-bg px-2 py-1.5 text-sm text-noir-foreground placeholder:text-noir-foreground/40 focus:border-neon-cyan focus:outline-none resize-y"
-          title="Optional. Leave blank to use default system note. Max 500 characters."
+          className="w-full rounded border border-border bg-bg px-2 py-1.5 text-sm text-foreground placeholder:text-foreground/40 focus:border-accent focus:outline-none resize-y"
+          title={copy.invisibleHandPlaceholder}
           aria-describedby="invisible-hand-hint"
         />
-        <p id="invisible-hand-hint" className="text-caption sm:text-xs text-noir-foreground/50 mt-1">
-          {trapText.length}/{MAX_PAYLOAD_LENGTH} characters. No HTML or script; letters, digits, spaces, and basic punctuation only.
+        <p id="invisible-hand-hint" className="text-caption sm:text-xs text-foreground/50 mt-1">
+          {replaceCopyPlaceholders(copy.invisibleHandHint, { n: trapText.length, max: MAX_PAYLOAD_LENGTH })}
         </p>
       </label>
 
       <div
-        className="mt-4 pt-4 border-t border-noir-border"
+        className="mt-4 pt-4 border-t border-border"
         role="region"
         aria-labelledby="invisible-hand-manual-title"
       >
         <h4
           id="invisible-hand-manual-title"
-          className="text-caption sm:text-xs uppercase tracking-wider text-noir-foreground/80 mb-2"
+          className="text-caption sm:text-xs uppercase tracking-wider text-foreground/80 mb-2"
         >
-          How to check &amp; validate
+          {copy.invisibleHandHowToTitle}
         </h4>
         {manualCheckAndValidation ? (
           <CheckAndValidateBlock
             content={manualCheckAndValidation}
             fallback={
-              <p className="text-caption sm:text-xs text-noir-foreground/50 italic">
+              <p className="text-caption sm:text-xs text-foreground/50 italic">
                 Instructions not available. Ensure the app can reach /api/eggs.
               </p>
             }
           />
         ) : (
-          <p className="text-caption sm:text-xs text-noir-foreground/50 italic">
+          <p className="text-caption sm:text-xs text-foreground/50 italic">
             Instructions not available. Ensure the app can reach /api/eggs.
           </p>
         )}

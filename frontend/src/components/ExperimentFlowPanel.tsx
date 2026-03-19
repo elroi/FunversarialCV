@@ -11,11 +11,11 @@ import type { Copy } from "../copy/types";
 export function ExperimentFlowPanel({ copy }: { copy: Copy }) {
   return (
     <div
-      className="mb-6 border border-border/80 bg-panel/60 font-mono shadow-[0_0_0_1px_var(--color-accent)/0.06]"
+      className="mb-6 min-w-0 border border-border/80 bg-panel/60 font-mono shadow-[0_0_0_1px var(--color-accent)/0.06]"
       role="region"
       aria-labelledby="experiment-flow-label"
     >
-      <div className="px-4 py-3 sm:px-5 sm:py-4">
+      <div className="px-3 py-3 sm:px-5 sm:py-4">
         <h2
           id="experiment-flow-label"
           className="mb-3 text-caption font-mono uppercase tracking-[0.2em] text-accent"
@@ -25,7 +25,8 @@ export function ExperimentFlowPanel({ copy }: { copy: Copy }) {
         <p className="mb-4 text-sm leading-relaxed text-foreground/90">
           {copy.positioningLine}
         </p>
-        <ol className="list-inside list-decimal space-y-2 pl-3 font-mono text-sm leading-relaxed text-foreground/85">
+        {/* list-outside + pl: avoids awkward wraps under the marker on narrow viewports */}
+        <ol className="list-outside list-decimal space-y-2 pl-5 font-mono text-[0.9375rem] leading-relaxed text-foreground/85 sm:pl-6 sm:text-sm">
           {copy.flowSteps.map((step, i) => (
             <li key={i} className="pl-1">
               {step.split("\n").map((line, j) => (
@@ -41,6 +42,11 @@ export function ExperimentFlowPanel({ copy }: { copy: Copy }) {
             </li>
           ))}
         </ol>
+        {copy.experimentFlowClarifier && (
+          <p className="mt-3 text-sm leading-relaxed text-foreground/70">
+            {copy.experimentFlowClarifier}
+          </p>
+        )}
         <p className="mt-3 text-xs italic leading-relaxed text-foreground/50">
           {copy.philosophyLine}
         </p>

@@ -45,6 +45,14 @@ No feedback was provided at the planned pauses during this run. Future runs can 
 
 ---
 
+## Mobile-first chrome (2025-03-19)
+
+- Shared [`SiteChrome`](../frontend/src/components/SiteChrome.tsx): `SiteHeader` + `SiteTopBar` on home and resources (DRY).
+- Top bar: column stack on narrow viewports, wrapping actions row, `min-w-0` to avoid horizontal overflow; touch-friendly pills (`min-h-[44px]` base, compact from `sm:`).
+- `AudienceSwitcher`: full-width split buttons on mobile, descriptive `aria-label` with full audience names.
+- Viewport: `.min-h-dvh-screen` in `globals.css` (`100vh` + `100dvh` fallback chain) on main shells.
+- **Acceptance (manual):** 320–375px width — no horizontal scroll; keyboard Tab through top bar; 200% zoom — focus rings not clipped.
+
 ## Follow-up items (optional)
 
 - **Skip link:** Investigate click interception by `<main>` (e.g. z-index or focus management) so “Skip to main content” is reliably activatable by click and keyboard.

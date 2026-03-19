@@ -3,44 +3,16 @@
 import React from "react";
 import Link from "next/link";
 import { useCopy } from "../../src/copy";
-import { AudienceSwitcher } from "../../src/components/AudienceSwitcher";
+import { SiteHeader, SiteTopBar } from "../../src/components/SiteChrome";
 
 export default function ResourcesPage() {
   const copy = useCopy();
 
   return (
-    <main className="min-h-screen bg-bg text-foreground">
-      <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
-        <header className="mb-4 flex flex-wrap items-start justify-between gap-2 border-b border-border pb-4">
-          <div>
-            <h1 className="text-2xl font-semibold">
-              <span className="bg-gradient-to-r from-success via-accent to-success bg-clip-text text-transparent">
-                FunversarialCV
-              </span>
-            </h1>
-            <p className="text-sm text-foreground/70">
-              {copy.tagline}
-            </p>
-          </div>
-        </header>
-
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-caption sm:text-xs font-mono uppercase tracking-[0.2em] text-accent/80">
-            {copy.piiModeBadge}
-          </p>
-          <div className="flex items-center gap-2">
-            <AudienceSwitcher />
-            <span className="shrink-0 rounded-full border border-success/60 bg-panel px-3 py-1 text-caption sm:text-xs uppercase tracking-[0.2em] text-success engine-online-pulse">
-              {copy.engineOnline}
-            </span>
-            <Link
-              href="/"
-              className="rounded-full border border-accent/70 px-3 py-1 text-caption sm:text-xs uppercase tracking-[0.2em] text-accent hover:border-success hover:text-success focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
-            >
-              {copy.backHome}
-            </Link>
-          </div>
-        </div>
+    <main className="min-h-dvh-screen bg-bg text-foreground">
+      <div className="mx-auto flex min-h-dvh-screen min-w-0 max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
+        <SiteHeader />
+        <SiteTopBar navLink={{ href: "/", label: copy.backHome }} />
 
         <section className="space-y-8 text-sm text-foreground/90">
           <section>

@@ -125,3 +125,9 @@ body * {
 .music-loading-bar:nth-child(4) { animation-delay: 0.15s; }
 .music-loading-bar:nth-child(5) { animation-delay: 0.05s; }
 
+/* Dynamic viewport height: avoids false "clipped" layouts when mobile browser chrome hides/shows. */
+.min-h-dvh-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+

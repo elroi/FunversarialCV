@@ -620,10 +620,11 @@ describe("Home page", () => {
         expect(header).toHaveClass("flex-wrap");
       });
 
-      it("Engine Online badge has shrink-0 so it does not overflow", () => {
+      it("Engine Online badge shares a flex row with Resources (min-w-0, sm:shrink-0) to avoid overflow", () => {
         renderWithAudience(<Home />);
         const badge = screen.getByText("Engine Online");
-        expect(badge).toHaveClass("shrink-0");
+        expect(badge).toHaveClass("min-w-0");
+        expect(badge).toHaveClass("sm:shrink-0");
       });
 
       it("PII Mode and Engine Online text are present", () => {

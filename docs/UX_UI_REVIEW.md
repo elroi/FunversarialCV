@@ -48,7 +48,8 @@ No feedback was provided at the planned pauses during this run. Future runs can 
 ## Mobile-first chrome (2025-03-19)
 
 - Shared [`SiteChrome`](../frontend/src/components/SiteChrome.tsx): `SiteHeader` + `SiteTopBar` on home and resources (DRY).
-- Top bar: column stack on narrow viewports, wrapping actions row, `min-w-0` to avoid horizontal overflow; touch-friendly pills (`min-h-[44px]` base, compact from `sm:`).
+- Top bar: column stack on narrow viewports; **READY + RESOURCES** sit in a dedicated full-width row with `flex-1` each so they align as a pair (not orphaned left). From `sm:` they shrink-wrap with the audience switcher. `min-w-0` avoids horizontal overflow; touch-friendly pills (`min-h-[44px]` base, compact from `sm:`).
+- **HR:** `SiteHeader` and `ExperimentFlowPanel` use `font-sans` in the panel; Security keeps `font-mono` in the experiment panel.
 - `AudienceSwitcher`: full-width split buttons on mobile, descriptive `aria-label` with full audience names.
 - Viewport: `.min-h-dvh-screen` in `globals.css` (`100vh` + `100dvh` fallback chain) on main shells.
 - **Acceptance (manual):** 320–375px width — no horizontal scroll; keyboard Tab through top bar; 200% zoom — focus rings not clipped.

@@ -2,6 +2,7 @@
 
 import React from "react";
 import type { Copy } from "../copy/types";
+import { useAudience } from "../contexts/AudienceContext";
 
 /**
  * Above-the-fold onboarding block: mission label, positioning line, numbered flow,
@@ -9,16 +10,21 @@ import type { Copy } from "../copy/types";
  * with clear hierarchy and spacing.
  */
 export function ExperimentFlowPanel({ copy }: { copy: Copy }) {
+  const { audience } = useAudience();
+  const isHr = audience === "hr";
+  // HR: sans in the panel to match tagline and improve mobile readability; Security: terminal mono.
+  const panelFont = isHr ? "font-sans" : "font-mono";
+
   return (
     <div
-      className="mb-6 min-w-0 border border-border/80 bg-panel/60 font-mono shadow-[0_0_0_1px var(--color-accent)/0.06]"
+      className={`mb-6 min-w-0 border border-border/80 bg-panel/60 shadow-[0_0_0_1px var(--color-accent)/0.06] ${panelFont}`}
       role="region"
       aria-labelledby="experiment-flow-label"
     >
       <div className="px-3 py-3 sm:px-5 sm:py-4">
         <h2
           id="experiment-flow-label"
-          className="mb-3 text-caption font-mono uppercase tracking-[0.2em] text-accent"
+          className="mb-3 text-caption uppercase tracking-[0.2em] text-accent"
         >
           {copy.experimentFlowLabel}
         </h2>
@@ -26,7 +32,7 @@ export function ExperimentFlowPanel({ copy }: { copy: Copy }) {
           {copy.positioningLine}
         </p>
         {/* list-outside + pl: avoids awkward wraps under the marker on narrow viewports */}
-        <ol className="list-outside list-decimal space-y-2 pl-5 font-mono text-[0.9375rem] leading-relaxed text-foreground/85 sm:pl-6 sm:text-sm">
+        <ol className="list-outside list-decimal space-y-2 pl-5 text-[0.9375rem] leading-relaxed text-foreground/85 sm:pl-6 sm:text-sm">
           {copy.flowSteps.map((step, i) => (
             <li key={i} className="pl-1">
               {step.split("\n").map((line, j) => (

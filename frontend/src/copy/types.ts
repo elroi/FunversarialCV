@@ -11,6 +11,10 @@ export interface Copy {
   backHome: string;
 
   // —— Home: intro ——
+  experimentFlowLabel: string;
+  positioningLine: string;
+  flowSteps: readonly [string, string, string, string, string, string];
+  philosophyLine: string;
   intro: string;
   piiNotice: string;
 
@@ -177,6 +181,15 @@ export interface Copy {
   resourcesGetStartedBody1: string;
   resourcesGetStartedBody2: string;
   resourcesGetStartedBody3: string;
+
+  // —— Validation Lab ——
+  validationLabTitle: string;
+  validationLabManualMirrorProtocol: string;
+  validationLabMatchBadgeHint: string;
+  validationCopySuccessLogMessage: string; // template: use {id} for prompt id
+  validationCopyButton: string;
+  validationCopyButtonSuccess: string;
+  validationMatchLabel: string;
 
   // —— Audience switcher ——
   audienceSecurity: string;

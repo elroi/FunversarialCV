@@ -14,6 +14,8 @@ import { IncidentMailtoConfigCard } from "../src/components/IncidentMailtoConfig
 import { CanaryWingConfigCard } from "../src/components/CanaryWingConfigCard";
 import { InvisibleHandConfigCard } from "../src/components/InvisibleHandConfigCard";
 import { MetadataShadowConfigCard } from "../src/components/MetadataShadowConfigCard";
+import { ValidationLab } from "../src/components/ValidationLab";
+import { ExperimentFlowPanel } from "../src/components/ExperimentFlowPanel";
 import { dehydrateInBrowser, rehydrateInBrowser } from "../src/lib/clientVault";
 import { createDocumentWithTextInBrowser } from "../src/lib/clientDocumentCreate";
 import { replacePiiWithTokensInCopy } from "../src/lib/clientTokenReplaceInCopy";
@@ -925,84 +927,88 @@ export default function Home() {
             </Link>
           </div>
         </div>
-        <div className="mb-6">
+        <ExperimentFlowPanel copy={copy} />
+        <div className="mt-2 mb-6">
           {renderIntro(copy.intro)}
         </div>
         <PiiNoticeBlock copy={copy} audience={audience} />
 
         <section className="flex flex-1 flex-col gap-8 md:flex-row">
           <div className="flex-1">
-            <div className="mb-4 text-caption uppercase tracking-[0.2em] text-accent">
-              {copy.inputChannel}
-            </div>
-            <DropZone onFileSelect={onFileSelect} maxSizeBytes={MAX_FILE_SIZE_BYTES} openFilePickerRef={openFilePickerRef} />
-            <p className="mt-1 text-caption text-foreground/50">
-              {copy.maxFileHint}
-            </p>
-            <CollapsibleCard
-              className="mt-3"
-              title={copy.sampleCvTitle}
-              titleId="sample-cv-preset-title"
-              contentId="sample-cv-preset-content"
-              ariaLabel={copy.sampleCvAriaLabel}
-              defaultExpanded={false}
-            >
-              <div className="space-y-3 text-caption text-foreground/60">
-                <p className="text-caption text-foreground/60">
-                  {copy.sampleCvDescription.split(/\b(Clean|Dirty)\b/).map((segment, i) =>
-                    segment === "Clean" ? (
-                      <span key={i} className="text-accent font-mono">Clean</span>
-                    ) : segment === "Dirty" ? (
-                      <span key={i} className="text-success font-mono">Dirty</span>
-                    ) : (
-                      <span key={i}>{segment}</span>
-                    )
-                  )}
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-accent/30 bg-panel text-foreground hover:border-accent/60 hover:shadow-accent/40 flex flex-col items-start"
-                    disabled={isDemoLoading}
-                    onClick={() => loadPreset("clean", "docx")}
-                  >
-                    <span className="font-mono text-accent">{copy.cleanLabel}</span>
-                    <span className="text-xs text-foreground/60">
-                      {copy.cleanSublabel}
-                    </span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-amber-300/70 border-dashed bg-panel text-foreground hover:border-amber-400/80 flex flex-col items-start"
-                    disabled={isDemoLoading}
-                    onClick={() => loadPreset("dirty", "docx")}
-                  >
-                    <span className="font-mono text-success">{copy.dirtyLabel}</span>
-                    <span className="text-xs text-foreground/60">
-                      {copy.dirtySublabel}
-                    </span>
-                  </Button>
-                </div>
-                {isDemoLoading && (
-                  <p
-                    className="text-caption text-accent/80 font-mono"
-                    aria-live="polite"
-                  >
-                    {copy.demoLoadingMessage}
-                  </p>
-                )}
-                <p className="text-caption text-foreground/60">
-                  {copy.lastPresetLabel}{" "}
-                  <span className="font-mono text-success">
-                    {demoVariant === "clean" ? "clean" : "dirty"} ·{" "}
-                    {demoFormat.toUpperCase()}
-                  </span>
-                </p>
+            <div className="rounded-lg border border-dashed border-border/50 p-4">
+              <div className="mb-4 text-caption uppercase tracking-[0.2em] text-accent">
+                {copy.inputChannel}
               </div>
-            </CollapsibleCard>
-            <div className="mt-8 mb-4 text-caption uppercase tracking-[0.2em] text-accent">
+              <DropZone onFileSelect={onFileSelect} maxSizeBytes={MAX_FILE_SIZE_BYTES} openFilePickerRef={openFilePickerRef} />
+              <p className="mt-1 text-caption text-foreground/50">
+                {copy.maxFileHint}
+              </p>
+              <CollapsibleCard
+                className="mt-3"
+                title={copy.sampleCvTitle}
+                titleId="sample-cv-preset-title"
+                contentId="sample-cv-preset-content"
+                ariaLabel={copy.sampleCvAriaLabel}
+                defaultExpanded={false}
+              >
+                <div className="space-y-3 text-caption text-foreground/60">
+                  <p className="text-caption text-foreground/60">
+                    {copy.sampleCvDescription.split(/\b(Clean|Dirty)\b/).map((segment, i) =>
+                      segment === "Clean" ? (
+                        <span key={i} className="text-accent font-mono">Clean</span>
+                      ) : segment === "Dirty" ? (
+                        <span key={i} className="text-success font-mono">Dirty</span>
+                      ) : (
+                        <span key={i}>{segment}</span>
+                      )
+                    )}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-accent/30 bg-panel text-foreground hover:border-accent/60 hover:shadow-accent/40 flex flex-col items-start"
+                      disabled={isDemoLoading}
+                      onClick={() => loadPreset("clean", "docx")}
+                    >
+                      <span className="font-mono text-accent">{copy.cleanLabel}</span>
+                      <span className="text-xs text-foreground/60">
+                        {copy.cleanSublabel}
+                      </span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-amber-300/70 border-dashed bg-panel text-foreground hover:border-amber-400/80 flex flex-col items-start"
+                      disabled={isDemoLoading}
+                      onClick={() => loadPreset("dirty", "docx")}
+                    >
+                      <span className="font-mono text-success">{copy.dirtyLabel}</span>
+                      <span className="text-xs text-foreground/60">
+                        {copy.dirtySublabel}
+                      </span>
+                    </Button>
+                  </div>
+                  {isDemoLoading && (
+                    <p
+                      className="text-caption text-accent/80 font-mono"
+                      aria-live="polite"
+                    >
+                      {copy.demoLoadingMessage}
+                    </p>
+                  )}
+                  <p className="text-caption text-foreground/60">
+                    {copy.lastPresetLabel}{" "}
+                    <span className="font-mono text-success">
+                      {demoVariant === "clean" ? "clean" : "dirty"} ·{" "}
+                      {demoFormat.toUpperCase()}
+                    </span>
+                  </p>
+                </div>
+              </CollapsibleCard>
+            </div>
+            <div className="mt-6 rounded-lg border border-dashed border-border/50 p-4">
+              <div className="mb-4 text-caption uppercase tracking-[0.2em] text-accent">
               {copy.engineConfigTitle}
             </div>
             {selectedFileName && (
@@ -1198,9 +1204,24 @@ export default function Home() {
                 manualCheckAndValidation={eggMetadataById["metadata-shadow"]?.manualCheckAndValidation}
               />
             </div>
+            </div>
+            <ValidationLab
+              enabledEggIds={enabledEggIds}
+              onPromptCopy={(id) =>
+                setLog((prev) => [
+                  ...prev,
+                  {
+                    id: `validation-copy-${id}`,
+                    stage: "accept",
+                    level: "success",
+                    message: copy.validationCopySuccessLogMessage.replace("{id}", id),
+                  },
+                ])
+              }
+            />
           </div>
 
-          <aside className="mt-8 w-full text-sm text-foreground/80 md:mt-0 md:w-80 md:shrink-0 md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-3rem)] md:overflow-y-auto">
+          <aside className="mt-8 w-full text-sm text-foreground/80 md:mt-0 md:w-80 md:shrink-0 md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-3rem)] md:overflow-y-auto rounded-lg border border-dashed border-border/50 p-4">
             <div className="mb-4 text-caption uppercase tracking-[0.2em] text-accent">
               {copy.pipelineStatusTitle}
             </div>

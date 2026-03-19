@@ -7,7 +7,7 @@ describe("Button", () => {
     render(<Button variant="primary">Harden</Button>);
     const btn = screen.getByRole("button", { name: /harden/i });
     expect(btn).toBeInTheDocument();
-    expect(btn).toHaveClass("border-neon-green");
+    expect(btn).toHaveClass("border-success");
   });
 
   it("applies disabled state and aria-disabled when disabled", () => {

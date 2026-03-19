@@ -8,8 +8,21 @@ export const hrCopy: Copy = {
   resourcesLink: "Resources",
   backHome: "Back home",
 
+  experimentFlowLabel: "RUN THE CV EXPERIMENT",
+  positioningLine:
+    "Turn your CV into a controlled experiment on how AI systems read your document.",
+  flowSteps: [
+    "Start with our sample CV (recommended)\nor upload your own CV",
+    "Add test layers to your document",
+    "Download your modified CV",
+    "Test both versions with a real AI tool\n(ChatGPT / Claude)",
+    "See how the outputs differ",
+    "Decide whether the test signals had an effect",
+  ] as const,
+  philosophyLine:
+    "This isn't about tricking the system — it's about understanding how your inputs shape the results.",
   intro:
-    "**FunversarialCV** is an educational tool that helps you see how your CV is handled by AI-powered hiring systems.\n\n" +
+    "FunversarialCV is an educational environment for exploring how AI-powered hiring systems interpret candidate data in real-world conditions.\n\n" +
     "It adds hidden, test signals to your document (aligned with industry security standards) while keeping your data private.\n" +
     "Everything is processed **in memory only**, with your contact details replaced by **temporary placeholders** before anything is sent – so nothing is stored after your new CV is generated.\n\n" +
     "When **Preserve styles** is on, we keep your layout where possible.\n" +
@@ -214,6 +227,16 @@ export const hrCopy: Copy = {
     "If you’re a job seeker, keep your main CV for normal applications and only use this in pipelines where you’re allowed to test. Start with one option and add more if you like.",
   resourcesGetStartedBody3:
     "If you’re in hiring or HR, run this in a test environment. Compare how normal and “signaled” CVs move through your pipeline and use that to improve prompts and guardrails.",
+
+  validationLabTitle: "Validation Lab",
+  validationLabManualMirrorProtocol:
+    "How to test your CV with added signals in an external AI:\n\n(1) Add signals and download your CV on this page.\n(2) Open an external AI (e.g. ChatGPT or Claude) in another tab and paste the downloaded CV into the chat.\n(3) Pick a prompt below, click Copy, and paste it into the same conversation.\n(4) Compare the AI’s reply to the goal described under that prompt (e.g. did it follow hidden instructions or use hidden metadata?). If the reply matches the goal, the test succeeded.",
+  validationLabMatchBadgeHint:
+    "Enabled means the option this test targets is currently turned on in the options above.",
+  validationCopySuccessLogMessage: "> [SYSTEM] {id} Prompt copied to clipboard",
+  validationCopyButton: "Copy",
+  validationCopyButtonSuccess: "Copied",
+  validationMatchLabel: "Enabled",
 
   audienceSecurity: "For security pros",
   audienceHr: "For HR",

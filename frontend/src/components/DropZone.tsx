@@ -1,5 +1,8 @@
+"use client";
+
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
+import { useCopy } from "../copy";
 
 export interface DropZoneProps {
   onFileSelect: (file: File) => void;
@@ -22,6 +25,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
   maxSizeBytes,
   openFilePickerRef,
 }) => {
+  const copy = useCopy();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,19 +47,19 @@ export const DropZone: React.FC<DropZoneProps> = ({
       const file = files[0];
 
       if (!isAcceptedFile(file)) {
-        setError("Only Word documents (.docx) are allowed.");
+        setError(copy.errorOnlyDocx);
         return;
       }
 
       if (maxSizeBytes && file.size > maxSizeBytes) {
-        setError("File is too large.");
+        setError(copy.errorFileTooLarge);
         return;
       }
 
       setError(null);
       onFileSelect(file);
     },
-    [maxSizeBytes, onFileSelect]
+    [maxSizeBytes, onFileSelect, copy.errorOnlyDocx, copy.errorFileTooLarge]
   );
 
   const onDrop = (event: React.DragEvent<HTMLLabelElement>) => {
@@ -94,35 +98,31 @@ export const DropZone: React.FC<DropZoneProps> = ({
         onDragLeave={onDragLeave}
         className={clsx(
           "relative flex flex-col items-center justify-center rounded-xl border border-dashed px-8 py-10 cursor-pointer transition-all noir-shell",
-          "bg-noir-panel/70 border-noir-border text-sm",
-          "hover:border-neon-green/80 hover:shadow-neon-green",
-          isDragOver && "border-neon-green shadow-neon-green bg-noir-panel/90"
+          "bg-panel/70 border-border text-sm",
+          "hover:border-success/80 hover:shadow-success",
+          isDragOver && "border-success shadow-success bg-panel/90"
         )}
       >
         <div className="pointer-events-none scanlines absolute inset-0 rounded-xl" />
         <div className="relative z-10 flex flex-col items-center space-y-2">
-          <p className="text-caption uppercase tracking-[0.2em] text-neon-cyan">
-            Funversarial Upload Channel
+          <p className="text-caption uppercase tracking-[0.2em] text-accent">
+            {copy.dropzoneTitle}
           </p>
-          <p className="text-lg font-semibold text-neon-green">
-            Drop your CV here
+          <p className="text-lg font-semibold text-success">
+            {copy.dropzonePrompt}
           </p>
-          <p className="text-sm text-noir-foreground/70">
+          <p className="text-sm text-foreground/70">
             .docx (Word) • Drag &amp; drop or{" "}
-            <span className="text-neon-cyan">browse</span>
+            <span className="text-accent">{copy.dropzoneHint}</span>
           </p>
-          <p className="text-caption text-noir-foreground/50">
-            PII handling is{" "}
-            <span className="font-semibold text-neon-cyan">
-              Stateless &amp; Volatile
-            </span>{" "}
-            — processed in-memory only, never stored.
+          <p className="text-caption text-foreground/50">
+            {copy.dropzonePiiNotice}
           </p>
         </div>
       </label>
 
       <span id="cv-upload-hint" className="sr-only">
-        Upload your CV as a Word document (.docx). PII handling is Stateless and Volatile: processed in-memory only and never stored.
+        {copy.dropzoneSrHint}
       </span>
         <input
           id="cv-upload-input"
@@ -138,7 +138,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
       {error && (
         <p
           id="dropzone-error"
-          className="text-sm font-medium text-neon-red"
+          className="text-sm font-medium text-error"
         >
           {error}
         </p>

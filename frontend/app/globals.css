@@ -7,20 +7,50 @@
   --color-panel: #050b18;
   --color-border: #1f2937;
   --color-foreground: #e5e7eb;
+  --color-accent: #00d4ff;
+  --color-accent-foreground: #050814;
+  --color-success: #00ff41;
+  --color-error: #ff3131;
   --color-neon-green: #00ff41;
   --color-neon-red: #ff3131;
   --color-neon-cyan: #00d4ff;
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* HR theme: warm white, strong contrast (section headings and borders readable) */
+[data-audience="hr"] {
+  --color-bg: #fafaf9;
+  --color-panel: #f5f5f4;
+  --color-border: #a8a29e;
+  --color-foreground: #1c1917;
+  --color-accent: #0369a1;
+  --color-accent-foreground: #fafaf9;
+  --color-success: #047857;
+  --color-error: #b91c1c;
 }
 
 body {
-  @apply bg-noir-bg text-noir-foreground antialiased;
+  background-color: var(--color-bg);
+  color: var(--color-foreground);
+  transition: background-color 1.2s ease, color 1.2s ease;
+  @apply antialiased;
   padding-left: env(safe-area-inset-left, 0);
   padding-right: env(safe-area-inset-right, 0);
   padding-top: env(safe-area-inset-top, 0);
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
-.noir-shell {
+body * {
+  transition: background-color 1.2s ease, color 1.2s ease, border-color 1.2s ease;
+}
+
+[data-audience="hr"] body {
+  font-family: var(--font-sans);
+}
+
+/* Security theme only: grid and scanlines */
+:root .noir-shell,
+[data-audience="security"] .noir-shell {
   background-image: radial-gradient(
     circle at 1px 1px,
     rgba(148, 163, 184, 0.12) 1px,
@@ -43,6 +73,18 @@ body {
     transparent 3px
   );
   mix-blend-mode: soft-light;
+}
+
+[data-audience="hr"] .scanlines::before {
+  display: none;
+}
+
+[data-audience="hr"] .noir-shell {
+  background-image: none;
+}
+
+[data-audience="hr"] .engine-online-pulse {
+  animation: none;
 }
 
 /* Terminal-style blinking cursor (for pipeline log when processing). */

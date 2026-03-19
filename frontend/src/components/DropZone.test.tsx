@@ -1,5 +1,6 @@
 import React from "react";
-import { render, fireEvent } from "@testing-library/react";
+import { fireEvent } from "@testing-library/react";
+import { renderWithAudience } from "../test-utils";
 import { DropZone } from "./DropZone";
 
 function createFile(name: string, type: string) {
@@ -9,7 +10,7 @@ function createFile(name: string, type: string) {
 describe("DropZone", () => {
   it("rejects a .pdf file and shows DOCX-only error", () => {
     const handleSelect = jest.fn();
-    const { getByTestId, getByText } = render(<DropZone onFileSelect={handleSelect} />);
+    const { getByTestId, getByText } = renderWithAudience(<DropZone onFileSelect={handleSelect} />);
 
     const input = getByTestId("dropzone-input") as HTMLInputElement;
     const file = createFile("resume.pdf", "application/pdf");
@@ -22,7 +23,7 @@ describe("DropZone", () => {
 
   it("accepts a .docx file and calls onFileSelect", () => {
     const handleSelect = jest.fn();
-    const { getByTestId } = render(<DropZone onFileSelect={handleSelect} />);
+    const { getByTestId } = renderWithAudience(<DropZone onFileSelect={handleSelect} />);
 
     const input = getByTestId("dropzone-input") as HTMLInputElement;
     const file = createFile(
@@ -37,7 +38,7 @@ describe("DropZone", () => {
 
   it("rejects unsupported file types and shows an error", () => {
     const handleSelect = jest.fn();
-    const { getByTestId, getByText } = render(
+    const { getByTestId, getByText } = renderWithAudience(
       <DropZone onFileSelect={handleSelect} />
     );
 
@@ -52,7 +53,7 @@ describe("DropZone", () => {
 
   it("rejects files larger than maxSizeBytes and shows a size error", () => {
     const handleSelect = jest.fn();
-    const { getByTestId, getByText } = render(
+    const { getByTestId, getByText } = renderWithAudience(
       <DropZone onFileSelect={handleSelect} maxSizeBytes={1} />
     );
 

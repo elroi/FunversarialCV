@@ -1,5 +1,6 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithAudience } from "../test-utils";
 import { DualityMonitor } from "./DualityMonitor";
 import type { DualityCheckResult } from "../engine/dualityCheck";
 
@@ -10,7 +11,7 @@ const baseDualityResult: DualityCheckResult = {
 
 describe("DualityMonitor", () => {
   it("renders all processor stages", () => {
-    render(
+    renderWithAudience(
       <DualityMonitor
         processingState="idle"
         log={[]}
@@ -26,7 +27,7 @@ describe("DualityMonitor", () => {
   });
 
   it("shows a friendly message when no suspicious patterns are found", () => {
-    render(
+    renderWithAudience(
       <DualityMonitor
         processingState="completed"
         log={[]}
@@ -46,7 +47,7 @@ describe("DualityMonitor", () => {
       details: ["ignore_previous_instructions: 2 match(es)"],
     };
 
-    render(
+    renderWithAudience(
       <DualityMonitor
         processingState="completed"
         log={[]}
@@ -69,7 +70,7 @@ describe("DualityMonitor", () => {
       details: ["existing_canary_url: 1 match(es)"],
     };
 
-    render(
+    renderWithAudience(
       <DualityMonitor
         processingState="completed"
         log={[]}
@@ -86,7 +87,7 @@ describe("DualityMonitor", () => {
   });
 
   it("renders terminal log entries", () => {
-    render(
+    renderWithAudience(
       <DualityMonitor
         processingState="processing"
         log={[
@@ -114,7 +115,7 @@ describe("DualityMonitor", () => {
   });
 
   it("describes what Duality means in the pre-hardening scan header and tooltip", () => {
-    render(
+    renderWithAudience(
       <DualityMonitor
         processingState="idle"
         log={[]}
@@ -138,7 +139,7 @@ describe("DualityMonitor", () => {
       clipboard: { writeText },
     });
 
-    render(
+    renderWithAudience(
       <DualityMonitor
         processingState="completed"
         log={[

@@ -7,11 +7,23 @@ export const securityCopy: Copy = {
   resourcesLink: "Resources",
   backHome: "Back home",
 
+  experimentFlowLabel: "RUN THE CV EXPERIMENT",
+  positioningLine:
+    "Turn your CV into a controlled experiment on how LLMs interpret documents.",
+  flowSteps: [
+    "Start with our sample CV (recommended)\nor upload your own CV",
+    "Inject adversarial layers",
+    "Download your \"armed\" CV",
+    "Test both versions against a real LLM\n(ChatGPT / Claude)",
+    "Observe differences in behavior",
+    "Confirm or reject the observed influence",
+  ] as const,
+  philosophyLine:
+    "This isn't about breaking the model — it's about understanding how inputs shape outcomes.",
   intro:
-    "**FunversarialCV**: A fun adversarial simulation console for arming resumes against **LLM-driven** hiring flows.\n\n" +
-    "This educational tool demonstrates how hiring pipelines become **attack vectors** by layering **OWASP-aligned** payloads into standard documents.\n" +
-    "Designed for **security awareness** and **LLM research**, it operates on a **zero-retention** model: **PII** is **dehydrated** in-memory and **rehydrated** only for the final output stream.\n\n" +
-    "Arm your CV, download the payload, and perform a **forensic comparison** between the clean and armed versions to reveal the hidden adversarial layers.",
+    "FunversarialCV is an adversarial simulation environment for exploring how **LLM-driven** hiring systems interpret candidate data in real-world conditions.\n\n" +
+    "This educational tool demonstrates how hiring pipelines become **attack vectors** by layering **OWASP-aligned** payloads into standard documents.\n\n" +
+    "Designed for **security awareness** and **LLM research**, it operates on a **zero-retention** model: **PII** is **dehydrated** in-memory and **rehydrated** only for the final output stream.",
   piiNotice:
     "Your CV is processed in your browser first. Before anything leaves your device, we replace email, phone, and other identifiers with short-lived tokens. Our server only sees tokens, never your raw contact details.",
 
@@ -212,6 +224,16 @@ export const securityCopy: Copy = {
     "If you are a candidate, keep your conventional CV as the primary version and only use Funversarial CVs in AI-heavy pipelines where you have explicit permission to experiment. Start with a single egg enabled and incrementally layer on more complexity.",
   resourcesGetStartedBody3:
     "If you are part of a hiring or security team, wire Funversarial CVs into a sandbox or test tenant of your hiring stack. Compare how clean and Funversarial CVs move through your pipeline, and use the differences to tighten prompts, add guardrails, and reinforce human-in-the-loop review.",
+
+  validationLabTitle: "Validation Lab",
+  validationLabManualMirrorProtocol:
+    "Manual Mirror Protocol — How to test your Armed CV in an external LLM:\n\n(1) Harden and download your CV on this page.\n(2) Open an external LLM (e.g. ChatGPT, Claude) in another tab and paste the downloaded CV into the chat.\n(3) Pick a prompt below, click [COPY], and paste it into the same conversation.\n(4) Compare the model’s reply to the diagnostic goal under that prompt (e.g. did it follow hidden instructions, leak metadata, or over-trust the document?). If the behaviour matches the goal, your forensic proof-of-concept succeeds.",
+  validationLabMatchBadgeHint:
+    "ENABLED means the option this test targets is currently turned on in Engine Configuration above.",
+  validationCopySuccessLogMessage: "> [SYSTEM] {id} Prompt copied to clipboard",
+  validationCopyButton: "COPY",
+  validationCopyButtonSuccess: "SUCCESS",
+  validationMatchLabel: "ENABLED",
 
   audienceSecurity: "For security pros",
   audienceHr: "For HR",

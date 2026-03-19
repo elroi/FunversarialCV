@@ -14,7 +14,7 @@ export const Card: React.FC<CardProps> = ({
 }) => (
   <div
     className={clsx(
-      "rounded-xl border border-noir-border bg-noir-panel/70 p-4 noir-shell",
+      "rounded-xl border border-border bg-panel/70 p-4 noir-shell",
       scanlines && "relative",
       className
     )}

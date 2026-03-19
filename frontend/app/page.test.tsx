@@ -64,9 +64,40 @@ describe("Home page", () => {
       renderWithAudience(<Home />);
       const main = screen.getByRole("main");
       const introText = main.textContent ?? "";
-      expect(introText).toMatch(/FunversarialCV.*adversarial simulation console/i);
+      expect(introText).toMatch(/FunversarialCV.*adversarial simulation environment/i);
       expect(introText).toMatch(/OWASP-aligned.*payloads/i);
       expect(introText).toMatch(/zero-retention.*dehydrated.*rehydrated/i);
+    });
+
+    it("renders positioning line (controlled experiment / LLMs interpret documents)", () => {
+      renderWithAudience(<Home />);
+      expect(screen.getByText(/controlled experiment/i)).toBeInTheDocument();
+      expect(screen.getByText(/LLMs interpret documents/i)).toBeInTheDocument();
+    });
+
+    it("renders philosophy line (breaking the model / inputs shape outcomes)", () => {
+      renderWithAudience(<Home />);
+      expect(screen.getByText(/breaking the model/i)).toBeInTheDocument();
+      expect(screen.getByText(/inputs shape outcomes/i)).toBeInTheDocument();
+    });
+
+    it("renders experiment flow panel with section label RUN THE CV EXPERIMENT", () => {
+      renderWithAudience(<Home />);
+      expect(screen.getByRole("region", { name: /run the cv experiment/i })).toBeInTheDocument();
+      expect(screen.getByText(/RUN THE CV EXPERIMENT/i)).toBeInTheDocument();
+    });
+
+    it("renders flow as numbered list with sample CV, inject, download, test, observe, confirm", () => {
+      renderWithAudience(<Home />);
+      expect(screen.getByText(/Start with our sample CV/i)).toBeInTheDocument();
+      expect(screen.getByText(/Inject adversarial layers/i)).toBeInTheDocument();
+      expect(screen.getByText(/Download your .armed. CV/i)).toBeInTheDocument();
+      expect(screen.getByText(/Test both versions against a real LLM/i)).toBeInTheDocument();
+      expect(screen.getByText(/Observe differences in behavior/i)).toBeInTheDocument();
+      expect(screen.getByText(/Confirm or reject the observed influence/i)).toBeInTheDocument();
+      const list = document.querySelector("ol");
+      expect(list).toBeInTheDocument();
+      expect(list?.querySelectorAll("li")).toHaveLength(6);
     });
 
     it("includes a Resources link in the header that points to \\/resources", () => {
@@ -79,7 +110,16 @@ describe("Home page", () => {
     it("renders Engine Configuration section heading and egg config content", () => {
       renderWithAudience(<Home />);
       expect(screen.getByText("Engine Configuration")).toBeInTheDocument();
-      expect(screen.getByText(/The Invisible Hand/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/The Invisible Hand/i).length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("renders Validation Lab section with heading and prompt entries", () => {
+      renderWithAudience(<Home />);
+      expect(
+        screen.getByRole("heading", { name: /validation lab/i })
+      ).toBeInTheDocument();
+      expect(screen.getByText("BASE-00")).toBeInTheDocument();
+      expect(screen.getByText("LLM01")).toBeInTheDocument();
     });
   });
 

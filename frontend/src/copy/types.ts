@@ -14,6 +14,8 @@ export interface Copy {
   experimentFlowLabel: string;
   positioningLine: string;
   flowSteps: readonly [string, string, string, string, string, string];
+  /** Optional helper line below flow steps (e.g. HR-only). */
+  experimentFlowClarifier?: string;
   philosophyLine: string;
   intro: string;
   piiNotice: string;

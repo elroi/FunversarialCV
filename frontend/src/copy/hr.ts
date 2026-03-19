@@ -12,18 +12,20 @@ export const hrCopy: Copy = {
   positioningLine:
     "Turn your CV into a controlled experiment on how AI systems read your document.",
   flowSteps: [
-    "Start with our sample CV (recommended)\nor upload your own CV",
-    "Add test layers to your document",
+    "Start with our sample CV (recommended) or upload your own CV",
+    "Add subtle AI-visible signals to your CV",
     "Download your modified CV",
-    "Test both versions with a real AI tool\n(ChatGPT / Claude)",
-    "See how the outputs differ",
-    "Decide whether the test signals had an effect",
+    "Test both versions in a real AI tool\n(ChatGPT / Claude)",
+    "Compare how the outputs differ",
+    "Confirm whether the signals changed the AI's response",
   ] as const,
+  experimentFlowClarifier:
+    "Look for changes in tone, ranking, or interpretation of your experience.",
   philosophyLine:
     "This isn't about tricking the system — it's about understanding how your inputs shape the results.",
   intro:
     "FunversarialCV is an educational environment for exploring how AI-powered hiring systems interpret candidate data in real-world conditions.\n\n" +
-    "It adds hidden, test signals to your document (aligned with industry security standards) while keeping your data private.\n" +
+    "It adds subtle, AI-visible signals to your document (aligned with industry security standards) while keeping your data private.\n" +
     "Everything is processed **in memory only**, with your contact details replaced by **temporary placeholders** before anything is sent – so nothing is stored after your new CV is generated.\n\n" +
     "When **Preserve styles** is on, we keep your layout where possible.\n" +
     "When we can't, we rebuild and explain it in the interface.",

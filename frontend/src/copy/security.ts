@@ -2,11 +2,11 @@ import type { Copy } from "./types";
 
 export const securityCopy: Copy = {
   tagline: "Adversarial CV hardening console for hungry LLMs.",
-  piiModeBadge: "PII Mode: Stateless & Volatile",
-  engineOnline: "Engine Online",
+  piiModeBadge: "PII · client vault (tokenized outbound)",
   resourcesLink: "Resources",
   backHome: "Back home",
 
+  experimentFlowCollapsibleTitle: "How to run a fair test",
   experimentFlowLabel: "RUN THE CV EXPERIMENT",
   positioningLine:
     "Turn your CV into a controlled experiment on how LLMs interpret documents.",
@@ -21,11 +21,10 @@ export const securityCopy: Copy = {
   philosophyLine:
     "This isn't about breaking the model — it's about understanding how inputs shape outcomes.",
   intro:
-    "FunversarialCV is an adversarial simulation environment for exploring how **LLM-driven** hiring systems interpret candidate data in real-world conditions.\n\n" +
-    "This educational tool demonstrates how hiring pipelines become **attack vectors** by layering **OWASP-aligned** payloads into standard documents.\n\n" +
-    "Designed for **security awareness** and **LLM research**, it operates on a **zero-retention** model: **PII** is **dehydrated** in-memory and **rehydrated** only for the final output stream.",
+    "Layers **OWASP-aligned** patterns into documents so you can observe LLM screening behavior—**authorized testing and research only**.",
   piiNotice:
-    "Your CV is processed in your browser first. Before anything leaves your device, we replace email, phone, and other identifiers with short-lived tokens. Our server only sees tokens, never your raw contact details.",
+    "Your CV is processed in your browser first. Before anything leaves your device, we replace email, phone, and other identifiers with short-lived tokens. Our server only sees tokens, never your raw contact details. Operation is in-memory with zero retention; PII is dehydrated for transit and rehydrated only in your browser for the final file.",
+  privacyDetailsSummary: "PII handling (details)",
 
   inputChannel: "Input Channel",
   maxFileHint: "Max 4 MB. DOCX (Word) only.",
@@ -99,7 +98,8 @@ export const securityCopy: Copy = {
     "Pre-hardening scan (Duality – original vs. Funversarial layer)",
   preHardeningScanTooltip:
     "Duality compares the CV's original adversarial surface with the Funversarial layer we add: first scanning for existing prompt-injection or canary-style patterns, then tracking the additional patterns introduced by eggs.",
-  piiStatelessVolatile: "PII handling is Stateless & Volatile — in-memory only, never stored.",
+  piiStatelessVolatile:
+    "Same vault model as upload: in-memory tokens; no CV persistence server-side.",
   awaitingFirstScan: "Awaiting first scan. Drop a CV to begin analysis.",
   noSuspiciousPatterns:
     "No suspicious prompt-injection patterns detected in the original CV.",
@@ -119,9 +119,9 @@ export const securityCopy: Copy = {
   dropzonePrompt: "Drop your CV here",
   dropzoneHint: "browse",
   dropzonePiiNotice:
-    "PII handling is Stateless & Volatile — processed in-memory only, never stored.",
+    "PII dehydrated client-side; outbound request carries tokens only. Nothing persisted after response.",
   dropzoneSrHint:
-    "Upload your CV as a Word document (.docx). PII handling is Stateless and Volatile: processed in-memory only and never stored.",
+    "Upload a Word (.docx). Client dehydrates PII before send; server sees tokens only; no document storage after download.",
   errorOnlyDocx: "Only Word documents (.docx) are allowed.",
   errorFileTooLarge: "File is too large.",
 

@@ -6,17 +6,22 @@ export interface Copy {
   // —— Home: header & badges ——
   tagline: string;
   piiModeBadge: string;
-  engineOnline: string;
   resourcesLink: string;
   backHome: string;
 
   // —— Home: intro ——
+  /** Collapsed title for the experiment steps panel (plain language navigation). */
+  experimentFlowCollapsibleTitle: string;
   experimentFlowLabel: string;
   positioningLine: string;
   flowSteps: readonly [string, string, string, string, string, string];
+  /** Optional helper line below flow steps (e.g. HR-only). */
+  experimentFlowClarifier?: string;
   philosophyLine: string;
   intro: string;
   piiNotice: string;
+  /** `<summary>` for optional details block around full PII notice (reduces duplicate trust copy above the fold). */
+  privacyDetailsSummary: string;
 
   // —— Home: input ——
   inputChannel: string;

@@ -113,26 +113,6 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
     if (!egg.validatePayload(payload)) {
       throw new Error(`Egg "${egg.id}" rejected payload validation.`);
     }
-    // #region agent log
-    if (typeof fetch === "function") {
-      fetch("http://127.0.0.1:7449/ingest/0768c635-2444-40d4-9a51-16892d6a03ff", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "1e3930",
-        },
-        body: JSON.stringify({
-          sessionId: "1e3930",
-          runId: "incident-mailto-docx",
-          hypothesisId: "H4",
-          location: "src/engine/Processor.ts:98",
-          message: "About to run egg.transform",
-          data: { eggId: egg.id },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-    }
-    // #endregion agent log
 
     currentBuffer = await egg.transform(currentBuffer, payload);
   }

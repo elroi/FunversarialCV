@@ -255,33 +255,6 @@ export const incidentMailto: IEgg = {
     const mailtoUri = buildMailtoUri(recipient, template);
     const label = template.mailtoLabel ?? "Report incident";
 
-    // #region agent log
-    if (typeof fetch === "function") {
-      fetch("http://127.0.0.1:7449/ingest/0768c635-2444-40d4-9a51-16892d6a03ff", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "1e3930",
-        },
-        body: JSON.stringify({
-          sessionId: "1e3930",
-          runId: "incident-mailto-docx",
-          hypothesisId: "H2",
-          location: "src/eggs/IncidentMailto.ts:173",
-          message: "IncidentMailto transform computed recipient and mailto URI",
-          data: {
-            mimeType,
-            hasToken: !!token,
-            hasRawEmail: !!rawEmail,
-            recipient,
-            mode,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-    }
-    // #endregion agent log
-
     // PDF: For raw emails (preserve-styles path), add a clickable mailto link annotation
     // over the contact info area rather than rebuilding from text (which destroys layout).
     // For tokenized text, use the text rebuild path.
@@ -321,30 +294,6 @@ export const incidentMailto: IEgg = {
         }
 
         const styled = await applyStylePreservingMailto(buffer, mailtoUri, label);
-
-        // #region agent log
-        if (typeof fetch === "function") {
-          fetch("http://127.0.0.1:7449/ingest/0768c635-2444-40d4-9a51-16892d6a03ff", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Debug-Session-Id": "1e3930",
-            },
-            body: JSON.stringify({
-              sessionId: "1e3930",
-              runId: "incident-mailto-docx",
-              hypothesisId: "H3",
-              location: "src/eggs/IncidentMailto.ts:190",
-              message: "IncidentMailto applied style-preserving mailto",
-              data: {
-                mimeType,
-                recipient,
-              },
-              timestamp: Date.now(),
-            }),
-          }).catch(() => {});
-        }
-        // #endregion agent log
 
         return styled;
       } catch {

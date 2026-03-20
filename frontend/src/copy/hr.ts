@@ -3,32 +3,30 @@ import type { Copy } from "./types";
 export const hrCopy: Copy = {
   tagline:
     "Add invisible, AI-friendly signals to your CV so you can see how hiring tools that use AI read it.",
-  piiModeBadge: "Your data stays private",
-  engineOnline: "Ready",
+  piiModeBadge: "Private processing: no CV storage",
   resourcesLink: "Resources",
   backHome: "Back home",
 
+  experimentFlowCollapsibleTitle: "How to run a fair test",
   experimentFlowLabel: "RUN THE CV EXPERIMENT",
   positioningLine:
     "Turn your CV into a controlled experiment on how AI systems read your document.",
   flowSteps: [
-    "Start with our sample CV (recommended)\nor upload your own CV",
-    "Add test layers to your document",
+    "Start with our sample CV (recommended) or upload your own CV",
+    "Add subtle AI-visible signals to your CV",
     "Download your modified CV",
-    "Test both versions with a real AI tool\n(ChatGPT / Claude)",
-    "See how the outputs differ",
-    "Decide whether the test signals had an effect",
+    "Test both versions in a real AI tool\n(ChatGPT / Claude)",
+    "Compare how the outputs differ",
+    "Confirm whether the signals changed the AI's response",
   ] as const,
+  experimentFlowClarifier:
+    "Look for changes in tone, ranking, or interpretation of your experience.",
   philosophyLine:
     "This isn't about tricking the system — it's about understanding how your inputs shape the results.",
-  intro:
-    "FunversarialCV is an educational environment for exploring how AI-powered hiring systems interpret candidate data in real-world conditions.\n\n" +
-    "It adds hidden, test signals to your document (aligned with industry security standards) while keeping your data private.\n" +
-    "Everything is processed **in memory only**, with your contact details replaced by **temporary placeholders** before anything is sent – so nothing is stored after your new CV is generated.\n\n" +
-    "When **Preserve styles** is on, we keep your layout where possible.\n" +
-    "When we can't, we rebuild and explain it in the interface.",
+  intro: "",
   piiNotice:
-    "Your CV is processed in your browser first. Before anything leaves your device, we replace your email, phone, and other contact details (we call this PII) with temporary placeholders. Our server only sees those placeholders, never your real contact information.",
+    "Your CV is processed in your browser first. Before anything leaves your device, we replace your email, phone, and other contact details (we call this PII) with temporary placeholders. Our server only sees those placeholders, never your real contact information. Processing is in memory only—we don’t store your document after your new CV is generated.",
+  privacyDetailsSummary: "How we protect your contact details",
 
   inputChannel: "Upload your CV",
   maxFileHint: "Max 4 MB. Word (.docx) only.",
@@ -101,7 +99,8 @@ export const hrCopy: Copy = {
   preHardeningScanTitle: "Pre-check (before adding our signals)",
   preHardeningScanTooltip:
     "We scan your CV for any existing hidden instructions or tracking links before adding our own, so you can see what was already there.",
-  piiStatelessVolatile: "Your contact details are handled in memory only and are never stored.",
+  piiStatelessVolatile:
+    "Same privacy model as upload: in-memory processing; we don’t store your documents.",
   awaitingFirstScan: "Waiting for a CV. Upload one to start.",
   noSuspiciousPatterns:
     "No existing hidden instructions or tracking links found in your CV.",
@@ -121,9 +120,9 @@ export const hrCopy: Copy = {
   dropzonePrompt: "Drop your CV here",
   dropzoneHint: "browse",
   dropzonePiiNotice:
-    "Your contact details are processed in memory only and never stored.",
+    "Contacts are replaced with placeholders before anything is sent; we don’t keep your file after you download.",
   dropzoneSrHint:
-    "Upload your CV as a Word document (.docx). Your data is processed in memory only and never stored.",
+    "Upload a Word document (.docx). Contacts are replaced with placeholders before send; nothing is stored after you download your result.",
   errorOnlyDocx: "Only Word documents (.docx) are allowed.",
   errorFileTooLarge: "File is too large.",
 

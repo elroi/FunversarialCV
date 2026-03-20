@@ -7,13 +7,17 @@ describe("copy", () => {
     it("returns security copy for audience security", () => {
       const copy = getCopy("security");
       expect(copy.tagline).toBe(securityCopy.tagline);
-      expect(copy.engineOnline).toBe("Engine Online");
+      expect(copy.experimentFlowCollapsibleTitle).toBe("How to run a fair test");
+      expect(securityCopy.piiModeBadge).toMatch(/PII · client vault/i);
+      expect(securityCopy.intro).toMatch(/OWASP-aligned/i);
     });
 
     it("returns HR copy for audience hr", () => {
       const copy = getCopy("hr");
       expect(copy.tagline).toBe(hrCopy.tagline);
-      expect(copy.engineOnline).toBe("Ready");
+      expect(copy.privacyDetailsSummary).toBe("How we protect your contact details");
+      expect(hrCopy.intro).toBe("");
+      expect(hrCopy.piiModeBadge).toMatch(/Private processing: no CV storage/i);
     });
   });
 
@@ -25,11 +29,6 @@ describe("copy", () => {
     it("HR tagline is plain English and does not lead with adversarial", () => {
       expect(hrCopy.tagline).not.toMatch(/^.*adversarial/i);
       expect(hrCopy.tagline.length).toBeGreaterThan(0);
-    });
-
-    it("HR copy uses Ready instead of Engine Online for engine badge", () => {
-      expect(hrCopy.engineOnline).toBe("Ready");
-      expect(securityCopy.engineOnline).toBe("Engine Online");
     });
 
     it("engineConfigTitle is set for both audiences", () => {

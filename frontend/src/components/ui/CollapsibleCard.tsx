@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import clsx from "clsx";
+
+const MD_MIN_WIDTH = "(min-width: 768px)";
 
 export interface CollapsibleCardProps {
   /** Title shown in the always-visible trigger row. */
@@ -14,6 +16,11 @@ export interface CollapsibleCardProps {
   ariaLabel: string;
   /** Initial expanded state. Default false so cards start collapsed on all viewports. */
   defaultExpanded?: boolean;
+  /**
+   * When true, sync expanded state with `md` breakpoint after mount (expanded on wide, collapsed on narrow).
+   * User toggles still work; resize updates state so desktop readers see steps without a long mobile scroll.
+   */
+  expandOnWide?: boolean;
   /** Card content; shown when expanded. */
   children: React.ReactNode;
   /** Optional class for the outer card wrapper. */
@@ -32,11 +39,21 @@ export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
   contentId,
   ariaLabel,
   defaultExpanded = false,
+  expandOnWide = false,
   children,
   className,
   disabled = false,
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
+
+  useEffect(() => {
+    if (!expandOnWide || typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia(MD_MIN_WIDTH);
+    const apply = () => setExpanded(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, [expandOnWide]);
 
   return (
     <div

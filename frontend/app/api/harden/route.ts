@@ -242,29 +242,6 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // #region agent log
-  fetch("http://127.0.0.1:7449/ingest/0768c635-2444-40d4-9a51-16892d6a03ff", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "1e3930",
-    },
-    body: JSON.stringify({
-      sessionId: "1e3930",
-      runId: "incident-mailto-docx",
-      hypothesisId: "H1",
-      location: "app/api/harden/route.ts:135",
-      message: "Selected eggs for /api/harden",
-      data: {
-        eggIds: eggs.map((e) => e.id),
-        preserveStyles,
-        mimeType,
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion agent log
-
   try {
     const result = await process({
       buffer,

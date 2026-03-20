@@ -10,7 +10,7 @@ test.describe("Navigation", () => {
   }) => {
     await page.goto("/");
 
-    await expect(page.getByText("Engine Online")).toBeVisible();
+    await expect(page.getByText(/PII · client vault/i)).toBeVisible();
     const resourcesLink = page.getByRole("link", { name: /resources/i });
     await expect(resourcesLink).toBeVisible();
     await resourcesLink.click();
@@ -22,6 +22,6 @@ test.describe("Navigation", () => {
     await page.getByRole("link", { name: /back home/i }).click();
 
     await expect(page).toHaveURL("/");
-    await expect(page.getByText("Engine Online")).toBeVisible();
+    await expect(page.getByText(/PII · client vault/i)).toBeVisible();
   });
 });

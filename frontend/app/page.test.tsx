@@ -60,35 +60,47 @@ describe("Home page", () => {
   });
 
   describe("intro and resources nav", () => {
-    it("renders intro explaining FunversarialCV and OWASP-aligned / zero-retention model", () => {
+    it("renders intro with OWASP-aligned framing and authorized-use qualifier (security)", () => {
       renderWithAudience(<Home />);
       const main = screen.getByRole("main");
       const introText = main.textContent ?? "";
-      expect(introText).toMatch(/FunversarialCV.*adversarial simulation environment/i);
-      expect(introText).toMatch(/OWASP-aligned.*payloads/i);
-      expect(introText).toMatch(/zero-retention.*dehydrated.*rehydrated/i);
+      expect(introText).toMatch(/OWASP-aligned/i);
+      expect(introText).toMatch(/authorized testing and research only/i);
     });
 
-    it("renders positioning line (controlled experiment / LLMs interpret documents)", () => {
+    it("renders positioning line inside experiment panel (expand collapsible)", () => {
       renderWithAudience(<Home />);
+      fireEvent.click(
+        screen.getByRole("button", { name: /how to run a fair test/i })
+      );
       expect(screen.getByText(/controlled experiment/i)).toBeInTheDocument();
       expect(screen.getByText(/LLMs interpret documents/i)).toBeInTheDocument();
     });
 
     it("renders philosophy line (breaking the model / inputs shape outcomes)", () => {
       renderWithAudience(<Home />);
+      fireEvent.click(
+        screen.getByRole("button", { name: /how to run a fair test/i })
+      );
       expect(screen.getByText(/breaking the model/i)).toBeInTheDocument();
       expect(screen.getByText(/inputs shape outcomes/i)).toBeInTheDocument();
     });
 
-    it("renders experiment flow panel with section label RUN THE CV EXPERIMENT", () => {
+    it("renders experiment steps inside collapsible (expand to show RUN THE CV EXPERIMENT)", () => {
       renderWithAudience(<Home />);
-      expect(screen.getByRole("region", { name: /run the cv experiment/i })).toBeInTheDocument();
+      const expand = screen.getByRole("button", {
+        name: /how to run a fair test/i,
+      });
+      expect(expand).toBeInTheDocument();
+      fireEvent.click(expand);
       expect(screen.getByText(/RUN THE CV EXPERIMENT/i)).toBeInTheDocument();
     });
 
     it("renders flow as numbered list with sample CV, inject, download, test, observe, confirm", () => {
       renderWithAudience(<Home />);
+      fireEvent.click(
+        screen.getByRole("button", { name: /how to run a fair test/i })
+      );
       expect(screen.getByText(/Start with our sample CV/i)).toBeInTheDocument();
       expect(screen.getByText(/Inject adversarial layers/i)).toBeInTheDocument();
       expect(screen.getByText(/Download your .armed. CV/i)).toBeInTheDocument();
@@ -614,22 +626,22 @@ describe("Home page", () => {
     });
 
     describe("2. Header", () => {
-      it("header has flex-wrap so title and badge fit on narrow widths", () => {
+      it("header has flex-wrap so title and nav link fit on narrow widths", () => {
         renderWithAudience(<Home />);
         const header = document.querySelector("header");
         expect(header).toHaveClass("flex-wrap");
       });
 
-      it("Engine Online badge has shrink-0 so it does not overflow", () => {
+      it("Resources appears as a header link (not a pill next to a status badge)", () => {
         renderWithAudience(<Home />);
-        const badge = screen.getByText("Engine Online");
-        expect(badge).toHaveClass("shrink-0");
+        const link = screen.getByRole("link", { name: /resources/i });
+        expect(link.closest("header")).toBeTruthy();
+        expect(screen.queryByText("Engine Online")).not.toBeInTheDocument();
       });
 
-      it("PII Mode and Engine Online text are present", () => {
+      it("security trust badge appears in the top toolbar", () => {
         renderWithAudience(<Home />);
-        expect(screen.getByText(/PII Mode: Stateless/i)).toBeInTheDocument();
-        expect(screen.getByText("Engine Online")).toBeInTheDocument();
+        expect(screen.getByText(/PII · client vault/i)).toBeInTheDocument();
       });
     });
 

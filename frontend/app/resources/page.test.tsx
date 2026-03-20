@@ -9,8 +9,8 @@ describe("Resources page", () => {
     expect(
       screen.getByRole("heading", { name: /funversarialcv/i, level: 1 })
     ).toBeInTheDocument();
-    expect(screen.getByText(/PII Mode: Stateless/i)).toBeInTheDocument();
-    expect(screen.getByText(/Engine Online/i)).toBeInTheDocument();
+    expect(screen.getByText(/PII · client vault/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Engine Online/i)).not.toBeInTheDocument();
   });
 
   it("explains why Funversarial CVs exist", () => {
@@ -48,10 +48,11 @@ describe("Resources page", () => {
     ).toBeInTheDocument();
   });
 
-  it("provides a Back home link to the main app", () => {
+  it("provides a Back home link in the header to the main app", () => {
     renderWithAudience(<ResourcesPage />);
     const link = screen.getByRole("link", { name: /back home/i });
     expect(link).toBeInTheDocument();
+    expect(link.closest("header")).toBeTruthy();
     expect((link as HTMLAnchorElement).getAttribute("href")).toBe("/");
   });
 

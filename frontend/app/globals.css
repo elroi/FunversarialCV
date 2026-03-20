@@ -83,10 +83,6 @@ body * {
   background-image: none;
 }
 
-[data-audience="hr"] .engine-online-pulse {
-  animation: none;
-}
-
 /* Terminal-style blinking cursor (for pipeline log when processing). */
 @keyframes cursor-blink {
   0%, 50% { opacity: 1; }
@@ -97,16 +93,6 @@ body * {
   content: "▌";
   animation: cursor-blink 1s step-end infinite;
   margin-left: 2px;
-}
-
-/* Subtle pulse for Engine Online badge. */
-@keyframes engine-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.25); }
-  50% { box-shadow: 0 0 0 4px rgba(0, 255, 65, 0.1); }
-}
-
-.engine-online-pulse {
-  animation: engine-pulse 2s ease-in-out infinite;
 }
 
 /* Music-themed loading (M.Mus/BA.Mus): minimal waveform bars. */
@@ -129,5 +115,18 @@ body * {
 .min-h-dvh-screen {
   min-height: 100vh;
   min-height: 100dvh;
+}
+
+/* Shared shell for functional groups on home (upload, engine config, validation, pipeline). */
+.functional-group {
+  border: 1px solid rgba(148, 163, 184, 0.36);
+  background-color: rgba(5, 11, 24, 0.62);
+  box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.08);
+}
+
+[data-audience="hr"] .functional-group {
+  border-color: rgba(120, 113, 108, 0.44);
+  background-color: rgba(245, 245, 244, 0.78);
+  box-shadow: 0 0 0 1px rgba(28, 25, 23, 0.06);
 }
 

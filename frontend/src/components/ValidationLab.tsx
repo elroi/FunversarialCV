@@ -97,7 +97,7 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
 
   return (
     <section
-      className="mt-6 rounded-lg border border-dashed border-border/50 p-4"
+      className="functional-group mt-6 p-4"
       aria-labelledby="validation-lab-heading"
       id="validation-lab"
     >

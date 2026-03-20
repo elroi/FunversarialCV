@@ -14,7 +14,7 @@ import { CanaryWingConfigCard } from "../src/components/CanaryWingConfigCard";
 import { InvisibleHandConfigCard } from "../src/components/InvisibleHandConfigCard";
 import { MetadataShadowConfigCard } from "../src/components/MetadataShadowConfigCard";
 import { ValidationLab } from "../src/components/ValidationLab";
-import { ExperimentFlowPanel } from "../src/components/ExperimentFlowPanel";
+import { ExperimentFlowPanelBody } from "../src/components/ExperimentFlowPanel";
 import { dehydrateInBrowser, rehydrateInBrowser } from "../src/lib/clientVault";
 import { createDocumentWithTextInBrowser } from "../src/lib/clientDocumentCreate";
 import { replacePiiWithTokensInCopy } from "../src/lib/clientTokenReplaceInCopy";
@@ -58,7 +58,7 @@ function PiiNoticeBlock({
             <button
               type="button"
               onClick={() => setVerifyExpanded((e) => !e)}
-              aria-expanded={verifyExpanded ? "true" : "false"}
+              aria-expanded={verifyExpanded}
               aria-controls="pii-verify-content"
               id="pii-verify-trigger"
               className="font-mono text-accent underline underline-offset-2 hover:text-accent/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-1 focus-visible:ring-offset-bg rounded"
@@ -897,17 +897,14 @@ export default function Home() {
 
       <main id="main-content" className="min-h-dvh-screen bg-bg text-foreground">
         <div className="mx-auto flex min-h-dvh-screen min-w-0 max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
-        <SiteHeader />
-        <SiteTopBar navLink={{ href: "/resources", label: copy.resourcesLink }} />
-        <ExperimentFlowPanel copy={copy} />
-        <div className="mt-2 mb-6">
-          {renderIntro(copy.intro)}
-        </div>
-        <PiiNoticeBlock copy={copy} audience={audience} />
+        <SiteHeader
+          secondaryNav={{ href: "/resources", label: copy.resourcesLink }}
+        />
+        <SiteTopBar />
 
         <section className="flex flex-1 flex-col gap-8 md:flex-row">
           <div className="flex-1">
-            <div className="rounded-lg border border-dashed border-border/50 p-4">
+            <div className="functional-group p-4">
               <div className="mb-4 text-caption uppercase tracking-[0.2em] text-accent">
                 {copy.inputChannel}
               </div>
@@ -979,7 +976,35 @@ export default function Home() {
                 </div>
               </CollapsibleCard>
             </div>
-            <div className="mt-6 rounded-lg border border-dashed border-border/50 p-4">
+
+            <div className="functional-group mb-6 mt-8 overflow-hidden sm:mt-10">
+              <CollapsibleCard
+                className="rounded-none border-0 bg-transparent shadow-none"
+                title={copy.experimentFlowCollapsibleTitle}
+                titleId="experiment-flow-card-title"
+                contentId="experiment-flow-card-content"
+                ariaLabel={`${copy.experimentFlowCollapsibleTitle}: show or hide steps`}
+                defaultExpanded={false}
+                expandOnWide
+              >
+                <ExperimentFlowPanelBody copy={copy} showPositioningLine />
+              </CollapsibleCard>
+            </div>
+
+            {copy.intro.trim() ? (
+              <div className="mb-6">{renderIntro(copy.intro)}</div>
+            ) : null}
+
+            <details className="mb-6 rounded-lg border border-border/60 bg-panel/40">
+              <summary className="flex min-h-[44px] cursor-pointer list-none items-center px-3 py-3 text-sm font-medium text-accent outline-none marker:content-none sm:px-4 [&::-webkit-details-marker]:hidden">
+                {copy.privacyDetailsSummary}
+              </summary>
+              <div className="border-t border-border/50 px-3 pb-3 pt-1 sm:px-4">
+                <PiiNoticeBlock copy={copy} audience={audience} />
+              </div>
+            </details>
+
+            <div className="functional-group mt-6 p-4">
               <div className="mb-4 text-caption uppercase tracking-[0.2em] text-accent">
               {copy.engineConfigTitle}
             </div>
@@ -1193,7 +1218,7 @@ export default function Home() {
             />
           </div>
 
-          <aside className="mt-8 w-full text-sm text-foreground/80 md:mt-0 md:w-80 md:shrink-0 md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-3rem)] md:overflow-y-auto rounded-lg border border-dashed border-border/50 p-4">
+          <aside className="functional-group mt-8 w-full p-4 text-sm text-foreground/80 md:mt-0 md:w-80 md:shrink-0 md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-3rem)] md:overflow-y-auto">
             <div className="mb-4 text-caption uppercase tracking-[0.2em] text-accent">
               {copy.pipelineStatusTitle}
             </div>
@@ -1202,7 +1227,7 @@ export default function Home() {
                 type="button"
                 onClick={() => setDualityMonitorOpen((o) => !o)}
                 className="flex w-full min-h-[44px] items-center justify-between rounded px-3 py-3 text-caption sm:text-xs uppercase tracking-[0.2em] text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-                aria-expanded={dualityMonitorOpen ? "true" : "false"}
+                aria-expanded={dualityMonitorOpen}
                 aria-controls="duality-monitor-content"
                 id="duality-monitor-toggle"
               >

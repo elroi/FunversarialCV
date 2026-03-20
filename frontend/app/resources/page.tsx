@@ -11,8 +11,8 @@ export default function ResourcesPage() {
   return (
     <main className="min-h-dvh-screen bg-bg text-foreground">
       <div className="mx-auto flex min-h-dvh-screen min-w-0 max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
-        <SiteHeader />
-        <SiteTopBar navLink={{ href: "/", label: copy.backHome }} />
+        <SiteHeader secondaryNav={{ href: "/", label: copy.backHome }} />
+        <SiteTopBar />
 
         <section className="space-y-8 text-sm text-foreground/90">
           <section>

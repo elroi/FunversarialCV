@@ -35,7 +35,7 @@
 
 **E2E (Playwright)**
 
-- `smoke.spec.ts` – home loads, “Engine Online”, drop zone visible.
+- `smoke.spec.ts` – home loads, PII trust line visible, drop zone visible.
 - `happy-path.spec.ts` – DOCX upload → harden → download; client PII dehydration (tokenized payload).
 - `errors.spec.ts`, `oversize-limit.spec.ts`, `navigation.spec.ts`, `options.spec.ts`, `demo-preset.spec.ts`, `duality-monitor.spec.ts`, `state-reset.spec.ts`, `server-pdf-pii.spec.ts`.
 

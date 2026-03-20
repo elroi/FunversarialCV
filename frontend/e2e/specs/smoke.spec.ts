@@ -5,9 +5,11 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Smoke", () => {
-  test("home page loads and shows Engine Online", async ({ page }) => {
+  test("home page loads and shows trust line plus primary drop zone entry", async ({
+    page,
+  }) => {
     await page.goto("/");
-    await expect(page.getByText("Engine Online")).toBeVisible();
+    await expect(page.getByText(/PII · client vault/i)).toBeVisible();
   });
 
   test("home page shows drop zone when no file selected", async ({ page }) => {

@@ -18,11 +18,11 @@ Structured review of the FunversarialCV frontend against the UX/UI plan. All eig
 | Dimension | Pass/Fail | Notes |
 |-----------|-----------|--------|
 | **Clarity and hierarchy** | Pass | Single primary action (Upload / Harden) clear; headings (H1→H2→H3/H4) and sections (hero, drop zone, PII notice, egg configs, Validation Lab, Duality Monitor) distinguishable. Copy differs appropriately for HR vs Security. |
-| **Trust and tone** | Pass | PII notice and “engine online” (Resources) support credibility. HR view avoids jargon; Security view includes “How to verify” and technical copy. Hacker-chic / terminal aesthetic (dark theme, monospace, accents) applied consistently. |
+| **Trust and tone** | Pass | PII badge in the top toolbar, optional privacy details (`<details>`), and header nav support credibility. HR view avoids jargon; Security view includes “How to verify” and technical copy. Hacker-chic / terminal aesthetic (dark theme, monospace, accents) applied consistently. |
 | **Errors and recovery** | Pass (with note) | Oversize: client copy “File is too large” and API 413; E2E covers oversize in `oversize-limit.spec.ts`. Not exercised via browser (no programmatic file input). Server/network: `role="alert"` and retry present in code. Validation Lab / Duality Monitor alerts readable. |
-| **Accessibility** | Pass (with note) | Skip to main content link present and first in DOM; focus order logical (Skip → Audience → Resources → How to verify → Sample CV → egg expand → Validation Lab → Duality). Focus-visible ring (focus:ring-2 focus:ring-accent) in layout. ARIA on dialog, live regions, expand/collapse (e.g. aria-expanded, aria-controls, aria-labelledby). Skip link click was intercepted by main in test (positioning); keyboard Tab flow works. |
+| **Accessibility** | Pass (with note) | Skip to main content link present and first in DOM; focus order logical (Skip → title/nav → Audience → experiment collapsible → …). Resources is a header text link. Focus-visible ring (focus:ring-2 focus:ring-accent) in layout. ARIA on dialog, live regions, expand/collapse (e.g. aria-expanded, aria-controls, aria-labelledby). Skip link click was intercepted by main in test (positioning); keyboard Tab flow works. |
 | **Navigation and state** | Pass | Home ↔ Resources via “Resources” and “Back home”; Audience switcher and “Back home” obvious. After success: Download and “Re-process with current egg config” / “Change file” clear; no dead ends. |
-| **Security persona (tertiary)** | Pass | “How to verify” expandable discoverable (Security only); Security-specific copy (e.g. PII Mode: Stateless & Volatile, Duality Monitor) distinct from HR. Security pro can assess transparency and control. |
+| **Security persona (tertiary)** | Pass | “How to verify” expandable discoverable (Security only); Security-specific copy (e.g. PII · client vault badge, Duality Monitor) distinct from HR. Security pro can assess transparency and control. |
 
 ---
 
@@ -45,14 +45,15 @@ No feedback was provided at the planned pauses during this run. Future runs can 
 
 ---
 
-## Mobile-first chrome (2025-03-19)
+## Mobile-first chrome (2025-03-19; IA update 2026-03-19)
 
-- Shared [`SiteChrome`](../frontend/src/components/SiteChrome.tsx): `SiteHeader` + `SiteTopBar` on home and resources (DRY).
-- Top bar: column stack on narrow viewports; **READY + RESOURCES** sit in a dedicated full-width row with `flex-1` each so they align as a pair (not orphaned left). From `sm:` they shrink-wrap with the audience switcher. `min-w-0` avoids horizontal overflow; touch-friendly pills (`min-h-[44px]` base, compact from `sm:`).
-- **HR:** `SiteHeader` and `ExperimentFlowPanel` use `font-sans` in the panel; Security keeps `font-mono` in the experiment panel.
+- Shared [`SiteChrome`](../frontend/src/components/SiteChrome.tsx): `SiteHeader` (optional `secondaryNav` text link: **Resources** / **Back home**) + `SiteTopBar` (PII badge + audience only). Decorative **Ready / Engine Online** pill removed.
+- **Home information architecture:** **Upload** (drop zone + sample CV; one-line `dropzonePiiNotice` for mechanism) → collapsible **How to run a fair test** (includes `positioningLine` + steps; auto-expanded from `md` via `CollapsibleCard` `expandOnWide`) → optional **intro** (security: one line; HR: omitted) → `<details>` for full **PII notice** (canonical deep trust copy) → **How it runs** / eggs / Validation Lab. Top bar badge is a short label (`piiModeBadge`), not a second tagline.
+- **Copy dedupe (2026-03-19):** Avoid repeating “in memory / placeholders / nothing stored” across tagline, badge, intro, drop zone, and details; one short mechanism near upload + expanded notice for detail. HR top-bar badge example: `Private processing: no CV storage` (`piiModeBadge`).
+- **HR:** `SiteHeader` and experiment panel body use `font-sans` where applied; Security keeps `font-mono` in the experiment panel body.
 - `AudienceSwitcher`: full-width split buttons on mobile, descriptive `aria-label` with full audience names.
 - Viewport: `.min-h-dvh-screen` in `globals.css` (`100vh` + `100dvh` fallback chain) on main shells.
-- **Acceptance (manual):** 320–375px width — no horizontal scroll; keyboard Tab through top bar; 200% zoom — focus rings not clipped.
+- **Acceptance (manual):** 320–375px width — no horizontal scroll; keyboard Tab through header link, audience, and collapsibles; 200% zoom — focus rings not clipped.
 
 ## Follow-up items (optional)
 

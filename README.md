@@ -1,7 +1,7 @@
 # 🐙 FunversarialCV
 **The Security Architect's Approach to Professional Differentiation.**
 
-FunversarialCV is an open-source tool designed for the "duality of AI security". It allows candidates to "harden" their CVs by injecting technical easter eggs, metadata "watermarks," and adversarial layers that bridge the gap between human creativity and machine parsing.
+FunversarialCV is an open-source tool designed for the "duality of AI security". It lets candidates **inject** technical easter eggs, metadata "watermarks," and adversarial layers into their CVs—bridging human creativity and machine parsing for controlled testing.
 
 Built by a Senior Security Architect specialized in AI Governance, this tool serves as a "Red Teaming" exercise for the HR-tech industry.
 
@@ -11,17 +11,17 @@ Built by a Senior Security Architect specialized in AI Governance, this tool ser
 
 ## 📖 Using FunversarialCV
 
-The service uses a **two-step flow** so you can configure eggs before hardening:
+The service uses a **two-step flow** so you can configure eggs before running the pipeline:
 
 1. **Upload your CV** — Drop or select a Word document (.docx). The file is "armed" (held in memory in your browser only); no processing runs yet.
 2. **Configure eggs** — Use the config cards to set options for each egg (e.g. Incident Mailto template, Canary Wing URL or token). You can change these as needed.
-3. **Click Harden** — When ready, click **Harden** to run the pipeline. The file is sent to the server, processed in memory (stateless), and your hardened CV downloads automatically. The Duality Monitor shows the pre-hardening scan result (e.g. existing prompt-injection or canary patterns in your original file).
+3. **Inject Eggs (security mode)** / **Add signals (HR mode)** — When ready, use the primary action to run the pipeline. The file is sent to the server, processed in memory (stateless), and your CV with injected eggs downloads automatically. The Duality Monitor shows the pre-injection scan result (e.g. existing prompt-injection or canary patterns in your original file).
 
-You can upload a different file at any time to replace the armed CV and configure again before hardening.
+You can upload a different file at any time to replace the armed CV and configure again before running the pipeline.
 
 **Upload size note:** To stay safely under Vercel’s Serverless Function request limits and avoid opaque platform 413 errors, FunversarialCV currently supports CVs up to **4 MB** per upload.
 
-**Note:** Hardening rebuilds the document from extracted text by default; original DOCX layout and styling are not preserved in the output unless you enable **Preserve styles** for compatible eggs (Invisible Hand, Canary Wing, Metadata Shadow, and Incident Mailto).
+**Note:** Egg injection rebuilds the document from extracted text by default; original DOCX layout and styling are not preserved in the output unless you enable **Preserve styles** for compatible eggs (Invisible Hand, Canary Wing, Metadata Shadow, and Incident Mailto).
 
 ---
 
@@ -39,7 +39,7 @@ Every feature in FunversarialCV is an "Egg" mapped to the **OWASP Top 10 for LLM
 As a tool focused on **Security for AI and AI for Security**, we prioritize data integrity:
 
 * **Zero-Retention Architecture:** Files are processed entirely in volatile memory (RAM) and are never written to disk or a database.
-* **PII Sanitization:** Before "hardening," the tool identifies PII patterns (Email, Phone, and common Address formats) to help you redact sensitive data before sharing your CV globally. Detection is heuristic and focused on obvious high-risk patterns (e.g. `user@example.com`, `+1 (555) 123-4567`, `123 Main St …`), not full DLP.
+* **PII Sanitization:** Before the document is sent for egg injection, the tool identifies PII patterns (Email, Phone, and common Address formats) to help you redact sensitive data before sharing your CV globally. Detection is heuristic and focused on obvious high-risk patterns (e.g. `user@example.com`, `+1 (555) 123-4567`, `123 Main St …`), not full DLP.
 * **v1 format:** The service currently supports **Word documents (.docx) only**. PDF support is planned for a future release. Document type is detected from file content (magic bytes), not filename.
 * **Stateless Execution:** Your data exists only for the duration of the request. Once the download is complete, the memory is purged.
 
@@ -63,7 +63,7 @@ For **Canary Wing** specifically, the `/api/canary` endpoint records **ephemeral
 
 FunversarialCV is designed to run as a Next.js 14 app on Vercel:
 
-- **Runtime:** Node / Serverless Functions for `/api/harden` and `/api/canary`, with stateless, in-memory processing only.
+- **Runtime:** Node / Serverless Functions for `/api/harden` (egg injection) and `/api/canary`, with stateless, in-memory processing only.
 - **File size:** CV uploads are limited to **4 MB** per file to stay safely under Vercel’s Serverless request caps and avoid opaque platform 413 errors.
 - **Rate limiting:** `/api/harden`, `/api/canary`, and `/api/canary/status` include lightweight, per-IP rate limiting with configurable env vars (`RATE_LIMIT_HARDEN_*`, `RATE_LIMIT_CANARY_*`, `RATE_LIMIT_CANARY_STATUS_*`) suitable for low-to-moderate traffic.
 - **Logging:** Structured JSON logs (route, event, meta) are emitted via `log.ts` and visible in Vercel logs; no PII or CV content is logged, only tokens/variants and operational metadata.

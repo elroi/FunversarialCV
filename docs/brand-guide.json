@@ -129,7 +129,7 @@
       "OWASP",
       "parser"
     ],
-    "productLexicon": ["Egg", "Harden", "Duality Monitor"],
+    "productLexicon": ["Egg", "Inject Eggs", "Duality Monitor"],
     "avoidInMarketing": [
       "unbeatable",
       "foolproof",
@@ -155,7 +155,7 @@
     "reference": ".cursorrules Design & Aesthetic"
   },
   "productScope": {
-    "currentFocus": "FunversarialCV — document hardening and audit for professional CVs/resumes (this repository).",
+    "currentFocus": "FunversarialCV — CV egg injection, document audit, and adversarial testing for professional CVs/resumes (this repository).",
     "visionProjects": [
       "Funversarial Prompts",
       "Funversarial Policies",

@@ -47,8 +47,8 @@ describe("copy", () => {
     it("Validation Lab ENABLED badge copy describes last successful arm, not live checkboxes", () => {
       const sec = getCopy("security");
       const hr = getCopy("hr");
-      expect(sec.validationLabMatchBadgeHint).toMatch(/last successful Harden/i);
-      expect(sec.validationMatchBadgeAriaLabel).toMatch(/last successful Harden/i);
+      expect(sec.validationLabMatchBadgeHint).toMatch(/last successful Inject Eggs/i);
+      expect(sec.validationMatchBadgeAriaLabel).toMatch(/last successful Inject Eggs/i);
       expect(hr.validationLabMatchBadgeHint).toMatch(/last successful Add signals/i);
       expect(hr.validationMatchBadgeAriaLabel).toMatch(/last successful run/i);
     });
@@ -58,6 +58,7 @@ describe("copy", () => {
       const hr = getCopy("hr");
       expect(sec.engineConfigIntroNoCv).toMatch(/eggs to run/i);
       expect(sec.engineConfigIntroCvReady).toMatch(/Expand each egg/i);
+      expect(sec.engineConfigIntroCvReady).toMatch(/Inject Eggs/i);
       expect(hr.engineConfigIntroNoCv).toMatch(/signals to add/i);
       expect(hr.engineConfigIntroCvReady).toMatch(/Add signals/i);
     });

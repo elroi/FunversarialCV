@@ -1,5 +1,5 @@
 /**
- * Duality monitor E2E: after harden, Pipeline status section shows the monitor card and log (expanded by default).
+ * Duality monitor E2E: after Inject Eggs, Pipeline status section shows the monitor card and log (expanded by default).
  * Copy is audience-specific (HR: "Processing steps" / "Log"; security: "Duality Monitor" / "Terminal Log").
  * Mocks /api/harden so scannerReport.scan is present and log is populated.
  */
@@ -17,7 +17,7 @@ const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx")
 test.describe("Duality monitor", () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
-  test("after harden, Pipeline status panel shows monitor and log content", async ({
+  test("after inject eggs, Pipeline status panel shows monitor and log content", async ({
     page,
   }) => {
     await page.route("**/api/harden", (route) => {
@@ -51,7 +51,7 @@ test.describe("Duality monitor", () => {
     await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
       timeout: 15_000,
     });
-    await page.getByRole("button", { name: /harden/i }).click();
+    await page.getByRole("button", { name: /inject eggs/i }).click();
 
     await expect(
       page.getByRole("button", { name: /download/i })

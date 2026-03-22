@@ -156,7 +156,7 @@ describe("POST /api/harden", () => {
     const second = await makeRequest();
     expect(second.status).toBe(429);
     const json = await second.json();
-    expect(json.error).toMatch(/too many harden requests/i);
+    expect(json.error).toMatch(/too many egg-injection requests/i);
 
     delete process.env.RATE_LIMIT_HARDEN_MAX;
     delete process.env.RATE_LIMIT_HARDEN_WINDOW_MS;
@@ -200,7 +200,7 @@ describe("POST /api/harden", () => {
     expect(res.status).toBe(400);
     const json = await res.json();
     expect(json.error).toBe(
-      "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored."
+      "Server expected dehydrated tokens only; client dehydration may have failed. No document was produced or stored."
     );
     expect(Processor.process).not.toHaveBeenCalled();
   });
@@ -248,7 +248,7 @@ describe("POST /api/harden", () => {
     expect(res.status).toBe(400);
     const json = await res.json();
     expect(json.error).toBe(
-      "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored."
+      "Server expected dehydrated tokens only; client dehydration may have failed. No document was produced or stored."
     );
     expect(Processor.process).not.toHaveBeenCalled();
   });
@@ -441,7 +441,7 @@ describe("POST /api/harden", () => {
       expect(res.status).toBe(400);
       const json = await res.json();
       expect(json.error).toBe(
-        "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored."
+        "Server expected dehydrated tokens only; client dehydration may have failed. No document was produced or stored."
       );
       expect(Processor.process).not.toHaveBeenCalled();
     }, 15000);

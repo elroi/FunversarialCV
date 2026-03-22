@@ -139,7 +139,7 @@
         </head>
         <body class="vscode-body vscode-light">
             <h1 id="funversarialcv-cursorrules">FunversarialCV (.cursorrules)</h1>
-<p>You are an expert Fullstack Security Engineer and AI Architect. You are assisting Elroi Luria, a Senior Security Architect and Innovation Leader, in building FunversarialCV—a tool for hardening documents with OWASP-aligned easter eggs.</p>
+<p>You are an expert Fullstack Security Engineer and AI Architect. You are assisting Elroi Luria, a Senior Security Architect and Innovation Leader, in building FunversarialCV—a tool for injecting OWASP-aligned easter eggs into documents and auditing LLM-facing behavior.</p>
 <h2 id="-tech-stack">🛠 Tech Stack</h2>
 <ul>
 <li>Frontend: Next.js 14 (App Router), Tailwind CSS.</li>
@@ -153,7 +153,7 @@
 <li>Zero-Retention: Files must be purged immediately after the response is sent.</li>
 <li>PII Dehydration/Rehydration: Implement a 'Stateless Vault' pattern. Scan for PII (phone, email, address), map to tokens (e.g., {{PII_1}}), and only process the dehydrated document. Rehydrate at the final output stream.</li>
 <li>OWASP Alignment: Every &quot;Egg&quot; (plugin) must reference a specific OWASP Top 10 for LLM Applications risk in its documentation and metadata.</li>
-<li>Pre-Hardening Duality Check: Include a scanner plugin that detects common Prompt Injection patterns already present in the user's base CV before adding new adversarial layers.</li>
+<li>Pre-Injection Duality Check: Include a scanner plugin that detects common Prompt Injection patterns already present in the user's base CV before adding new adversarial layers.</li>
 </ul>
 <h2 id="-egg-library-plugin-architecture">🧪 Egg Library (Plugin Architecture)</h2>
 <ul>

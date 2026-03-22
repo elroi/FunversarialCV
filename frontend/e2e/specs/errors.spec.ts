@@ -35,7 +35,7 @@ test.describe("Errors", () => {
     await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
       timeout: 15_000,
     });
-    await page.getByRole("button", { name: /harden/i }).click();
+    await page.getByRole("button", { name: /inject eggs/i }).click();
 
     await expect(page.getByText(/Alert:/i)).toBeVisible({ timeout: 10_000 });
     await expect(page.getByRole("button", { name: /retry/i })).toBeVisible();
@@ -77,7 +77,7 @@ test.describe("Errors", () => {
     await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
       timeout: 15_000,
     });
-    await page.getByRole("button", { name: /harden/i }).click();
+    await page.getByRole("button", { name: /inject eggs/i }).click();
     await expect(page.getByRole("button", { name: /retry/i })).toBeVisible({
       timeout: 10_000,
     });
@@ -116,10 +116,10 @@ test.describe("Errors", () => {
     await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
       timeout: 15_000,
     });
-    await page.getByRole("button", { name: /harden/i }).click();
+    await page.getByRole("button", { name: /inject eggs/i }).click();
 
     await expect(page.getByText(/Alert:/i)).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText(/Hardened CV ready/i)).toHaveCount(0);
+    await expect(page.getByText(/eggs injected/i)).toHaveCount(0);
   });
 
   test("uploading PDF shows DOCX-only error and no Armed CV", async ({

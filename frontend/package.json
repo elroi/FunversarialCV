@@ -2,7 +2,7 @@
     "name": "funversarial-cv",
     "version": "1.0.0",
     "private": true,
-    "description": "Adversarial CV hardening tool for security professionals.",
+    "description": "Adversarial CV egg-injection tool for security professionals.",
     "scripts": {
         "dev": "NODE_OPTIONS='--no-deprecation' next dev",
         "build": "next build",

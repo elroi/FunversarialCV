@@ -1,6 +1,6 @@
 /**
- * State reset E2E: after success, clear/change file resets state; change file and harden again works.
- * TDD: tests define that clear and change-file flows reset UI and allow another harden.
+ * State reset E2E: after success, clear/change file resets state; change file and inject eggs again works.
+ * TDD: tests define that clear and change-file flows reset UI and allow another injection run.
  * DOCX-only: uses minimal.docx and mocks return DOCX.
  */
 import { test, expect } from "@playwright/test";
@@ -55,7 +55,7 @@ test.describe("State reset", () => {
     await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
       timeout: 15_000,
     });
-    await page.getByRole("button", { name: /harden/i }).click();
+    await page.getByRole("button", { name: /inject eggs/i }).click();
 
     await expect(
       page.getByRole("button", { name: /download/i })
@@ -67,10 +67,10 @@ test.describe("State reset", () => {
 
     await expect(page.getByText(/Drop your CV here/i)).toBeVisible();
     await expect(page.getByText(securityUiRx.armedCvLabel)).toHaveCount(0);
-    await expect(page.getByText(/Hardened CV ready/i)).toHaveCount(0);
+    await expect(page.getByText(/eggs injected/i)).toHaveCount(0);
   });
 
-  test("after success, selecting another file shows new filename; harden again yields Download", async ({
+  test("after success, selecting another file shows new filename; inject eggs again yields Download", async ({
     page,
   }) => {
     const docxBuffer = getMinimalDocxBuffer();
@@ -105,7 +105,7 @@ test.describe("State reset", () => {
       timeout: 15_000,
     });
     await expect(page.getByText(/minimal\.docx/i)).toBeVisible();
-    await page.getByRole("button", { name: /harden/i }).click();
+    await page.getByRole("button", { name: /inject eggs/i }).click();
 
     await expect(
       page.getByRole("button", { name: /download/i })
@@ -124,7 +124,7 @@ test.describe("State reset", () => {
       timeout: 15_000,
     });
     await expect(page.getByText(/second\.docx/i)).toBeVisible();
-    await page.getByRole("button", { name: /harden/i }).click();
+    await page.getByRole("button", { name: /inject eggs/i }).click();
 
     await expect(
       page.getByRole("button", { name: /download/i })

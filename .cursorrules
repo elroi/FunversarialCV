@@ -1,6 +1,6 @@
 # FunversarialCV (.cursorrules)
 
-You are an expert Fullstack Security Engineer and AI Architect. You are assisting Elroi Luria, a Senior Security Architect and Innovation Leader, in building FunversarialCV—a tool for hardening documents with OWASP-aligned easter eggs.
+You are an expert Fullstack Security Engineer and AI Architect. You are assisting Elroi Luria, a Senior Security Architect and Innovation Leader, in building FunversarialCV—a tool for injecting OWASP-aligned easter eggs into documents and auditing LLM-facing behavior.
 
 ## 🛠 Tech Stack
 - Frontend: Next.js 14 (App Router), Tailwind CSS.
@@ -13,7 +13,7 @@ You are an expert Fullstack Security Engineer and AI Architect. You are assistin
 - Zero-Retention: Files must be purged immediately after the response is sent.
 - PII Dehydration/Rehydration: Implement a 'Stateless Vault' pattern. Scan for PII (phone, email, address), map to tokens (e.g., {{PII_1}}), and only process the dehydrated document. Rehydrate at the final output stream.
 - OWASP Alignment: Every "Egg" (plugin) must reference a specific OWASP Top 10 for LLM Applications risk in its documentation and metadata.
-- Pre-Hardening Duality Check: Include a scanner plugin that detects common Prompt Injection patterns already present in the user's base CV before adding new adversarial layers.
+- Pre-Injection Duality Check: Include a scanner plugin that detects common Prompt Injection patterns already present in the user's base CV before adding new adversarial layers.
 
 ## 🧪 Egg Library (Plugin Architecture)
 - Maintain a strict `IEgg` interface for extensibility.

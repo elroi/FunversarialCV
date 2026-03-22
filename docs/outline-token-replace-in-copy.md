@@ -93,7 +93,7 @@
 
 5. **Tests:**
    - Unit tests: DOCX with a known body XML, assert PII → token in output ZIP. PDF: mock getTextContent, assert overlay or stream replace.
-   - E2E: upload DOCX with PII, harden, assert downloaded file has original layout (e.g. same paragraph structure) and PII restored.
+   - E2E: upload DOCX with PII, Inject Eggs, assert downloaded file has original layout (e.g. same paragraph structure) and PII restored.
 
 ---
 

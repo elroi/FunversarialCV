@@ -17,7 +17,7 @@
 
 | Persona | Goal | Key concerns |
 |--------|------|--------------|
-| **Candidate** | Upload CV and get hardened file without sending PII when possible | More PDFs work client-side; clear feedback when server path is needed; no regression on currently working PDFs |
+| **Candidate** | Upload CV and get file with injected eggs without sending PII when possible | More PDFs work client-side; clear feedback when server path is needed; no regression on currently working PDFs |
 | **Security reviewer** | Minimize PII on server; verify no new attack surface | Fallback only adds client-side parsing; no new server endpoints; WASM/CDN supply chain and CSP if PDFium loads from CDN |
 | **Maintainer** | Extend and debug extraction pipeline | Clear separation of pdfjs vs PDFium code; tests for both paths; docs for future PDF.js upgrade |
 | **Privacy/Compliance** | PII stays in browser where feasible | Fewer “server-side processing required” flows; same zero-retention guarantee when server is used |

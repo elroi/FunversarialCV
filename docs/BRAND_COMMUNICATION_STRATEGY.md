@@ -71,7 +71,7 @@ The product may expose **two modes** (e.g. HR vs security) for the same truth to
 |------|-------------|----------|
 | **Plain (default)** | Primary UI, onboarding, HR mode | explore, understand, configure, download, privacy, scan |
 | **Technical (security / audit)** | Security mode, docs for builders | instrument, vector, audit, triage, red team, OWASP, parser |
-| **Product lexicon** | Consistent across modes when naming features | Egg, Harden, Duality Monitor (define once, link to glossary) |
+| **Product lexicon** | Consistent across modes when naming features | Egg, Inject Eggs (security primary action), Add signals (HR), Duality Monitor (define once, link to glossary) |
 
 **Reconciling “strategic language” with “avoid jargon”:** Prefer plain language until the reader has opted into—or clearly benefits from—precision. The brand is **sharp**, not **inaccessible**.
 
@@ -107,7 +107,7 @@ These points are **brand proof points** as well as architecture.
 
 ### Today: FunversarialCV
 
-The repository ships **FunversarialCV**—tools to harden and audit **professional documents** (CVs/resumes) with OWASP-aligned “eggs,” scans, and privacy-conscious processing. All contributor and roadmap docs should treat this as the **current product scope** unless stated otherwise.
+The repository ships **FunversarialCV**—tools to inject OWASP-aligned “eggs” into and audit **professional documents** (CVs/resumes), with scans and privacy-conscious processing. All contributor and roadmap docs should treat this as the **current product scope** unless stated otherwise.
 
 ### Vision: broader Funversarial ecosystem (not shipped as one product)
 
@@ -152,7 +152,7 @@ How the two internal drafts were reconciled:
 | Term | Meaning |
 |------|---------|
 | **Egg** | A pluggable transformation mapped to an OWASP LLM risk (or creative category); user-configurable. |
-| **Harden** | Run the pipeline to produce an output document with selected eggs applied. |
+| **Inject Eggs** | Security-mode primary action: run the pipeline to produce an output document with selected eggs applied (HR mode: **Add signals**, same pipeline). |
 | **Duality** | Human-facing vs machine-facing layers of the same document; also the security-for-AI / AI-for-security framing. |
 | **Instrument / vector / audit / triage** | Technical vocabulary for security-mode copy—signals, paths of influence, structured review, prioritization. |
 | **Stateless Vault** | Pattern: dehydrate sensitive patterns for processing, rehydrate for output—brand + architecture name. |

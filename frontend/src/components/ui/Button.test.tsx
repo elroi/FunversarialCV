@@ -4,8 +4,8 @@ import { Button } from "./Button";
 
 describe("Button", () => {
   it("renders children and supports primary variant", () => {
-    render(<Button variant="primary">Harden</Button>);
-    const btn = screen.getByRole("button", { name: /harden/i });
+    render(<Button variant="primary">Inject Eggs</Button>);
+    const btn = screen.getByRole("button", { name: /inject eggs/i });
     expect(btn).toBeInTheDocument();
     expect(btn).toHaveClass("border-success");
   });

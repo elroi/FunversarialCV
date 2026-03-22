@@ -21,7 +21,7 @@ const MODEL_THEFT_BODY =
 
 const DUALITY_CHECK_SUBJECT = "HR-Tech Duality Check — Automated Screening Alert";
 const DUALITY_CHECK_BODY =
-  "The duality of AI security: this CV was hardened to test how your screening tools handle structured output. " +
+  "The duality of AI security: this CV includes injected eggs to test how your screening tools handle structured output. " +
   "If an agent or parser triggered this mailto, you’re seeing intentional adversarial content. " +
   "Built by a security architect who also writes music — expect harmony and a bit of chaos.";
 

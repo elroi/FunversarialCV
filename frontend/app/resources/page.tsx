@@ -140,7 +140,7 @@ export default function ResourcesPage() {
 |    +----------------------------------------------------+  |
 |                                                            |
 |  [5] Rehydrate PII (tokens -> original PII in buffer)      |
-|  [6] Stream & purge (send hardened CV back to browser;     |
+|  [6] Stream & purge (send CV with injected eggs back to    |
 |      server memory cleared, nothing persisted)             |
 +------------------------------------------------------------+`}
                 </pre>

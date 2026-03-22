@@ -79,7 +79,7 @@ Legend: **HR-OK** = appropriate for recruiter-facing mode; **Lab** = fine for Se
 |----------------|---------|----------------|--------|
 | `experimentFlowLabel` “RUN THE CV EXPERIMENT” | **Lab** | **Lab** | Same in both [`hr.ts`](../frontend/src/copy/hr.ts) / [`security.ts`](../frontend/src/copy/security.ts)—primary credibility clash for HR. |
 | “Eggs” / egg names | HR uses “options” in several places; Resources still “easter eggs” | “Eggs” everywhere | HR **partially** de-jargonized; engine section title HR: “Options to add”. |
-| “Harden” vs “Add signals” | Add signals | Harden | Good split. |
+| Primary pipeline CTA | Add signals | Inject Eggs | Good split (HR plain / security precise). |
 | “Duality Monitor” vs “Processing steps” | Processing steps | Duality Monitor | Good split. |
 | “Validation Lab” | Same | Same | Sounds like a **classroom**; HR might use “Try in an AI tool” or similar. |
 | “Pipeline / Engine / Terminal log” | Processing steps / log | Pipeline / Terminal | HR reduced; still **terminal** metaphor in `terminalLogTitle`. |

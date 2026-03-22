@@ -13,7 +13,7 @@ export enum OwaspMapping {
 
     /**
      * Human-readable instructions:
-     * - How to manually check that this egg is present in a hardened document.
+     * - How to manually check that this egg is present in the output document.
      * - How to validate that the egg has been implemented correctly.
      */
     manualCheckAndValidation: string;

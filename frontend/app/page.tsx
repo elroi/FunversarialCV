@@ -577,7 +577,7 @@ export default function Home() {
             stage: "rehydration",
             level: "success",
             message:
-              "[REHYDRATE] PII rehydrated into final hardened CV stream. Stateless & Volatile handling complete; nothing persisted.",
+              "[REHYDRATE] PII rehydrated into final CV stream (eggs injected). Stateless & Volatile handling complete; nothing persisted.",
           },
         ]);
       } catch (_err) {

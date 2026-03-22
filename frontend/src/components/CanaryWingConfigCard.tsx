@@ -160,7 +160,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
             baseUrl.trim() !== ""
               ? baseUrl.trim().replace(/\/+$/, "")
               : defaultCanaryBase;
-          const t = token.trim() || "[uuid-generated-on-harden]";
+          const t = token.trim() || "[uuid-generated-on-inject]";
           return `${base}/${t}`;
         })();
   const copyCanaryLink = useCallback(() => {
@@ -507,10 +507,10 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
           Did my canary sing?
         </h4>
         <p className="text-caption text-foreground/70 mb-2">
-          When the canary link in your hardened CV is opened or clicked, the server records the hit (variant, time, and optional client info). To see your results:
+          When the canary link in your CV (after Inject Eggs) is opened or clicked, the server records the hit (variant, time, and optional client info). To see your results:
         </p>
         <ol className="text-caption text-foreground/70 list-decimal list-inside space-y-1 mb-2 ml-0.5">
-          <li><strong>Find the egg</strong> — Open your hardened document (DOCX). Use Select All (Ctrl/Cmd+A) or search for a URL; the canary is embedded as nearly invisible text and/or a clickable region.</li>
+          <li><strong>Find the egg</strong> — Open your output document (DOCX). Use Select All (Ctrl/Cmd+A) or search for a URL; the canary is embedded as nearly invisible text and/or a clickable region.</li>
           <li><strong>Trigger it</strong> — Click the canary link (or have someone/something else open it). The server logs the hit and associates it with your token.</li>
           <li><strong>Watch the result</strong> — Click <strong>Check for triggers</strong> below. You&apos;ll see each trigger with variant (e.g. <code className="text-sm">pdf-clickable</code>) and timestamp; repeated triggers appear in the list.</li>
         </ol>
@@ -537,7 +537,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
           <div className="text-caption text-foreground/80">
             {statusHits.length === 0 ? (
               <p className="text-foreground/60 italic">
-                No triggers yet. Find the canary link in your hardened CV, click it, then click <strong>Check for triggers</strong> above to see it here.
+                No triggers yet. Find the canary link in your CV after Inject Eggs, click it, then click <strong>Check for triggers</strong> above to see it here.
               </p>
             ) : (
               <>

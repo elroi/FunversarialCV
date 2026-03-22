@@ -5,6 +5,8 @@ FunversarialCV is an open-source tool designed for the "duality of AI security".
 
 Built by a Senior Security Architect specialized in AI Governance, this tool serves as a "Red Teaming" exercise for the HR-tech industry.
 
+**Brand and voice (Funversarial family):** [docs/BRAND_COMMUNICATION_STRATEGY.md](docs/BRAND_COMMUNICATION_STRATEGY.md) — narrative guide; [docs/brand-guide.json](docs/brand-guide.json) — structured fields for plans and tooling.
+
 ---
 
 ## 📖 Using FunversarialCV

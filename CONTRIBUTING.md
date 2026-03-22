@@ -145,6 +145,7 @@ These variables are read at runtime; if they are not set, the application falls 
 
 ## Where to look
 
+- **Copy and brand:** [docs/BRAND_COMMUNICATION_STRATEGY.md](docs/BRAND_COMMUNICATION_STRATEGY.md) (voice, scope, trust messaging); [docs/brand-guide.json](docs/brand-guide.json) (machine-readable checklist for plans and agents—keep in sync with the strategy doc). Archived **input drafts** that were merged into the strategy: [docs/brand/drafts/](docs/brand/drafts/).
 - **Implementation details and phase breakdown:** [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)
 - **Egg interface and registry:** [frontend/src/types/egg.ts](frontend/src/types/egg.ts), [frontend/src/eggs/registry.ts](frontend/src/eggs/registry.ts)
 - **API contract (POST /api/harden):** [docs/API.md](docs/API.md)

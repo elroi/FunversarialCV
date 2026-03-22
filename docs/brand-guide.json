@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "document": "docs/BRAND_COMMUNICATION_STRATEGY.md",
+  "sourceDrafts": [
+    "docs/brand/drafts/Funversarial_Brand_Architecture_Universal.md",
+    "docs/brand/drafts/funversarial_brand_communication_final.md"
+  ],
+  "essence": {
+    "elevatorLine": "Funversarial is a safe, hands-on lab for exploring how automated systems behave—and how information layers shape outcomes—without breaking trust.",
+    "taglines": ["Explore systems. Understand outcomes. Stay in control."]
+  },
+  "principles": [
+    {
+      "id": "understanding-not-breaking",
+      "statement": "Observe behavior and reveal mechanics of influence; do not frame the product as teaching illegal or unethical exploitation."
+    },
+    {
+      "id": "systems-shapeable",
+      "statement": "Inputs influence outputs; small deliberate changes can produce observable effects as a literacy insight."
+    },
+    {
+      "id": "lab-not-lecture",
+      "statement": "Insight comes from instrumentation and experimentation in a sandbox-like experience, not theory alone."
+    },
+    {
+      "id": "complexity-approachable",
+      "statement": "Advanced ideas without oversimplification; technical and non-technical audiences get language that fits their context.",
+      "audience": "all"
+    },
+    {
+      "id": "curiosity-valuable",
+      "statement": "Questioning outcomes and exploring why is encouraged; blind trust in opaque systems is not required."
+    },
+    {
+      "id": "responsibility-matters",
+      "statement": "Exploration pairs with ethics: respect for data, safe experimentation, clear intent (red-team/audit framing where appropriate)."
+    },
+    {
+      "id": "architecture-of-duality",
+      "statement": "Security literacy requires understanding human intent vs automated logic and what crosses that boundary."
+    }
+  ],
+  "brandCharacter": [
+    { "trait": "Curious", "meaning": "Encourages exploration and questioning" },
+    { "trait": "Clear", "meaning": "Makes complex ideas understandable" },
+    { "trait": "Practical", "meaning": "Focused on real interaction, not theory alone" },
+    { "trait": "Balanced", "meaning": "Depth with accessibility" },
+    { "trait": "Responsible", "meaning": "Trust and thoughtful use" }
+  ],
+  "tone": {
+    "do": [
+      "direct",
+      "thoughtful",
+      "grounded",
+      "lightly playful or witty where appropriate",
+      "persona-appropriate vocabulary"
+    ],
+    "dont": [
+      "unnecessary jargon on default or HR-facing surfaces",
+      "aggressive phrasing toward people",
+      "sensationalism or over-promising",
+      "implying illegal or unethical use"
+    ]
+  },
+  "vocabulary": {
+    "plainPreferred": [
+      "explore",
+      "understand",
+      "configure",
+      "download",
+      "privacy",
+      "scan"
+    ],
+    "technicalContextTerms": [
+      "instrument",
+      "vector",
+      "audit",
+      "triage",
+      "red team",
+      "OWASP",
+      "parser"
+    ],
+    "productLexicon": ["Egg", "Harden", "Duality Monitor"],
+    "avoidInMarketing": [
+      "unbeatable",
+      "foolproof",
+      "trick recruiters",
+      "destroy parsers"
+    ]
+  },
+  "userExperienceGoals": [
+    "I can explore this myself.",
+    "I understand more than I did before.",
+    "This is something I can reason about.",
+    "I am not dependent on blind trust."
+  ],
+  "trustPillars": [
+    "stateless processing",
+    "zero-retention uploads",
+    "PII-aware handling (dehydration/sanitization as product pattern)",
+    "responsible experimentation framing"
+  ],
+  "design": {
+    "theme": "Hacker-Chic / terminal-first",
+    "defaultMode": "dark",
+    "reference": ".cursorrules Design & Aesthetic"
+  },
+  "productScope": {
+    "currentFocus": "FunversarialCV — document hardening and audit for professional CVs/resumes (this repository).",
+    "visionProjects": [
+      "Funversarial Prompts",
+      "Funversarial Policies",
+      "Funversarial Fraud"
+    ],
+    "visionNote": "Vision projects are not shipped unless explicitly built; label as roadmap in copy."
+  },
+  "personas": [
+    {
+      "id": "candidate",
+      "role": "Candidate / general user",
+      "copyTier": "plain",
+      "planningNote": "Safe, explorable tone; minimal jargon."
+    },
+    {
+      "id": "hr",
+      "role": "Hiring / HR-adjacent",
+      "copyTier": "plain",
+      "planningNote": "Outcomes and trust; avoid security gatekeeping tone."
+    },
+    {
+      "id": "security",
+      "role": "Security / technical",
+      "copyTier": "technical",
+      "planningNote": "Precise terms where they earn clarity; OWASP and audit framing OK."
+    },
+    {
+      "id": "privacy",
+      "role": "Privacy / compliance",
+      "copyTier": "plain",
+      "planningNote": "Stateless, retention, and data-flow promises at messaging level."
+    },
+    {
+      "id": "agent",
+      "role": "LLM / automation planning features",
+      "copyTier": "structured",
+      "planningNote": "Load this file; run Brand check against tone, trustPillars, userExperienceGoals."
+    }
+  ]
+}

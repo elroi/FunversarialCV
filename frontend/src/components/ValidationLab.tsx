@@ -64,12 +64,13 @@ function promptCollapsibleAriaLabel(template: string, promptId: string): string 
 }
 
 export interface ValidationLabProps {
-  enabledEggIds: Set<string>;
+  /** Egg ids included in the last successful arm/harden on this page (latest downloaded CV). */
+  armedEggIds: Set<string>;
   onPromptCopy?: (promptId: string) => void;
 }
 
 export const ValidationLab: React.FC<ValidationLabProps> = ({
-  enabledEggIds,
+  armedEggIds,
   onPromptCopy,
 }) => {
   const copy = useCopy();
@@ -116,7 +117,7 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
         {VALIDATION_PROMPTS.map((prompt) => {
             const isMatch =
               prompt.eggIds.length > 0 &&
-              prompt.eggIds.some((id) => enabledEggIds.has(id));
+              prompt.eggIds.some((id) => armedEggIds.has(id));
             const isCopied = copiedId === prompt.id;
             const titleId = `validation-prompt-${prompt.id}-title`;
             const contentId = `validation-prompt-${prompt.id}-content`;
@@ -131,7 +132,7 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
                         {isMatch && (
                           <span
                             className="rounded border border-success/60 bg-success/10 px-2 py-0.5 text-caption uppercase tracking-wider text-success"
-                            aria-label={`${copy.validationMatchLabel}: option for this test is turned on in Engine Configuration above`}
+                            aria-label={copy.validationMatchBadgeAriaLabel}
                           >
                             {copy.validationMatchLabel}
                           </span>

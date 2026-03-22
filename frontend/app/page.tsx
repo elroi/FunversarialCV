@@ -146,6 +146,8 @@ export default function Home() {
   const [canaryWingPayload, setCanaryWingPayload] = useState<string>("");
   const [metadataShadowPayload, setMetadataShadowPayload] = useState<string>("");
   const [enabledEggIds, setEnabledEggIds] = useState<Set<string>>(() => new Set(DEFAULT_ENABLED_EGG_IDS));
+  /** Eggs applied in the last successful harden; drives Validation Lab ENABLED badge (not live checkboxes). */
+  const [armedEggIds, setArmedEggIds] = useState<Set<string>>(() => new Set());
   const [preserveStyles, setPreserveStyles] = useState(true);
   const [preserveStylesDetailExpanded, setPreserveStylesDetailExpanded] =
     useState(false);
@@ -288,6 +290,7 @@ export default function Home() {
     setSelectedFileName(file.name);
     lastHardenedBlobRef.current = null;
     lastHardenedConfigRef.current = null;
+    setArmedEggIds(new Set());
     setDualityResult(null);
     setLog([]);
     setProcessingState("idle");
@@ -302,6 +305,7 @@ export default function Home() {
     setSuccessMessage(null);
     lastHardenedBlobRef.current = null;
     lastHardenedConfigRef.current = null;
+    setArmedEggIds(new Set());
     setDualityResult(null);
     setLog([]);
     setProcessingState("idle");
@@ -496,6 +500,7 @@ export default function Home() {
           eggIds: [...eggIdsToUse],
           preserveStyles,
         };
+        setArmedEggIds(new Set(eggIdsToUse));
 
         const canaryTokenUsed = data.canaryTokenUsed;
         if (typeof canaryTokenUsed === "string" && canaryTokenUsed.trim() !== "") {
@@ -593,6 +598,7 @@ export default function Home() {
     setSuccessMessage(null);
     lastHardenedBlobRef.current = null;
     lastHardenedConfigRef.current = null;
+    setArmedEggIds(new Set());
     setClientPiiMap(null);
     setProcessingState("processing");
     setActiveStage("accept");
@@ -1273,7 +1279,7 @@ export default function Home() {
               defaultExpanded={false}
             >
               <ValidationLab
-                enabledEggIds={enabledEggIds}
+                armedEggIds={armedEggIds}
                 onPromptCopy={(id) =>
                   setLog((prev) => [
                     ...prev,

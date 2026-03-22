@@ -15,9 +15,12 @@ function expandPrompt(promptId: string) {
   );
 }
 
+/** Default `AudienceProvider` tests as HR; badge aria matches `hrCopy.validationMatchBadgeAriaLabel`. */
+const matchBadgeAriaHr = /Enabled:.*last successful run on this page/i;
+
 describe("ValidationLab", () => {
   it("renders protocol copy and per-prompt rows without an outer fold", () => {
-    renderWithAudience(<ValidationLab enabledEggIds={new Set()} />);
+    renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
 
     expect(
       screen.getByText(/How to test your CV|Manual Mirror Protocol/i)
@@ -27,7 +30,7 @@ describe("ValidationLab", () => {
   });
 
   it("keeps prompt descriptions inside collapsed prompt panels until expanded", () => {
-    renderWithAudience(<ValidationLab enabledEggIds={new Set()} />);
+    renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
 
     const base00Panel = document.getElementById("validation-prompt-BASE-00-content");
     expect(base00Panel).toBeTruthy();
@@ -55,7 +58,7 @@ describe("ValidationLab", () => {
   });
 
   it("LLM01, LLM02, LLM09 have external links in expanded body; BASE-00 does not", () => {
-    renderWithAudience(<ValidationLab enabledEggIds={new Set()} />);
+    renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
 
     const base00Card = screen.getByTestId("validation-prompt-BASE-00");
     expandPrompt("BASE-00");
@@ -83,7 +86,7 @@ describe("ValidationLab", () => {
     const onPromptCopy = jest.fn();
 
     renderWithAudience(
-      <ValidationLab enabledEggIds={new Set()} onPromptCopy={onPromptCopy} />
+      <ValidationLab armedEggIds={new Set()} onPromptCopy={onPromptCopy} />
     );
 
     expandPrompt("LLM01");
@@ -100,39 +103,48 @@ describe("ValidationLab", () => {
     });
   });
 
-  it("when enabledEggIds contains invisible-hand, LLM01 card shows match badge", () => {
+  it("when armedEggIds contains invisible-hand, LLM01 card shows match badge", () => {
     renderWithAudience(
-      <ValidationLab enabledEggIds={new Set(["invisible-hand"])} />
+      <ValidationLab armedEggIds={new Set(["invisible-hand"])} />
     );
 
-    const matchBadge = screen.getByLabelText(/option for this test is turned on/i);
+    const matchBadge = screen.getByLabelText(matchBadgeAriaHr);
     expect(matchBadge).toBeInTheDocument();
     const llm01Card = screen.getByTestId("validation-prompt-LLM01");
     expect(llm01Card).toContainElement(matchBadge);
   });
 
-  it("when enabledEggIds is empty, no match badge is shown", () => {
-    renderWithAudience(<ValidationLab enabledEggIds={new Set()} />);
+  it("when armedEggIds is empty, no match badge is shown", () => {
+    renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
 
-    expect(screen.queryByLabelText(/option for this test is turned on/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(matchBadgeAriaHr)).not.toBeInTheDocument();
   });
 
-  it("when enabledEggIds contains metadata-shadow, LLM02 card shows match badge", () => {
+  it("when armedEggIds contains metadata-shadow, LLM02 card shows match badge", () => {
     renderWithAudience(
-      <ValidationLab enabledEggIds={new Set(["metadata-shadow"])} />
+      <ValidationLab armedEggIds={new Set(["metadata-shadow"])} />
     );
 
-    const matchBadge = screen.getByLabelText(/option for this test is turned on/i);
+    const matchBadge = screen.getByLabelText(matchBadgeAriaHr);
     const llm02Card = screen.getByTestId("validation-prompt-LLM02");
     expect(llm02Card).toContainElement(matchBadge);
   });
 
-  it("when enabledEggIds contains canary-wing, LLM09 card shows match badge", () => {
+  it("when armedEggIds contains incident-mailto only, LLM02 card shows match badge", () => {
     renderWithAudience(
-      <ValidationLab enabledEggIds={new Set(["canary-wing"])} />
+      <ValidationLab armedEggIds={new Set(["incident-mailto"])} />
     );
 
-    const matchBadge = screen.getByLabelText(/option for this test is turned on/i);
+    const matchBadge = screen.getByLabelText(matchBadgeAriaHr);
+    expect(screen.getByTestId("validation-prompt-LLM02")).toContainElement(matchBadge);
+  });
+
+  it("when armedEggIds contains canary-wing, LLM09 card shows match badge", () => {
+    renderWithAudience(
+      <ValidationLab armedEggIds={new Set(["canary-wing"])} />
+    );
+
+    const matchBadge = screen.getByLabelText(matchBadgeAriaHr);
     const llm09Card = screen.getByTestId("validation-prompt-LLM09");
     expect(llm09Card).toContainElement(matchBadge);
   });

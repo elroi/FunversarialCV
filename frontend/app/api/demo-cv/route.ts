@@ -8,6 +8,9 @@ import { MIME_DOCX, MIME_PDF, detectDocumentType } from "@/engine/documentExtrac
 /** Query string drives output; `request.url` is dynamic — do not probe at static generation. */
 export const dynamic = "force-dynamic";
 
+/** docx/pdf-lib builders expect Node APIs; keep off Edge. */
+export const runtime = "nodejs";
+
 type Variant = "clean" | "dirty";
 type Format = "pdf" | "docx";
 

@@ -18,7 +18,10 @@ import { ExperimentFlowPanelBody } from "../src/components/ExperimentFlowPanel";
 import { dehydrateInBrowser, rehydrateInBrowser } from "../src/lib/clientVault";
 import { createDocumentWithTextInBrowser } from "../src/lib/clientDocumentCreate";
 import { replacePiiWithTokensInCopy } from "../src/lib/clientTokenReplaceInCopy";
-import { detectDocumentTypeFromBuffer } from "../src/lib/clientDocumentExtract";
+import {
+  decodeBase64ToUint8Array,
+  detectDocumentTypeFromUint8Array,
+} from "../src/lib/clientDocumentExtract";
 import type { PiiMap } from "../src/lib/clientVaultTypes";
 import type { DualityCheckResult } from "../src/engine/dualityCheck";
 import { EGG_OPTIONS, DEFAULT_ENABLED_EGG_IDS } from "../src/eggs/eggMetadata";
@@ -269,26 +272,8 @@ export default function Home() {
     });
   };
 
-  /**
-   * Sniff magic bytes and arm the pipeline with a .docx only.
-   * Returns false when the file is rejected (error message already set).
-   * Used by DropZone and by demo preset load so callers can await before marking success.
-   */
-  const validateAndArmFile = async (file: File): Promise<boolean> => {
-    const buf = await file.slice(0, 8).arrayBuffer();
-    const detected = detectDocumentTypeFromBuffer(buf);
-    if (detected === "pdf") {
-      setError(
-        "This file looks like a PDF. We currently support Word documents (.docx) only."
-      );
-      return false;
-    }
-    if (detected !== "docx") {
-      setError(
-        "File content is not a valid Word document. Please upload a real .docx file."
-      );
-      return false;
-    }
+  /** Applies a validated file to pipeline state (clears prior run, errors, PII map). */
+  const armPipelineWithFile = useCallback((file: File) => {
     setError(null);
     setSuccessMessage(null);
     setSelectedFile(file);
@@ -301,6 +286,28 @@ export default function Home() {
     setProcessingState("idle");
     setActiveStage(undefined);
     setClientPiiMap(null);
+  }, []);
+
+  /**
+   * Sniff magic bytes and arm the pipeline with a .docx only.
+   * Returns false when the file is rejected (error message already set).
+   */
+  const validateAndArmFile = async (file: File): Promise<boolean> => {
+    const head = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+    const detected = detectDocumentTypeFromUint8Array(head);
+    if (detected === "pdf") {
+      setError(
+        "This file looks like a PDF. We currently support Word documents (.docx) only."
+      );
+      return false;
+    }
+    if (detected !== "docx") {
+      setError(
+        "File content is not a valid Word document. Please upload a real .docx file."
+      );
+      return false;
+    }
+    armPipelineWithFile(file);
     return true;
   };
 
@@ -770,9 +777,23 @@ export default function Home() {
       setSuccessMessage(null);
       const url = `/api/demo-cv?variant=${variant}&format=${format}`;
       const res = await fetch(url);
-      const data = await res.json().catch(() => null);
+      const data = (await res.json().catch(() => null)) as {
+        bufferBase64?: unknown;
+        mimeType?: unknown;
+        originalName?: unknown;
+        error?: unknown;
+      } | null;
+
+      if (!res.ok) {
+        const apiMsg =
+          data && typeof data.error === "string" && data.error.trim() !== ""
+            ? data.error
+            : "Failed to fetch demo CV. Please try again.";
+        setError(apiMsg);
+        return false;
+      }
+
       if (
-        !res.ok ||
         !data ||
         typeof data.bufferBase64 !== "string" ||
         typeof data.mimeType !== "string" ||
@@ -781,19 +802,43 @@ export default function Home() {
         setError("Failed to fetch demo CV. Please try again.");
         return false;
       }
-      const binaryString = atob(data.bufferBase64.trim());
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
+
+      let bytes: Uint8Array;
+      try {
+        bytes = decodeBase64ToUint8Array(data.bufferBase64);
+      } catch {
+        setError("Demo CV data could not be decoded. Please try again.");
+        return false;
       }
+
       if (bytes.length === 0) {
         setError("Demo CV document was empty. Please try again.");
         return false;
       }
-      const demoFile = new File([bytes], data.originalName, {
+
+      const detected = detectDocumentTypeFromUint8Array(bytes);
+      if (detected === "pdf") {
+        setError(
+          "This file looks like a PDF. We currently support Word documents (.docx) only."
+        );
+        return false;
+      }
+      if (detected !== "docx") {
+        setError(
+          "The demo file was not recognized as a Word document. Please try again."
+        );
+        return false;
+      }
+
+      const arrayBuffer = bytes.buffer.slice(
+        bytes.byteOffset,
+        bytes.byteOffset + bytes.byteLength
+      ) as ArrayBuffer;
+      const demoFile = new File([arrayBuffer], data.originalName, {
         type: data.mimeType,
       });
-      return await validateAndArmFile(demoFile);
+      armPipelineWithFile(demoFile);
+      return true;
     } catch {
       setError("Failed to fetch demo CV. Please try again.");
       return false;
@@ -809,16 +854,22 @@ export default function Home() {
         setError("Failed to download demo CV. Please try again.");
         return;
       }
-      const binaryString = atob(data.bufferBase64.trim());
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
+      let bytes: Uint8Array;
+      try {
+        bytes = decodeBase64ToUint8Array(data.bufferBase64);
+      } catch {
+        setError("Failed to download demo CV. Please try again.");
+        return;
       }
       if (bytes.length === 0) {
         setError("Demo CV document was empty. Please try again.");
         return;
       }
-      const blob = new Blob([bytes], { type: data.mimeType });
+      const arrayBuffer = bytes.buffer.slice(
+        bytes.byteOffset,
+        bytes.byteOffset + bytes.byteLength
+      ) as ArrayBuffer;
+      const blob = new Blob([arrayBuffer], { type: data.mimeType });
       const urlObj = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = urlObj;

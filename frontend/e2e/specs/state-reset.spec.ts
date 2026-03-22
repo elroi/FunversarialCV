@@ -7,6 +7,7 @@ import { test, expect } from "@playwright/test";
 import path from "path";
 import fs from "fs";
 import { expandEngineConfigurationSection } from "../helpers/engine-section";
+import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
 
 const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
 
@@ -44,6 +45,7 @@ test.describe("State reset", () => {
     mockHardenSuccess(page);
 
     await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
 
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
@@ -90,6 +92,7 @@ test.describe("State reset", () => {
     });
 
     await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
 
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));

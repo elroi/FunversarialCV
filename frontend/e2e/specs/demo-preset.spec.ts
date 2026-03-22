@@ -4,6 +4,7 @@
  */
 import { test, expect } from "@playwright/test";
 import { expandEngineConfigurationSection } from "../helpers/engine-section";
+import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
 
 const demoPdfPayload = {
   bufferBase64: Buffer.from("%PDF-1.4\n%\n").toString("base64"),
@@ -56,6 +57,7 @@ test.describe("Demo preset", () => {
     mockDemoCvAndHarden(page, "docx");
 
     await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
 
     await page.getByRole("button", { name: /use sample cv to test/i }).click();
     await page.getByRole("button", { name: /clean · docx/i }).click();
@@ -90,6 +92,7 @@ test.describe("Demo preset", () => {
     mockDemoCvAndHarden(page, "docx");
 
     await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
 
     await page.getByRole("button", { name: /use sample cv to test/i }).click();
     await page.getByRole("button", { name: /dirty · docx/i }).click();

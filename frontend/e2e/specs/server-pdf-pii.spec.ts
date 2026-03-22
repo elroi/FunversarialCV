@@ -3,12 +3,14 @@
  * Replaced former "Server PDF with PII" flow; v1 supports DOCX only.
  */
 import { test, expect } from "@playwright/test";
+import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
 
 test.describe("PDF rejected (DOCX-only)", () => {
   test("uploading PDF shows DOCX-only message and server-PDF dialog never appears", async ({
     page,
   }) => {
     await page.goto("/?e2eServerPdf=1");
+    await ensureSecurityAudienceForE2e(page);
 
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles({

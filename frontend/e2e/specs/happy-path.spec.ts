@@ -6,6 +6,7 @@ import { test, expect } from "@playwright/test";
 import path from "path";
 import fs from "fs";
 import { expandEngineConfigurationSection } from "../helpers/engine-section";
+import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
 
 const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
 const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx"));
@@ -13,6 +14,7 @@ const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx")
 test.describe("Happy path", () => {
   test("DOCX: upload, harden, download yields valid DOCX", async ({ page }) => {
     await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
 
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
@@ -74,6 +76,7 @@ test.describe("Happy path", () => {
     });
 
     await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
 
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(docxPath);

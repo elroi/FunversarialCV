@@ -3,12 +3,14 @@
  * TDD: tests define that main navigation flows work.
  */
 import { test, expect } from "@playwright/test";
+import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
 
 test.describe("Navigation", () => {
   test("Home → Resources → Back home: URL and key content", async ({
     page,
   }) => {
     await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
 
     await expect(page.getByText(/PII · client vault/i)).toBeVisible();
     const resourcesLink = page.getByRole("link", { name: /resources/i });

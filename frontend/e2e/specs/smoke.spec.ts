@@ -4,6 +4,7 @@
  */
 import { test, expect } from "@playwright/test";
 import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
+import { securityUiRx } from "../helpers/security-ui";
 
 test.describe("Smoke", () => {
   test("home page loads and shows trust line plus primary drop zone entry", async ({
@@ -11,7 +12,7 @@ test.describe("Smoke", () => {
   }) => {
     await page.goto("/");
     await ensureSecurityAudienceForE2e(page);
-    await expect(page.getByText(/PII · client vault/i)).toBeVisible();
+    await expect(page.getByText(securityUiRx.piiModeBadge)).toBeVisible();
   });
 
   test("home page shows drop zone when no file selected", async ({ page }) => {

@@ -27,8 +27,17 @@ jobs:
         working-directory: frontend
         run: npx playwright install --with-deps chromium
 
+      # Prebuild so Playwright can use `next start` instead of `next dev`.
+      # Dev triggers on-demand compilation per route and serializes E2E badly.
+      - name: Build Next.js for E2E
+        working-directory: frontend
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+
       - name: Run E2E tests
         working-directory: frontend
         run: npm run test:e2e
         env:
           CI: "true"
+          NEXT_TELEMETRY_DISABLED: "1"

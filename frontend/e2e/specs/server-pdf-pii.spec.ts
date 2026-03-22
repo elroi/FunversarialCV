@@ -4,6 +4,7 @@
  */
 import { test, expect } from "@playwright/test";
 import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
+import { securityUiRx } from "../helpers/security-ui";
 
 test.describe("PDF rejected (DOCX-only)", () => {
   test("uploading PDF shows DOCX-only message and server-PDF dialog never appears", async ({
@@ -22,7 +23,7 @@ test.describe("PDF rejected (DOCX-only)", () => {
     await expect(
       page.getByText(/looks like a PDF|support.*\.docx.*only|only.*word documents.*\.docx.*allowed/i)
     ).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText(/Armed CV:/i)).not.toBeVisible();
+    await expect(page.getByText(securityUiRx.armedCvLabel)).not.toBeVisible();
     await expect(
       page.getByRole("heading", { name: /Server-side processing required/i })
     ).not.toBeVisible();

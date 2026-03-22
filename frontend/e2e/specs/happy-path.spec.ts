@@ -7,6 +7,7 @@ import path from "path";
 import fs from "fs";
 import { expandEngineConfigurationSection } from "../helpers/engine-section";
 import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
+import { securityUiRx } from "../helpers/security-ui";
 
 const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
 const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx"));
@@ -19,8 +20,10 @@ test.describe("Happy path", () => {
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
 
-    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
     await expandEngineConfigurationSection(page);
+    await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
+      timeout: 15_000,
+    });
     await page.getByRole("button", { name: /harden/i }).click();
 
     await expect(
@@ -81,8 +84,10 @@ test.describe("Happy path", () => {
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(docxPath);
 
-    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
     await expandEngineConfigurationSection(page);
+    await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
+      timeout: 15_000,
+    });
     await page.getByRole("button", { name: /harden/i }).click();
 
     await expect(

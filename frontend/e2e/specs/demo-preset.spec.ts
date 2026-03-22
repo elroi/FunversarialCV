@@ -5,6 +5,7 @@
 import { test, expect } from "@playwright/test";
 import { expandEngineConfigurationSection } from "../helpers/engine-section";
 import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
+import { securityUiRx } from "../helpers/security-ui";
 
 const demoPdfPayload = {
   bufferBase64: Buffer.from("%PDF-1.4\n%\n").toString("base64"),
@@ -59,11 +60,13 @@ test.describe("Demo preset", () => {
     await page.goto("/");
     await ensureSecurityAudienceForE2e(page);
 
-    await page.getByRole("button", { name: /use sample cv to test/i }).click();
+    await page.getByRole("button", { name: securityUiRx.sampleCvButton }).click();
     await page.getByRole("button", { name: /clean · docx/i }).click();
 
-    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
     await expandEngineConfigurationSection(page);
+    await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(page.getByRole("button", { name: /harden/i })).toBeEnabled();
 
     await page.getByRole("button", { name: /harden/i }).click();
@@ -94,11 +97,13 @@ test.describe("Demo preset", () => {
     await page.goto("/");
     await ensureSecurityAudienceForE2e(page);
 
-    await page.getByRole("button", { name: /use sample cv to test/i }).click();
+    await page.getByRole("button", { name: securityUiRx.sampleCvButton }).click();
     await page.getByRole("button", { name: /dirty · docx/i }).click();
 
-    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
     await expandEngineConfigurationSection(page);
+    await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(page.getByRole("button", { name: /harden/i })).toBeEnabled();
 
     await page.getByRole("button", { name: /harden/i }).click();

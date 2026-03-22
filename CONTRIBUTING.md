@@ -13,6 +13,7 @@ cd frontend && npm install && npm run dev
 - **Run E2E tests (full suite):** `npm run test:e2e` (starts dev server if needed; requires Playwright: `npx playwright install chromium`). For faster local runs, start the dev server in another terminal and E2E will reuse it.
 - **Run E2E smoke tests only:** `npx playwright test e2e/specs/smoke.spec.ts e2e/specs/happy-path.spec.ts`
 - **Generate E2E fixtures:** `npm run gen:e2e-fixtures` (writes `e2e/fixtures/minimal.pdf` and `minimal.docx`; v1 E2E use DOCX only)
+- **Homepage / copy changes:** Many E2E flows assume the **security** audience (home defaults to HR). After `page.goto("/")`, call `ensureSecurityAudienceForE2e` when asserting security copy. Security-audience matchers are centralized in `e2e/helpers/security-ui.ts` (derived from `src/copy/security.ts`). See `frontend/e2e/README.md`.
 
 ### Recommended local workflow
 

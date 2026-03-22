@@ -5,7 +5,8 @@ import clsx from "clsx";
 import { useCopy } from "../copy";
 
 export interface DropZoneProps {
-  onFileSelect: (file: File) => void;
+  /** May be async (e.g. magic-byte validation on the home page). */
+  onFileSelect: (file: File) => void | Promise<void>;
   accept?: string;
   maxSizeBytes?: number;
   /** Optional ref the parent can use to open the file picker (e.g. for "Change file"). */

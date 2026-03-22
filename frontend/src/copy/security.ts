@@ -42,6 +42,8 @@ export const securityCopy: Copy = {
   dirtyLabel: "Dirty · DOCX",
   dirtySublabel: "Adversarial sample",
   demoLoadingMessage: "> Generating demo CV… this may take a few seconds.",
+  demoArmedInlineHint:
+    "> Sample CV armed — Engine Configuration opened below. Use Harden when ready.",
   lastPresetLabel: "> Last preset:",
   armedCvLabel: "> Armed CV:",
   downloadDemoLabel: "Download to view current demo as-is",
@@ -239,7 +241,9 @@ export const securityCopy: Copy = {
   validationLabManualMirrorProtocol:
     "Manual Mirror Protocol — How to test your Armed CV in an external LLM:\n\n(1) Harden and download your CV on this page.\n(2) Open an external LLM (e.g. ChatGPT, Claude) in another tab and paste the downloaded CV into the chat.\n(3) Pick a prompt below, click [COPY], and paste it into the same conversation.\n(4) Compare the model’s reply to the diagnostic goal under that prompt (e.g. did it follow hidden instructions, leak metadata, or over-trust the document?). If the behaviour matches the goal, your forensic proof-of-concept succeeds.",
   validationLabMatchBadgeHint:
-    "ENABLED means the option this test targets is currently turned on in Engine Configuration above.",
+    "ENABLED means this prompt’s egg was applied in your last successful Harden on this page—the badge reflects your latest downloaded CV, not checkboxes alone. After you change eggs or payloads, Harden or Re-process to refresh.",
+  validationMatchBadgeAriaLabel:
+    "ENABLED: this prompt’s egg was applied in your last successful Harden on this page.",
   validationCopySuccessLogMessage: "> [SYSTEM] {id} Prompt copied to clipboard",
   validationCopyButton: "COPY",
   validationCopyButtonSuccess: "SUCCESS",

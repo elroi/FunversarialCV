@@ -6,6 +6,8 @@ import {
   extractTextFromBuffer,
   MIME_PDF,
   detectDocumentTypeFromBuffer,
+  detectDocumentTypeFromUint8Array,
+  decodeBase64ToUint8Array,
 } from "./clientDocumentExtract";
 import * as clientPdfium from "./clientPdfium";
 
@@ -23,6 +25,40 @@ describe("detectDocumentTypeFromBuffer", () => {
   it("returns null for empty or unknown content", () => {
     expect(detectDocumentTypeFromBuffer(new ArrayBuffer(0))).toBeNull();
     expect(detectDocumentTypeFromBuffer(new Uint8Array([0x00, 0x01]).buffer)).toBeNull();
+  });
+});
+
+describe("detectDocumentTypeFromUint8Array", () => {
+  it("matches buffer helper for PK and %PDF", () => {
+    const pk = new Uint8Array([0x50, 0x4b, 0x03, 0x04]);
+    const pdf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]);
+    expect(detectDocumentTypeFromUint8Array(pk)).toBe("docx");
+    expect(detectDocumentTypeFromUint8Array(pdf)).toBe("pdf");
+  });
+
+  it("reads magic from the start of a larger view (pooled-buffer safe)", () => {
+    const big = new Uint8Array(1024);
+    big[100] = 0x50;
+    big[101] = 0x4b;
+    big[102] = 0x03;
+    big[103] = 0x04;
+    expect(detectDocumentTypeFromUint8Array(big.subarray(100, 104))).toBe("docx");
+    expect(detectDocumentTypeFromUint8Array(big)).toBeNull();
+  });
+});
+
+describe("decodeBase64ToUint8Array", () => {
+  it("decodes standard base64 and ignores whitespace", () => {
+    const raw = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0xff, 0x00]);
+    const b64 = Buffer.from(raw).toString("base64");
+    const spaced = `${b64.slice(0, 4)} \n ${b64.slice(4)}`;
+    const out = decodeBase64ToUint8Array(spaced);
+    expect(out.length).toBe(raw.length);
+    expect(Array.from(out)).toEqual(Array.from(raw));
+  });
+
+  it("throws on invalid base64", () => {
+    expect(() => decodeBase64ToUint8Array("not-valid!!!")).toThrow("Invalid base64");
   });
 });
 

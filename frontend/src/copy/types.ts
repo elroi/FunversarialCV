@@ -39,6 +39,8 @@ export interface Copy {
   dirtyLabel: string;
   dirtySublabel: string;
   demoLoadingMessage: string;
+  /** Shown under “Last preset” after a sample CV arms successfully (Engine section auto-opens). */
+  demoArmedInlineHint: string;
   lastPresetLabel: string;
   armedCvLabel: string;
   downloadDemoLabel: string;
@@ -206,6 +208,8 @@ export interface Copy {
   validationLabPromptCollapsibleAriaLabel: string;
   validationLabManualMirrorProtocol: string;
   validationLabMatchBadgeHint: string;
+  /** Full aria-label for the ENABLED / Enabled match badge on a validation prompt row. */
+  validationMatchBadgeAriaLabel: string;
   validationCopySuccessLogMessage: string; // template: use {id} for prompt id
   validationCopyButton: string;
   validationCopyButtonSuccess: string;

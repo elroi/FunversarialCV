@@ -9,6 +9,8 @@ import Home from "./page";
 import * as ClientVault from "../src/lib/clientVault";
 import * as ClientDocumentCreate from "../src/lib/clientDocumentCreate";
 import * as ClientTokenReplace from "../src/lib/clientTokenReplaceInCopy";
+import { buildStyledDemoCvDocx } from "../src/lib/demoCvBuilders";
+import { MIME_DOCX } from "../src/engine/documentExtract";
 
 const createFile = (name: string, type: string) =>
   new File(["dummy"], name, { type });
@@ -21,13 +23,17 @@ function createDocxFile(name: string) {
   });
 }
 
-/** Engine / “How it runs” is collapsed by default; expand before Harden or egg controls. */
-function expandEngineConfigSection() {
-  fireEvent.click(
-    screen.getByRole("button", {
-      name: /engine configuration: show or hide|how it runs: show or hide/i,
-    })
-  );
+/**
+ * Engine fold may auto-open after arming a CV; only click if still collapsed
+ * so we never toggle it shut before Harden / egg tests.
+ */
+function ensureEngineConfigExpanded() {
+  const btn = screen.getByRole("button", {
+    name: /engine configuration: show or hide|how it runs: show or hide/i,
+  });
+  if (btn.getAttribute("aria-expanded") !== "true") {
+    fireEvent.click(btn);
+  }
 }
 
 function mockFetchSuccess(originalName: string = "resume.docx") {
@@ -190,7 +196,7 @@ describe("Home page", () => {
         name: /engine configuration: show or hide/i,
       });
       expect(engineBtn).toHaveAttribute("aria-expanded", "false");
-      expandEngineConfigSection();
+      ensureEngineConfigExpanded();
       expect(screen.getByText("Engine Configuration")).toBeInTheDocument();
       expect(
         screen.getByText(
@@ -252,7 +258,7 @@ describe("Home page", () => {
         expect(screen.getByText(/Armed CV:/i)).toBeInTheDocument();
       });
 
-      expandEngineConfigSection();
+      ensureEngineConfigExpanded();
 
       expect(
         screen.getByText(/Expand each egg to set payloads, then click Harden/i)
@@ -314,7 +320,7 @@ describe("Home page", () => {
         expect(screen.getByText(/Armed CV:/i)).toBeInTheDocument();
       });
 
-      expandEngineConfigSection();
+      ensureEngineConfigExpanded();
 
       fireEvent.click(screen.getByRole("button", { name: /harden/i }));
 
@@ -381,7 +387,7 @@ describe("Home page", () => {
         target: { files: [createDocxFile("resume.docx")] },
       });
 
-      expandEngineConfigSection();
+      ensureEngineConfigExpanded();
 
       await waitFor(() => {
         expect(screen.getByRole("button", { name: /harden/i })).toBeInTheDocument();
@@ -416,7 +422,7 @@ describe("Home page", () => {
         expect(screen.getByText(/Armed CV:/i)).toBeInTheDocument();
       });
 
-      expandEngineConfigSection();
+      ensureEngineConfigExpanded();
 
       const clearBtn = screen.getByRole("button", { name: /clear file|change file/i });
       expect(clearBtn).toBeInTheDocument();
@@ -445,7 +451,7 @@ describe("Home page", () => {
         target: { files: [createDocxFile("resume.docx")] },
       });
 
-      expandEngineConfigSection();
+      ensureEngineConfigExpanded();
 
       await waitFor(() => {
         const btn = screen.getByRole("button", { name: /harden/i });
@@ -486,7 +492,7 @@ describe("Home page", () => {
         expect(screen.getByText(/Armed CV:/i)).toBeInTheDocument();
       });
 
-      expandEngineConfigSection();
+      ensureEngineConfigExpanded();
 
       const invisibleHandCheckbox = screen.getByRole("checkbox", { name: /Invisible Hand/i });
       fireEvent.click(invisibleHandCheckbox);
@@ -522,7 +528,7 @@ describe("Home page", () => {
         target: { files: [createDocxFile("resume.docx")] },
       });
 
-      expandEngineConfigSection();
+      ensureEngineConfigExpanded();
 
       await waitFor(() => {
         expect(screen.getByText(/Eggs to run/i)).toBeInTheDocument();
@@ -553,7 +559,7 @@ describe("Home page", () => {
         target: { files: [createDocxFile("resume.docx")] },
       });
 
-      expandEngineConfigSection();
+      ensureEngineConfigExpanded();
 
       await waitFor(() => {
         expect(screen.getByText(/Eggs to run/i)).toBeInTheDocument();
@@ -586,7 +592,7 @@ describe("Home page", () => {
       await waitFor(() => {
         expect(screen.getByText(/Armed CV:/i)).toBeInTheDocument();
       });
-      expandEngineConfigSection();
+      ensureEngineConfigExpanded();
       await waitFor(() => {
         expect(screen.getByRole("button", { name: /clear file|change file/i })).toBeInTheDocument();
       });
@@ -602,7 +608,7 @@ describe("Home page", () => {
         target: { files: [createDocxFile("cv.docx")] },
       });
       await waitFor(() => screen.getByText(/Armed CV:/i));
-      expandEngineConfigSection();
+      ensureEngineConfigExpanded();
       await waitFor(() => screen.getByRole("button", { name: /harden/i }));
       fireEvent.click(screen.getByRole("button", { name: /harden/i }));
       await waitFor(() => screen.getByRole("button", { name: /download/i }));
@@ -620,7 +626,7 @@ describe("Home page", () => {
         target: { files: [createDocxFile("cv.docx")] },
       });
       await waitFor(() => screen.getByText(/Armed CV:/i));
-      expandEngineConfigSection();
+      ensureEngineConfigExpanded();
       await waitFor(() => screen.getByRole("button", { name: /harden/i }));
       fireEvent.click(screen.getByRole("button", { name: /harden/i }));
       await waitFor(() => screen.getByRole("button", { name: /retry/i }));
@@ -643,7 +649,7 @@ describe("Home page", () => {
         target: { files: [createDocxFile("resume.docx")] },
       });
       await waitFor(() => screen.getByText(/Armed CV:/i));
-      expandEngineConfigSection();
+      ensureEngineConfigExpanded();
       await waitFor(() => screen.getByText(/Eggs to run/i));
       const label = screen.getByRole("checkbox", { name: /Invisible Hand/i }).closest("label");
       expect(label).toHaveClass("py-2");
@@ -659,7 +665,7 @@ describe("Home page", () => {
         target: { files: [createDocxFile("cv.docx")] },
       });
       await waitFor(() => screen.getByText(/Armed CV:/i));
-      expandEngineConfigSection();
+      ensureEngineConfigExpanded();
       await waitFor(() => screen.getByRole("button", { name: /harden/i }));
       fireEvent.click(screen.getByRole("button", { name: /harden/i }));
       await waitFor(() => screen.getByRole("button", { name: /download/i }));
@@ -676,7 +682,7 @@ describe("Home page", () => {
         target: { files: [createDocxFile("cv.docx")] },
       });
       await waitFor(() => screen.getByText(/Armed CV:/i));
-      expandEngineConfigSection();
+      ensureEngineConfigExpanded();
       await waitFor(() => screen.getByRole("button", { name: /harden/i }));
       fireEvent.click(screen.getByRole("button", { name: /harden/i }));
       await waitFor(() => screen.getByRole("button", { name: /retry/i }));
@@ -731,6 +737,25 @@ describe("Home page", () => {
           originalName: "demo.pdf",
         }),
       } as unknown as Response);
+    });
+
+    it("arms the engine when Clean · DOCX returns a real docx buffer from the API", async () => {
+      const buffer = await buildStyledDemoCvDocx("clean");
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          bufferBase64: Buffer.from(buffer).toString("base64"),
+          mimeType: MIME_DOCX,
+          originalName: "FunversarialCV-demo-clean.docx",
+        }),
+      } as unknown as Response);
+
+      renderWithAudience(<Home />);
+      fireEvent.click(screen.getByRole("button", { name: /clean · docx/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(/CV loaded:|Armed CV:/i)).toBeInTheDocument();
+      });
     });
   });
 
@@ -801,7 +826,7 @@ describe("Home page", () => {
           target: { files: [createDocxFile("resume.docx")] },
         });
         await waitFor(() => screen.getByText(/Armed CV:/i));
-        expandEngineConfigSection();
+        ensureEngineConfigExpanded();
         await waitFor(() => screen.getByText(/Eggs to run/i));
         const invisibleHand = screen.getByRole("button", { name: /expand.*Invisible Hand/i });
         const incidentMailto = screen.getByRole("button", { name: /expand.*Mailto Surprise/i });
@@ -820,7 +845,7 @@ describe("Home page", () => {
           target: { files: [createDocxFile("resume.docx")] },
         });
         await waitFor(() => screen.getByText(/Armed CV:/i));
-        expandEngineConfigSection();
+        ensureEngineConfigExpanded();
         await waitFor(() => screen.getByRole("button", { name: /expand.*Invisible Hand/i }));
         const trigger = screen.getByRole("button", { name: /expand.*Invisible Hand/i });
         fireEvent.click(trigger);
@@ -850,7 +875,7 @@ describe("Home page", () => {
           target: { files: [createDocxFile("cv.docx")] },
         });
         await waitFor(() => screen.getByText(/Armed CV:/i));
-        expandEngineConfigSection();
+        ensureEngineConfigExpanded();
         await waitFor(() => screen.getByRole("button", { name: /harden/i }));
         fireEvent.click(screen.getByRole("button", { name: /harden/i }));
         await waitFor(() => screen.getByRole("button", { name: /download/i }));

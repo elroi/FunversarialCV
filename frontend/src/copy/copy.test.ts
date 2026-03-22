@@ -39,6 +39,20 @@ describe("copy", () => {
       expect(getCopy("hr").engineConfigTitle).toBe("How it runs");
     });
 
+    it("demoArmedInlineHint points users to the engine fold after sample load", () => {
+      expect(getCopy("security").demoArmedInlineHint).toMatch(/Engine Configuration/i);
+      expect(getCopy("hr").demoArmedInlineHint).toMatch(/Engine Configuration/i);
+    });
+
+    it("Validation Lab ENABLED badge copy describes last successful arm, not live checkboxes", () => {
+      const sec = getCopy("security");
+      const hr = getCopy("hr");
+      expect(sec.validationLabMatchBadgeHint).toMatch(/last successful Harden/i);
+      expect(sec.validationMatchBadgeAriaLabel).toMatch(/last successful Harden/i);
+      expect(hr.validationLabMatchBadgeHint).toMatch(/last successful Add signals/i);
+      expect(hr.validationMatchBadgeAriaLabel).toMatch(/last successful run/i);
+    });
+
     it("engine config intros differ by audience and state", () => {
       const sec = getCopy("security");
       const hr = getCopy("hr");

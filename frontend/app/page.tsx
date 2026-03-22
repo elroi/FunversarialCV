@@ -18,7 +18,10 @@ import { ExperimentFlowPanelBody } from "../src/components/ExperimentFlowPanel";
 import { dehydrateInBrowser, rehydrateInBrowser } from "../src/lib/clientVault";
 import { createDocumentWithTextInBrowser } from "../src/lib/clientDocumentCreate";
 import { replacePiiWithTokensInCopy } from "../src/lib/clientTokenReplaceInCopy";
-import { detectDocumentTypeFromBuffer } from "../src/lib/clientDocumentExtract";
+import {
+  decodeBase64ToUint8Array,
+  detectDocumentTypeFromUint8Array,
+} from "../src/lib/clientDocumentExtract";
 import type { PiiMap } from "../src/lib/clientVaultTypes";
 import type { DualityCheckResult } from "../src/engine/dualityCheck";
 import { EGG_OPTIONS, DEFAULT_ENABLED_EGG_IDS } from "../src/eggs/eggMetadata";
@@ -146,6 +149,8 @@ export default function Home() {
   const [canaryWingPayload, setCanaryWingPayload] = useState<string>("");
   const [metadataShadowPayload, setMetadataShadowPayload] = useState<string>("");
   const [enabledEggIds, setEnabledEggIds] = useState<Set<string>>(() => new Set(DEFAULT_ENABLED_EGG_IDS));
+  /** Eggs applied in the last successful harden; drives Validation Lab ENABLED badge (not live checkboxes). */
+  const [armedEggIds, setArmedEggIds] = useState<Set<string>>(() => new Set());
   const [preserveStyles, setPreserveStyles] = useState(true);
   const [preserveStylesDetailExpanded, setPreserveStylesDetailExpanded] =
     useState(false);
@@ -167,6 +172,8 @@ export default function Home() {
   const [demoFormat, setDemoFormat] = useState<"pdf" | "docx">("docx");
   const [hasDemoLoaded, setHasDemoLoaded] = useState(false);
   const [isDemoLoading, setIsDemoLoading] = useState(false);
+  /** Bumped when a CV is armed so Engine Configuration opens (it starts collapsed). */
+  const [engineFoldExpandSignal, setEngineFoldExpandSignal] = useState(0);
   const [clientPiiMap, setClientPiiMap] = useState<PiiMap | null>(null);
 
   /** Egg metadata from GET /api/eggs (id -> { name, manualCheckAndValidation }). */
@@ -212,16 +219,17 @@ export default function Home() {
     }
   }, [error]);
 
-  // When a CV (user or demo) is armed, bring the Armed CV + Harden controls into view.
+  // After the engine fold opens, scroll to Armed CV (fold content may paint one frame later).
   useEffect(() => {
-    if (
-      selectedFileName &&
-      armedSectionRef.current &&
-      typeof armedSectionRef.current.scrollIntoView === "function"
-    ) {
-      armedSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [selectedFileName]);
+    if (engineFoldExpandSignal === 0) return;
+    const t = window.setTimeout(() => {
+      const el = armedSectionRef.current;
+      if (el && typeof el.scrollIntoView === "function") {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 200);
+    return () => window.clearTimeout(t);
+  }, [engineFoldExpandSignal]);
 
   // Hydrate checkbox state from localStorage on mount (client-only).
   useEffect(() => {
@@ -267,32 +275,48 @@ export default function Home() {
     });
   };
 
-  const onFileSelect = async (file: File) => {
-    const buf = await file.slice(0, 4).arrayBuffer();
-    const detected = detectDocumentTypeFromBuffer(buf);
-    if (detected === "pdf") {
-      setError(
-        "This file looks like a PDF. We currently support Word documents (.docx) only."
-      );
-      return;
-    }
-    if (detected !== "docx") {
-      setError(
-        "File content is not a valid Word document. Please upload a real .docx file."
-      );
-      return;
-    }
+  /** Applies a validated file to pipeline state (clears prior run, errors, PII map). */
+  const armPipelineWithFile = useCallback((file: File) => {
     setError(null);
     setSuccessMessage(null);
     setSelectedFile(file);
     setSelectedFileName(file.name);
     lastHardenedBlobRef.current = null;
     lastHardenedConfigRef.current = null;
+    setArmedEggIds(new Set());
     setDualityResult(null);
     setLog([]);
     setProcessingState("idle");
     setActiveStage(undefined);
     setClientPiiMap(null);
+    setEngineFoldExpandSignal((n) => n + 1);
+  }, []);
+
+  /**
+   * Sniff magic bytes and arm the pipeline with a .docx only.
+   * Returns false when the file is rejected (error message already set).
+   */
+  const validateAndArmFile = async (file: File): Promise<boolean> => {
+    const head = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+    const detected = detectDocumentTypeFromUint8Array(head);
+    if (detected === "pdf") {
+      setError(
+        "This file looks like a PDF. We currently support Word documents (.docx) only."
+      );
+      return false;
+    }
+    if (detected !== "docx") {
+      setError(
+        "File content is not a valid Word document. Please upload a real .docx file."
+      );
+      return false;
+    }
+    armPipelineWithFile(file);
+    return true;
+  };
+
+  const onFileSelect = async (file: File) => {
+    await validateAndArmFile(file);
   };
 
   const clearFile = useCallback(() => {
@@ -302,6 +326,7 @@ export default function Home() {
     setSuccessMessage(null);
     lastHardenedBlobRef.current = null;
     lastHardenedConfigRef.current = null;
+    setArmedEggIds(new Set());
     setDualityResult(null);
     setLog([]);
     setProcessingState("idle");
@@ -496,6 +521,7 @@ export default function Home() {
           eggIds: [...eggIdsToUse],
           preserveStyles,
         };
+        setArmedEggIds(new Set(eggIdsToUse));
 
         const canaryTokenUsed = data.canaryTokenUsed;
         if (typeof canaryTokenUsed === "string" && canaryTokenUsed.trim() !== "") {
@@ -593,6 +619,7 @@ export default function Home() {
     setSuccessMessage(null);
     lastHardenedBlobRef.current = null;
     lastHardenedConfigRef.current = null;
+    setArmedEggIds(new Set());
     setClientPiiMap(null);
     setProcessingState("processing");
     setActiveStage("accept");
@@ -744,30 +771,81 @@ export default function Home() {
     });
   };
 
-  const loadDemoCv = async (variant: "clean" | "dirty", format: "pdf" | "docx") => {
+  /** Fetches demo CV from API and arms the file if the buffer is a valid .docx. */
+  const loadDemoCv = async (
+    variant: "clean" | "dirty",
+    format: "pdf" | "docx"
+  ): Promise<boolean> => {
     try {
       setError(null);
       setSuccessMessage(null);
       const url = `/api/demo-cv?variant=${variant}&format=${format}`;
       const res = await fetch(url);
-      const data = await res.json().catch(() => null);
-      if (!res.ok || !data || typeof data.bufferBase64 !== "string" || typeof data.mimeType !== "string" || typeof data.originalName !== "string") {
+      const data = (await res.json().catch(() => null)) as {
+        bufferBase64?: unknown;
+        mimeType?: unknown;
+        originalName?: unknown;
+        error?: unknown;
+      } | null;
+
+      if (!res.ok) {
+        const apiMsg =
+          data && typeof data.error === "string" && data.error.trim() !== ""
+            ? data.error
+            : "Failed to fetch demo CV. Please try again.";
+        setError(apiMsg);
+        return false;
+      }
+
+      if (
+        !data ||
+        typeof data.bufferBase64 !== "string" ||
+        typeof data.mimeType !== "string" ||
+        typeof data.originalName !== "string"
+      ) {
         setError("Failed to fetch demo CV. Please try again.");
-        return;
+        return false;
       }
-      const binaryString = atob(data.bufferBase64.trim());
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
+
+      let bytes: Uint8Array;
+      try {
+        bytes = decodeBase64ToUint8Array(data.bufferBase64);
+      } catch {
+        setError("Demo CV data could not be decoded. Please try again.");
+        return false;
       }
+
       if (bytes.length === 0) {
         setError("Demo CV document was empty. Please try again.");
-        return;
+        return false;
       }
-      const demoFile = new File([bytes], data.originalName, { type: data.mimeType });
-      onFileSelect(demoFile);
+
+      const detected = detectDocumentTypeFromUint8Array(bytes);
+      if (detected === "pdf") {
+        setError(
+          "This file looks like a PDF. We currently support Word documents (.docx) only."
+        );
+        return false;
+      }
+      if (detected !== "docx") {
+        setError(
+          "The demo file was not recognized as a Word document. Please try again."
+        );
+        return false;
+      }
+
+      const arrayBuffer = bytes.buffer.slice(
+        bytes.byteOffset,
+        bytes.byteOffset + bytes.byteLength
+      ) as ArrayBuffer;
+      const demoFile = new File([arrayBuffer], data.originalName, {
+        type: data.mimeType,
+      });
+      armPipelineWithFile(demoFile);
+      return true;
     } catch {
       setError("Failed to fetch demo CV. Please try again.");
+      return false;
     }
   };
 
@@ -780,16 +858,22 @@ export default function Home() {
         setError("Failed to download demo CV. Please try again.");
         return;
       }
-      const binaryString = atob(data.bufferBase64.trim());
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
+      let bytes: Uint8Array;
+      try {
+        bytes = decodeBase64ToUint8Array(data.bufferBase64);
+      } catch {
+        setError("Failed to download demo CV. Please try again.");
+        return;
       }
       if (bytes.length === 0) {
         setError("Demo CV document was empty. Please try again.");
         return;
       }
-      const blob = new Blob([bytes], { type: data.mimeType });
+      const arrayBuffer = bytes.buffer.slice(
+        bytes.byteOffset,
+        bytes.byteOffset + bytes.byteLength
+      ) as ArrayBuffer;
+      const blob = new Blob([arrayBuffer], { type: data.mimeType });
       const urlObj = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = urlObj;
@@ -804,7 +888,8 @@ export default function Home() {
   const loadPreset = async (variant: "clean" | "dirty", format: "pdf" | "docx") => {
     setIsDemoLoading(true);
     try {
-      await loadDemoCv(variant, format);
+      const ok = await loadDemoCv(variant, format);
+      if (!ok) return;
       setDemoVariant(variant);
       setDemoFormat(format);
       setHasDemoLoaded(true);
@@ -982,6 +1067,15 @@ export default function Home() {
                       {demoFormat.toUpperCase()}
                     </span>
                   </p>
+                  {hasDemoLoaded && selectedFileName ? (
+                    <p
+                      className="text-caption text-success font-mono mt-2"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      {copy.demoArmedInlineHint}
+                    </p>
+                  ) : null}
                 </div>
               </CollapsibleCard>
             </SectionFold>
@@ -1023,6 +1117,7 @@ export default function Home() {
               contentId="engine-config-section-content"
               ariaLabel={`${copy.engineConfigTitle}: show or hide`}
               defaultExpanded={false}
+              expandRevision={engineFoldExpandSignal}
             >
             <p className="mb-3 text-caption text-foreground/60">
               {selectedFileName
@@ -1273,7 +1368,7 @@ export default function Home() {
               defaultExpanded={false}
             >
               <ValidationLab
-                enabledEggIds={enabledEggIds}
+                armedEggIds={armedEggIds}
                 onPromptCopy={(id) =>
                   setLog((prev) => [
                     ...prev,

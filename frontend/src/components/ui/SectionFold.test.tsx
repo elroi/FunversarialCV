@@ -42,6 +42,41 @@ describe("SectionFold", () => {
     expect(screen.getByText("Hidden at first")).toBeVisible();
   });
 
+  it("opens when expandRevision increases while starting collapsed", () => {
+    const { rerender } = render(
+      <SectionFold
+        title="Sync open"
+        titleId="so-title"
+        contentId="so-body"
+        ariaLabel="Sync open: toggle"
+        defaultExpanded={false}
+        expandRevision={0}
+      >
+        <p>Revealed by signal</p>
+      </SectionFold>
+    );
+
+    expect(screen.queryByText("Revealed by signal")).not.toBeVisible();
+
+    rerender(
+      <SectionFold
+        title="Sync open"
+        titleId="so-title"
+        contentId="so-body"
+        ariaLabel="Sync open: toggle"
+        defaultExpanded={false}
+        expandRevision={1}
+      >
+        <p>Revealed by signal</p>
+      </SectionFold>
+    );
+
+    expect(screen.getByText("Revealed by signal")).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: /sync open: toggle/i })
+    ).toHaveAttribute("aria-expanded", "true");
+  });
+
   it("uses the same compact trigger padding as CollapsibleCard (px-3 py-2, full width)", () => {
     render(
       <SectionFold

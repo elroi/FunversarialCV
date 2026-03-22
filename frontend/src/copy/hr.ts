@@ -44,6 +44,8 @@ export const hrCopy: Copy = {
   dirtyLabel: "Dirty · DOCX",
   dirtySublabel: "Sample with hidden signals",
   demoLoadingMessage: "Generating sample CV… this may take a few seconds.",
+  demoArmedInlineHint:
+    "Sample CV loaded — Engine Configuration is open below. Use Add signals when you're ready.",
   lastPresetLabel: "Last sample:",
   armedCvLabel: "CV loaded:",
   downloadDemoLabel: "Download the current sample as-is",
@@ -241,7 +243,9 @@ export const hrCopy: Copy = {
   validationLabManualMirrorProtocol:
     "How to test your CV with added signals in an external AI:\n\n(1) Add signals and download your CV on this page.\n(2) Open an external AI (e.g. ChatGPT or Claude) in another tab and paste the downloaded CV into the chat.\n(3) Pick a prompt below, click Copy, and paste it into the same conversation.\n(4) Compare the AI’s reply to the goal described under that prompt (e.g. did it follow hidden instructions or use hidden metadata?). If the reply matches the goal, the test succeeded.",
   validationLabMatchBadgeHint:
-    "Enabled means the option this test targets is currently turned on in the options above.",
+    "Enabled means this prompt’s option was applied in your last successful Add signals run on this page—the badge reflects your latest downloaded CV, not checkboxes alone. After you change options, run Add signals again to refresh.",
+  validationMatchBadgeAriaLabel:
+    "Enabled: this prompt’s target option was applied in your last successful run on this page.",
   validationCopySuccessLogMessage: "> [SYSTEM] {id} Prompt copied to clipboard",
   validationCopyButton: "Copy",
   validationCopyButtonSuccess: "Copied",

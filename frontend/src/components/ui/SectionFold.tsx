@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { DisclosureChevron } from "./DisclosureChevron";
 
@@ -12,6 +12,11 @@ export interface SectionFoldProps {
   ariaLabel: string;
   /** When true, body is shown on first paint (matches pre-fold layout). */
   defaultExpanded?: boolean;
+  /**
+   * When this number increases (e.g. after loading a sample CV), the section opens.
+   * Start at 0; bump by one each time the parent wants to reveal content (user may have collapsed the fold).
+   */
+  expandRevision?: number;
   /** Outer wrapper classes (e.g. `functional-group mt-6`). Horizontal padding is applied inside the component to match `CollapsibleCard`. */
   className?: string;
   /** Optional DOM id for deep links / anchors. */
@@ -34,11 +39,21 @@ export const SectionFold: React.FC<SectionFoldProps> = ({
   contentId,
   ariaLabel,
   defaultExpanded = true,
+  expandRevision,
   className,
   sectionId,
   children,
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
+  const lastExpandRevision = useRef(0);
+
+  useEffect(() => {
+    if (expandRevision === undefined) return;
+    if (expandRevision > lastExpandRevision.current) {
+      setExpanded(true);
+      lastExpandRevision.current = expandRevision;
+    }
+  }, [expandRevision]);
 
   return (
     <div id={sectionId} className={clsx("flex w-full min-w-0 flex-col pb-3", className)}>

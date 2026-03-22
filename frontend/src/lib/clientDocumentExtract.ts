@@ -32,6 +32,47 @@ export function detectDocumentTypeFromBuffer(buffer: ArrayBuffer): "docx" | "pdf
   return null;
 }
 
+/**
+ * Same rules as {@link detectDocumentTypeFromBuffer}, but reads only from the
+ * Uint8Array view (avoids pooled ArrayBuffer / offset mistakes with large buffers).
+ */
+export function detectDocumentTypeFromUint8Array(arr: Uint8Array): "docx" | "pdf" | null {
+  if (!arr || arr.length < 2) return null;
+  if (
+    arr.length >= 4 &&
+    arr[0] === 0x25 &&
+    arr[1] === 0x50 &&
+    arr[2] === 0x44 &&
+    arr[3] === 0x46
+  ) {
+    return "pdf";
+  }
+  if (arr[0] === 0x50 && arr[1] === 0x4b) {
+    return "docx";
+  }
+  return null;
+}
+
+/**
+ * Decodes standard base64 (ignores ASCII whitespace). Throws if invalid.
+ * Prefer this over manual atob + charCodeAt loops for demo/API payloads.
+ */
+export function decodeBase64ToUint8Array(b64: string): Uint8Array {
+  const trimmed = b64.trim().replace(/\s/g, "");
+  let binary: string;
+  try {
+    binary = atob(trimmed);
+  } catch {
+    throw new Error("Invalid base64");
+  }
+  const buf = new ArrayBuffer(binary.length);
+  const out = new Uint8Array(buf);
+  for (let i = 0; i < binary.length; i++) {
+    out[i] = binary.charCodeAt(i) & 0xff;
+  }
+  return out;
+}
+
 export async function extractTextFromFileInBrowser(
   file: File | Blob
 ): Promise<{ text: string; mimeType: string }> {

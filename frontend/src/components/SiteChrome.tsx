@@ -56,7 +56,7 @@ export function SiteTopBar() {
 
   return (
     <div
-      className="mb-3 flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2"
+      className="mb-4 flex w-full min-w-0 flex-col gap-3 sm:mb-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2"
       role="toolbar"
       aria-label="Privacy note and audience"
     >

@@ -350,3 +350,17 @@
 - **Docs**
   - [ ] Note in `CONTRIBUTING.md` or security docs that Code Scanning is required for `main` and how to view/triage alerts in the Security tab.
 
+### UI style guide — Phase 2 (extend [docs/UI_STYLE_GUIDE.md](UI_STYLE_GUIDE.md))
+
+Phase 1 (disclosure tiers, defaults, safe state on change) is shipped. After v1 launch, expand the guide and/or `brand-guide.json` as needed:
+
+- [ ] **Typography by audience** — Document HR vs Security `font-sans` / `font-mono` surfaces (see [docs/UX_UI_REVIEW.md](UX_UI_REVIEW.md)).
+- [ ] **Semantic color / Tailwind tokens** — When to use `accent`, `success`, `panel`, `border`, `foreground/*`.
+- [ ] **Primary actions & Button variants** — Hierarchy for Upload / Harden / Download; touch targets.
+- [ ] **Status & feedback** — `aria-live`, `role="alert"`, processing vs error patterns.
+- [ ] **Dialogs** — Modal consent pattern (focus, `aria-modal`, return focus).
+- [ ] **Forms & density** — Checkbox grids, egg toggles, labels.
+- [ ] **Motion** — Purposeful loading/animation; `.cursorrules` music-metaphor touch.
+- [ ] **LLM-trap / adversarial rendering** — Pointer to technical/security docs; not marketing surfaces.
+- [ ] **Wider `ui.*` in `brand-guide.json`** — Only if agents need machine-readable tokens beyond `ui.disclosureTiers`.
+

@@ -25,6 +25,7 @@ import { EGG_OPTIONS, DEFAULT_ENABLED_EGG_IDS } from "../src/eggs/eggMetadata";
 import { Button } from "../src/components/ui/Button";
 import { Card } from "../src/components/ui/Card";
 import { CollapsibleCard } from "../src/components/ui/CollapsibleCard";
+import { SectionFold } from "../src/components/ui/SectionFold";
 import { useCopy } from "../src/copy";
 import { useAudience } from "../src/contexts/AudienceContext";
 
@@ -146,6 +147,8 @@ export default function Home() {
   const [metadataShadowPayload, setMetadataShadowPayload] = useState<string>("");
   const [enabledEggIds, setEnabledEggIds] = useState<Set<string>>(() => new Set(DEFAULT_ENABLED_EGG_IDS));
   const [preserveStyles, setPreserveStyles] = useState(true);
+  const [preserveStylesDetailExpanded, setPreserveStylesDetailExpanded] =
+    useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const successMessageRef = useRef<HTMLParagraphElement>(null);
   const retryButtonRef = useRef<HTMLButtonElement>(null);
@@ -157,7 +160,6 @@ export default function Home() {
     eggIds: string[];
     preserveStyles: boolean;
   } | null>(null);
-  const [dualityMonitorOpen, setDualityMonitorOpen] = useState(false);
   const openFilePickerRef = useRef<(() => void) | null>(null);
   /** True once the user has toggled an egg or preserve-styles; we only persist after that so we never overwrite saved state on load. */
   const userHasChangedCheckboxesRef = useRef(false);
@@ -904,10 +906,17 @@ export default function Home() {
 
         <section className="flex flex-1 flex-col gap-8 md:flex-row">
           <div className="flex-1">
-            <div className="functional-group p-4">
-              <div className="mb-4 text-caption uppercase tracking-[0.2em] text-accent">
-                {copy.inputChannel}
-              </div>
+            {copy.introLead.trim() ? (
+              <div className="mb-6">{renderIntro(copy.introLead)}</div>
+            ) : null}
+            <SectionFold
+              className="functional-group"
+              title={copy.inputChannel}
+              titleId="input-channel-section-title"
+              contentId="input-channel-section-content"
+              ariaLabel={`${copy.inputChannel}: show or hide`}
+              defaultExpanded
+            >
               <DropZone onFileSelect={onFileSelect} maxSizeBytes={MAX_FILE_SIZE_BYTES} openFilePickerRef={openFilePickerRef} />
               <p className="mt-1 text-caption text-foreground/50">
                 {copy.maxFileHint}
@@ -975,7 +984,7 @@ export default function Home() {
                   </p>
                 </div>
               </CollapsibleCard>
-            </div>
+            </SectionFold>
 
             <div className="functional-group mb-6 mt-8 overflow-hidden sm:mt-10">
               <CollapsibleCard
@@ -991,26 +1000,38 @@ export default function Home() {
               </CollapsibleCard>
             </div>
 
-            {copy.intro.trim() ? (
-              <div className="mb-6">{renderIntro(copy.intro)}</div>
+            {audience === "security" && copy.introDetail.trim() ? (
+              <div className="mb-6">{renderIntro(copy.introDetail)}</div>
             ) : null}
 
-            <details className="mb-6 rounded-lg border border-border/60 bg-panel/40">
-              <summary className="flex min-h-[44px] cursor-pointer list-none items-center px-3 py-3 text-sm font-medium text-accent outline-none marker:content-none sm:px-4 [&::-webkit-details-marker]:hidden">
-                {copy.privacyDetailsSummary}
-              </summary>
-              <div className="border-t border-border/50 px-3 pb-3 pt-1 sm:px-4">
-                <PiiNoticeBlock copy={copy} audience={audience} />
-              </div>
-            </details>
+            <CollapsibleCard
+              className="mb-6 border-border/60 bg-panel/40"
+              title={copy.privacyDetailsSummary}
+              titleClassName="text-caption sm:text-xs font-medium text-accent normal-case"
+              titleId="privacy-details-card-title"
+              contentId="privacy-details-card-content"
+              ariaLabel={`${copy.privacyDetailsSummary}: show or hide details`}
+              defaultExpanded={false}
+            >
+              <PiiNoticeBlock copy={copy} audience={audience} />
+            </CollapsibleCard>
 
-            <div className="functional-group mt-6 p-4">
-              <div className="mb-4 text-caption uppercase tracking-[0.2em] text-accent">
-              {copy.engineConfigTitle}
-            </div>
+            <SectionFold
+              className="functional-group mt-6"
+              title={copy.engineConfigTitle}
+              titleId="engine-config-section-title"
+              contentId="engine-config-section-content"
+              ariaLabel={`${copy.engineConfigTitle}: show or hide`}
+              defaultExpanded={false}
+            >
+            <p className="mb-3 text-caption text-foreground/60">
+              {selectedFileName
+                ? copy.engineConfigIntroCvReady
+                : copy.engineConfigIntroNoCv}
+            </p>
             {selectedFileName && (
               <div ref={armedSectionRef}>
-                <p className="mt-3 text-sm text-success">
+                <p className="mt-0 text-sm text-success">
                   {copy.armedCvLabel} <span className="font-semibold">{selectedFileName}</span>
                 </p>
                 <div className="mt-1 flex flex-col items-start gap-1">
@@ -1038,29 +1059,68 @@ export default function Home() {
                     {copy.changeFileButton}
                   </Button>
                 </div>
-                <p className="mt-1 text-caption text-foreground/60">
-                  {copy.configureThenHarden}
-                </p>
                 <p className="mt-0.5 text-caption text-foreground/50">
                   {copy.outputPlainTextHint}
                 </p>
-                <div className="mt-2">
-                  <label className="flex min-h-[44px] cursor-pointer items-center gap-2 py-2 text-sm text-foreground/80">
+                <div className="mt-2 rounded-md border border-border/50 bg-panel/40 px-3 py-2.5">
+                  <div className="flex min-h-[44px] items-center gap-3">
                     <input
+                      id="preserve-styles-checkbox"
                       type="checkbox"
                       checked={preserveStyles}
                       onChange={() => {
                         userHasChangedCheckboxesRef.current = true;
                         setPreserveStyles((p) => !p);
                       }}
-                      className="rounded border-border text-accent focus:ring-accent/50"
-                      aria-describedby="preserve-styles-desc"
+                      className="h-4 w-4 shrink-0 rounded border-border text-accent focus:ring-accent/50"
+                      aria-describedby={
+                        preserveStylesDetailExpanded
+                          ? "preserve-styles-summary preserve-styles-desc"
+                          : "preserve-styles-summary"
+                      }
                     />
-                    <span>{copy.preserveStylesLabel}</span>
-                  </label>
-                  <p id="preserve-styles-desc" className="text-caption text-foreground/50 ml-6 -mt-1">
-                    {copy.preserveStylesDesc}
-                  </p>
+                    <label
+                      htmlFor="preserve-styles-checkbox"
+                      className="min-w-0 flex-1 cursor-pointer text-sm font-medium leading-snug text-foreground/90"
+                    >
+                      {copy.preserveStylesLabel}
+                    </label>
+                  </div>
+                  <div className="mt-2 min-w-0 pl-7">
+                      <p
+                        id="preserve-styles-summary"
+                        className="text-caption leading-relaxed text-foreground/75 sm:text-xs"
+                      >
+                        {copy.preserveStylesSummary}{" "}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPreserveStylesDetailExpanded((e) => !e)
+                          }
+                          aria-expanded={preserveStylesDetailExpanded}
+                          aria-controls="preserve-styles-desc"
+                          id="preserve-styles-detail-trigger"
+                          className="text-accent underline underline-offset-2 hover:text-accent/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-1 focus-visible:ring-offset-bg rounded"
+                        >
+                          {copy.preserveStylesDetailAnchor}
+                          <span aria-hidden="true" className="ml-0.5">
+                            {preserveStylesDetailExpanded ? " ▼" : " ▸"}
+                          </span>
+                        </button>
+                      </p>
+                      <div
+                        id="preserve-styles-desc"
+                        role="region"
+                        aria-labelledby="preserve-styles-detail-trigger"
+                        className={
+                          preserveStylesDetailExpanded
+                            ? "mt-1.5 border-l-2 border-accent/40 pl-3 text-caption leading-relaxed text-foreground/80 sm:text-xs"
+                            : "hidden"
+                        }
+                      >
+                        {copy.preserveStylesDesc}
+                      </div>
+                  </div>
                 </div>
                 <div className="mt-3">
                   <Card className="px-4 py-3">
@@ -1201,52 +1261,52 @@ export default function Home() {
                 manualCheckAndValidation={eggMetadataById["metadata-shadow"]?.manualCheckAndValidation}
               />
             </div>
-            </div>
-            <ValidationLab
-              enabledEggIds={enabledEggIds}
-              onPromptCopy={(id) =>
-                setLog((prev) => [
-                  ...prev,
-                  {
-                    id: `validation-copy-${id}`,
-                    stage: "accept",
-                    level: "success",
-                    message: copy.validationCopySuccessLogMessage.replace("{id}", id),
-                  },
-                ])
-              }
-            />
+            </SectionFold>
+
+            <SectionFold
+              sectionId="validation-lab"
+              className="functional-group mt-6"
+              title={copy.validationLabTitle}
+              titleId="validation-lab-section-title"
+              contentId="validation-lab-section-content"
+              ariaLabel={copy.validationLabCollapsibleAriaLabel}
+              defaultExpanded={false}
+            >
+              <ValidationLab
+                enabledEggIds={enabledEggIds}
+                onPromptCopy={(id) =>
+                  setLog((prev) => [
+                    ...prev,
+                    {
+                      id: `validation-copy-${id}`,
+                      stage: "accept",
+                      level: "success",
+                      message: copy.validationCopySuccessLogMessage.replace("{id}", id),
+                    },
+                  ])
+                }
+              />
+            </SectionFold>
           </div>
 
-          <aside className="functional-group mt-8 w-full p-4 text-sm text-foreground/80 md:mt-0 md:w-80 md:shrink-0 md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-3rem)] md:overflow-y-auto">
-            <div className="mb-4 text-caption uppercase tracking-[0.2em] text-accent">
-              {copy.pipelineStatusTitle}
-            </div>
-            <div className="block md:hidden mb-2">
-              <button
-                type="button"
-                onClick={() => setDualityMonitorOpen((o) => !o)}
-                className="flex w-full min-h-[44px] items-center justify-between rounded px-3 py-3 text-caption sm:text-xs uppercase tracking-[0.2em] text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-                aria-expanded={dualityMonitorOpen}
-                aria-controls="duality-monitor-content"
-                id="duality-monitor-toggle"
-              >
-                <span>{copy.pipelineStatusToggle}</span>
-                <span aria-hidden="true">{dualityMonitorOpen ? "▼" : "▶"}</span>
-              </button>
-            </div>
-            <div
-              id="duality-monitor-content"
-              className={`${dualityMonitorOpen ? "block" : "hidden md:block"} max-h-[60vh] overflow-y-auto md:max-h-none`}
-              aria-labelledby="duality-monitor-toggle"
+          <aside className="mt-8 w-full md:mt-0 md:w-80 md:shrink-0 md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-3rem)] md:overflow-y-auto">
+            <SectionFold
+              className="functional-group"
+              title={copy.pipelineStatusTitle}
+              titleId="pipeline-status-section-title"
+              contentId="pipeline-status-section-content"
+              ariaLabel={`${copy.pipelineStatusTitle}: show or hide`}
+              defaultExpanded
             >
-            <DualityMonitor
-              processingState={processingState}
-              activeStage={activeStage}
-              log={log}
-              dualityResult={dualityResult ?? undefined}
-            />
-            </div>
+              <div className="max-h-[60vh] overflow-y-auto md:max-h-none">
+                <DualityMonitor
+                  processingState={processingState}
+                  activeStage={activeStage}
+                  log={log}
+                  dualityResult={dualityResult ?? undefined}
+                />
+              </div>
+            </SectionFold>
           </aside>
         </section>
       </div>

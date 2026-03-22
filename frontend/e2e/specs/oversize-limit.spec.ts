@@ -4,6 +4,8 @@
  */
 
 import { test, expect } from "@playwright/test";
+import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
+import { securityUiRx } from "../helpers/security-ui";
 
 test.describe("Oversize uploads", () => {
   test("rejects files over 4 MB with a clear error and does not call /api/harden", async ({
@@ -18,6 +20,7 @@ test.describe("Oversize uploads", () => {
     });
 
     await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
 
     const fileInput = page.getByTestId("dropzone-input");
     const oversizeBuffer = Buffer.alloc(4 * 1024 * 1024 + 1024, 0x20); // just over 4 MB
@@ -29,7 +32,7 @@ test.describe("Oversize uploads", () => {
 
     await expect(page.getByText(/file is too large/i)).toBeVisible({ timeout: 5_000 });
     // Should not arm the CV or enable harden flow.
-    await expect(page.getByText(/Armed CV:/i)).toHaveCount(0);
+    await expect(page.getByText(securityUiRx.armedCvLabel)).toHaveCount(0);
     expect(hardenCallCount).toBe(0);
   });
 });

@@ -18,9 +18,12 @@ export interface Copy {
   /** Optional helper line below flow steps (e.g. HR-only). */
   experimentFlowClarifier?: string;
   philosophyLine: string;
-  intro: string;
+  /** Short framing above the input channel (both audiences). */
+  introLead: string;
+  /** Extra security framing after the experiment panel; use "" for HR. */
+  introDetail: string;
   piiNotice: string;
-  /** `<summary>` for optional details block around full PII notice (reduces duplicate trust copy above the fold). */
+  /** Collapsed title for the foldable PII / privacy notice block (reduces duplicate trust copy above the fold). */
   privacyDetailsSummary: string;
 
   // —— Home: input ——
@@ -41,9 +44,17 @@ export interface Copy {
   downloadDemoLabel: string;
   selectDemoLabel: string;
   changeFileButton: string;
-  configureThenHarden: string;
+  /** Shown at top of Engine Configuration when no CV is loaded yet. */
+  engineConfigIntroNoCv: string;
+  /** Shown at top of Engine Configuration once a CV is armed (replaces upload/arm step). */
+  engineConfigIntroCvReady: string;
   outputPlainTextHint: string;
   preserveStylesLabel: string;
+  /** Short line always visible next to Preserve styles. */
+  preserveStylesSummary: string;
+  /** Inline control label to expand full preserve-styles explanation (like “How to verify”). */
+  preserveStylesDetailAnchor: string;
+  /** Full explanation shown when the anchor is expanded. */
   preserveStylesDesc: string;
   eggsToRunTitle: string;
   engineConfigTitle: string;
@@ -189,6 +200,10 @@ export interface Copy {
 
   // —— Validation Lab ——
   validationLabTitle: string;
+  /** Accessible name for the outer Validation Lab expand/collapse control. */
+  validationLabCollapsibleAriaLabel: string;
+  /** Template: {id} = prompt id (e.g. LLM01). Used for per-prompt fold buttons. */
+  validationLabPromptCollapsibleAriaLabel: string;
   validationLabManualMirrorProtocol: string;
   validationLabMatchBadgeHint: string;
   validationCopySuccessLogMessage: string; // template: use {id} for prompt id

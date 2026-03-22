@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Credibility &amp; information architecture &mdash; research brief</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <h1 id="credibility--information-architecture--research-brief">Credibility &amp; information architecture — research brief</h1>
+<p><strong>Date:</strong> 2026-03-20<br>
+<strong>Scope:</strong> Research deliverable for the <strong>Credibility gap research</strong> plan (stakeholder plan lives in Cursor; may not be in-repo). <strong>Not</strong> an implementation spec.<br>
+<strong>Method:</strong> Codebase and doc trace, desk heuristic review, competitive desk research, optional user-interview <strong>protocol</strong> (live sessions not run in this pass).</p>
+<hr>
+<h2 id="1-executive-summary">1. Executive summary</h2>
+<p>FunversarialCV ships <strong>strong in-flow trust mechanics</strong> (PII dehydration narrative, audience modes, long-form Resources). The gap to a “credible product surface” is mostly <strong>positioning and product chrome</strong>: the home console still <strong>names itself as an experiment</strong> (<code>RUN THE CV EXPERIMENT</code>), uses <strong>lab vocabulary</strong> (eggs, Validation Lab, Duality Monitor / pipeline stages, terminal log), and lacks <strong>standard product affordances</strong> (footer with legal/analytics disclosure, About/FAQ, status, curated SEO metadata). HR copy is softer than Security copy but <strong>still shares the experiment label and monospace/uppercase affordances</strong> in key places.</p>
+<p><strong>Recommendation at a glance:</strong> Treat “credibility” as <strong>structural</strong> (IA, policies, metadata, operational signals) and keep <strong>playful depth</strong> inside Security mode or secondary panels—without conflating the two in the first five seconds.</p>
+<hr>
+<h2 id="2-target-posture-stakeholder-decision--not-assumed">2. Target posture (stakeholder decision — not assumed)</h2>
+<p>Pick one primary posture for vNext; the backlog below is tagged by which posture it supports.</p>
+<table>
+<thead>
+<tr>
+<th>Posture</th>
+<th>Fit</th>
+<th>Trade-off</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A — Serious dual-audience utility</strong></td>
+<td>Default recommendation from this research</td>
+<td>HR path needs less “lab” chrome; Security keeps depth.</td>
+</tr>
+<tr>
+<td><strong>B — Public red-team lab</strong></td>
+<td>Matches current voice (“experiment,” “console”)</td>
+<td>Explicit disclaimers + minimal “enterprise” expectations; still add legal/analytics transparency.</td>
+</tr>
+<tr>
+<td><strong>C — Marketing site + app shell</strong></td>
+<td>Maximum “real company” feel</td>
+<td>Higher build cost: landing, pricing (if any), careers, etc.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Proposed working posture (for planning):</strong> <strong>A</strong> — <em>Serious B2C/B2B-style utility with an optional Security “pro” skin</em>, with Resources as the long-form trust layer until dedicated policy routes exist.</p>
+<hr>
+<h2 id="3-workstream-1--heuristic--ia-audit">3. Workstream 1 — Heuristic &amp; IA audit</h2>
+<h3 id="31-information-architecture-routes">3.1 Information architecture (routes)</h3>
+<table>
+<thead>
+<tr>
+<th>Route</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/</code></td>
+<td>Main console: upload, sample CVs, engine config, success/download, Validation Lab, Duality Monitor (<a href="../frontend/app/page.tsx"><code>frontend/app/page.tsx</code></a>)</td>
+</tr>
+<tr>
+<td><code>/resources</code></td>
+<td>Long-form usage, privacy flow, OWASP links (<a href="../frontend/app/resources/page.tsx"><code>frontend/app/resources/page.tsx</code></a>)</td>
+</tr>
+<tr>
+<td><code>/admin/canaries</code></td>
+<td>Admin/specialized (not part of mainstream “product” IA)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Not present (typical product gaps):</strong> dedicated Privacy / Terms / Contact / Security disclosure routes, FAQ, Changelog, Status/health, About/Product story, GitHub link in chrome (may exist only off-site).</p>
+<h3 id="32-home-page-section-order-primary-column">3.2 Home page section order (primary column)</h3>
+<ol>
+<li>Optional <strong>intro</strong> (Security has adversarial framing; HR is shorter)</li>
+<li>Collapsible <strong>“How to run a fair test”</strong> → <code>ExperimentFlowPanelBody</code> (steps + <code>experimentFlowLabel</code>)</li>
+<li><strong>Upload</strong> group: <code>DropZone</code>, max size hint, sample CV collapsible</li>
+<li><code>&lt;details&gt;</code> <strong>privacy / PII</strong> expansion</li>
+<li><strong>Engine configuration</strong> (egg cards, preserve styles, primary CTA)</li>
+<li><strong>Validation Lab</strong></li>
+<li><strong>Duality Monitor</strong> (toggle + log)</li>
+</ol>
+<p><strong>Implication:</strong> The <strong>first structural landmark after the header is still “experiment flow,”</strong> even when collapsed—so scanners of the page (humans and SEO) see “experiment” before “upload” in the DOM order.</p>
+<h3 id="33-global-chrome">3.3 Global chrome</h3>
+<ul>
+<li><a href="../frontend/app/layout.tsx"><code>frontend/app/layout.tsx</code></a>: Skip link, <code>JetBrains_Mono</code> on <strong>entire</strong> <code>&lt;body&gt;</code>, no footer, no legal links, no analytics notice.</li>
+<li><a href="../frontend/src/components/SiteChrome.tsx"><code>frontend/src/components/SiteChrome.tsx</code></a>: Brand H1 + tagline + single secondary nav link (Resources / Back home); top bar = PII badge + audience switcher.</li>
+</ul>
+<p><strong>Cross-check with</strong> <a href="UX_UI_REVIEW.html"><code>docs/UX_UI_REVIEW.md</code></a>: Follow-ups (skip link click vs <code>&lt;main&gt;</code>, <code>/api/eggs</code> loading fallback, oversize message numeric limit) remain <strong>maturity/polish</strong> items that affect perceived production quality.</p>
+<h3 id="34-desk-five-second-impression-internal-not-user-validated">3.4 Desk “five-second” impression (internal, not user-validated)</h3>
+<p><strong>Prompt:</strong> <em>What is this and who is it for?</em></p>
+<table>
+<thead>
+<tr>
+<th>Reader</th>
+<th>Likely first read</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Skim-only</td>
+<td>“Funversarial” + gradient title + monospace badge → <strong>hacker / demo tool</strong></td>
+</tr>
+<tr>
+<td>HR mode</td>
+<td>Softer tagline but <strong>same experiment label</strong> in collapsible + uppercase section rails → <strong>mixed: edu tool, not HR SaaS</strong></td>
+</tr>
+<tr>
+<td>Security mode</td>
+<td>“Adversarial,” “console,” “Duality Monitor” → <strong>legit lab / red team</strong> (credible for that niche, not “generic product”)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Gap:</strong> No single <strong>plain-product sentence</strong> above the fold that reads like a normal SaaS value prop without opening Resources.</p>
+<h3 id="35-terminology-matrix-prominent-strings">3.5 Terminology matrix (prominent strings)</h3>
+<p>Legend: <strong>HR-OK</strong> = appropriate for recruiter-facing mode; <strong>Lab</strong> = fine for Security or deep panels; <strong>Split</strong> = consider context-specific wording.</p>
+<table>
+<thead>
+<tr>
+<th>Term / pattern</th>
+<th>HR copy</th>
+<th>Security copy</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>experimentFlowLabel</code> “RUN THE CV EXPERIMENT”</td>
+<td><strong>Lab</strong></td>
+<td><strong>Lab</strong></td>
+<td>Same in both <a href="../frontend/src/copy/hr.ts"><code>hr.ts</code></a> / <a href="../frontend/src/copy/security.ts"><code>security.ts</code></a>—primary credibility clash for HR.</td>
+</tr>
+<tr>
+<td>“Eggs” / egg names</td>
+<td>HR uses “options” in several places; Resources still “easter eggs”</td>
+<td>“Eggs” everywhere</td>
+<td>HR <strong>partially</strong> de-jargonized; engine section title HR: “Options to add”.</td>
+</tr>
+<tr>
+<td>“Harden” vs “Add signals”</td>
+<td>Add signals</td>
+<td>Harden</td>
+<td>Good split.</td>
+</tr>
+<tr>
+<td>“Duality Monitor” vs “Processing steps”</td>
+<td>Processing steps</td>
+<td>Duality Monitor</td>
+<td>Good split.</td>
+</tr>
+<tr>
+<td>“Validation Lab”</td>
+<td>Same</td>
+<td>Same</td>
+<td>Sounds like a <strong>classroom</strong>; HR might use “Try in an AI tool” or similar.</td>
+</tr>
+<tr>
+<td>“Pipeline / Engine / Terminal log”</td>
+<td>Processing steps / log</td>
+<td>Pipeline / Terminal</td>
+<td>HR reduced; still <strong>terminal</strong> metaphor in <code>terminalLogTitle</code>.</td>
+</tr>
+<tr>
+<td>“Armed CV” (security)</td>
+<td>“CV loaded”</td>
+<td>Armed CV</td>
+<td>Good split.</td>
+</tr>
+<tr>
+<td>Uppercase micro-labels (<code>tracking-[0.2em]</code>)</td>
+<td>Present on input + engine rails</td>
+<td>Present</td>
+<td>Contributes to <strong>instrument panel</strong> feel in HR mode.</td>
+</tr>
+<tr>
+<td>Sample <strong>Clean / Dirty</strong></td>
+<td>Framed as learning</td>
+<td>“Adversarial sample”</td>
+<td>HR: OK with context; still <strong>game-like</strong> labels.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="4-workstream-2--competitive--analog-benchmarking">4. Workstream 2 — Competitive &amp; analog benchmarking</h2>
+<p>Desk research only; use these as <strong>pattern libraries</strong>, not design copies.</p>
+<h3 id="41-adjacent-security--oss-style-products-depth--trust">4.1 Adjacent security / OSS-style products (depth &amp; trust)</h3>
+<table>
+<thead>
+<tr>
+<th>Analog</th>
+<th>What signals “real product”</th>
+<th>Takeaway for FunversarialCV</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://semgrep.dev/">Semgrep</a></td>
+<td>Product marketing + <strong>Docs</strong> + <strong>Security</strong> pages + <strong>Trust portal</strong> (<a href="https://trust.semgrep.dev/">trust.semgrep.dev</a>) + terms</td>
+<td>Separate <strong>trust surface</strong> from the tool UI; link SOC2-style artifacts only if applicable.</td>
+</tr>
+<tr>
+<td><a href="https://semgrep.dev/docs/security">Semgrep Docs — Security</a></td>
+<td>Vulnerability reporting contact, explicit security program</td>
+<td>Add <strong>security@</strong> or GitHub security path in footer + Resources.</td>
+</tr>
+<tr>
+<td><a href="https://owasp.org/">OWASP</a> (reference)</td>
+<td>Neutral nonprofit IA, clear “about” and project boundaries</td>
+<td>You already cite OWASP; <strong>your</strong> site still needs <strong>your</strong> policies.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="42-document--privacy-forward-consumer-tools-upload-fear--legal-ia">4.2 Document / privacy-forward consumer tools (upload fear + legal IA)</h3>
+<table>
+<thead>
+<tr>
+<th>Analog</th>
+<th>What signals “real product”</th>
+<th>Takeaway for FunversarialCV</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://1password.com/legal">1Password Legal Center</a></td>
+<td><strong>Legal hub</strong> with privacy, terms, history, accessibility</td>
+<td>Minimal v1: <strong>one Privacy page</strong> + optional Terms stub + version date.</td>
+</tr>
+<tr>
+<td><a href="https://1password.com/privacy">1Password — privacy overview</a></td>
+<td>Plain-language principles before legalese</td>
+<td>Short “how we handle data” page mirrors your Resources but <strong>linkable and shareable</strong>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43-synthesis--patterns-to-borrow">4.3 Synthesis — patterns to borrow</h3>
+<ol>
+<li><strong>Footer legal cluster</strong> (Privacy, Terms if needed, GitHub, Security contact).</li>
+<li><strong>Dedicated trust/privacy URL</strong> users can send to compliance—not only <code>/resources</code> scroll.</li>
+<li><strong>Product metadata</strong> (title, description, OG) for link previews.</li>
+<li><strong>Optional</strong> trust center later if B2B evaluators appear.</li>
+</ol>
+<hr>
+<h2 id="5-workstream-3--trust-legal--analytics-alignment">5. Workstream 3 — Trust, legal &amp; analytics alignment</h2>
+<h3 id="51-claim--documentation--ui-surface">5.1 Claim → documentation → UI surface</h3>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Documented where</th>
+<th>Surfaced in UI?</th>
+<th>Gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No CV storage / in-memory processing</td>
+<td><a href="../README.html"><code>README.md</code></a>, Resources copy, PII <code>&lt;details&gt;</code></td>
+<td>Yes (home + Resources)</td>
+<td>Low.</td>
+</tr>
+<tr>
+<td>PII tokenized before server</td>
+<td>README, Resources, <code>piiNotice</code></td>
+<td>Yes</td>
+<td>Low.</td>
+</tr>
+<tr>
+<td>Heuristic PII only; not full DLP</td>
+<td>README</td>
+<td>Resources (implicit); home short copy</td>
+<td>Medium: <strong>limitation</strong> easy to miss on home.</td>
+</tr>
+<tr>
+<td><strong>First-party analytics</strong> (typed, opt-in, GPC handling)</td>
+<td><a href="PRIVACY_ANALYTICS_IMPLEMENTATION_PLAN.html"><code>docs/PRIVACY_ANALYTICS_IMPLEMENTATION_PLAN.md</code></a></td>
+<td><strong>No</strong> dedicated user-facing disclosure</td>
+<td><strong>High:</strong> when <code>NEXT_PUBLIC_ANALYTICS_ENABLED</code> / <code>ANALYTICS_ENABLED</code> are on, behavior should match a <strong>published</strong> notice.</td>
+</tr>
+<tr>
+<td>Analytics payload allowlist / no CV content in events</td>
+<td>Implementation plan + <a href="../packages/privacy-analytics/"><code>@funversarial/privacy-analytics</code></a></td>
+<td>No</td>
+<td>Document for compliance readers.</td>
+</tr>
+<tr>
+<td>Ingest stores events in <strong>in-memory ring buffer</strong> (<a href="../frontend/src/lib/analyticsBuffer.ts"><code>analyticsBuffer.ts</code></a>)</td>
+<td>Code comments; plan mentions Postgres later</td>
+<td>No</td>
+<td><strong>Medium:</strong> retention story is “ephemeral server memory”—should be stated if analytics enabled in prod.</td>
+</tr>
+<tr>
+<td>Canary Wing / <code>/api/canary</code> behavior</td>
+<td>README (ring buffer, process-local)</td>
+<td>UI explains canary; <strong>not</strong> same as analytics</td>
+<td>Medium: avoid conflating canary hits with product analytics in copy.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-footer--global-disclosure-gaps">5.2 Footer / global disclosure gaps</h3>
+<p><a href="../frontend/app/layout.tsx"><code>frontend/app/layout.tsx</code></a> has <strong>no footer</strong>. Users cannot discover Privacy, GitHub, or analytics policy without <strong>Resources</strong> or external README.</p>
+<hr>
+<h2 id="6-workstream-4--user-interviews-protocol--desk-synthesis">6. Workstream 4 — User interviews (protocol + desk synthesis)</h2>
+<h3 id="61-protocol-for-35-sessions">6.1 Protocol (for 3–5 sessions)</h3>
+<p><strong>Recruit:</strong> Mix of (1) HR/recruiting ops, (2) security/engineering, (3) job seekers who use AI tools—<strong>naive to the repo</strong>.</p>
+<p><strong>Script (20–25 min):</strong></p>
+<ol>
+<li><em>First impression:</em> Show home for 5 seconds (cover scroll). What is it? Who is it for?</li>
+<li><em>Trust:</em> Would you upload a real CV? What would change your mind?</li>
+<li><em>Language:</em> Which words feel unprofessional (HR) or too shallow (Security)?</li>
+<li><em>Shareability:</em> What would you need to forward this to a colleague?</li>
+<li><em>Debrief:</em> Open Resources for 30 seconds—does that change trust?</li>
+</ol>
+<p><strong>Capture:</strong> Verbatim adjectives + blockers + requested links.</p>
+<h3 id="62-live-sessions">6.2 Live sessions</h3>
+<p><strong>Not conducted in this research pass.</strong> Schedule sessions to validate or falsify the desk findings below.</p>
+<h3 id="63-anticipated-themes-hypotheses-from-audit--validate-with-interviews">6.3 Anticipated themes (hypotheses from audit — validate with interviews)</h3>
+<table>
+<thead>
+<tr>
+<th>Theme</th>
+<th>Evidence</th>
+<th>If confirmed in interviews</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>“Experiment” undermines HR trust</td>
+<td>Shared <code>experimentFlowLabel</code> in both audiences</td>
+<td>Rename HR label; demote “experiment” to Security-only or body copy.</td>
+</tr>
+<tr>
+<td>Upload anxiety</td>
+<td>Strong privacy copy exists but buried in <code>&lt;details&gt;</code></td>
+<td>One-line <strong>link</strong> “Privacy &amp; data handling” above fold → anchor.</td>
+</tr>
+<tr>
+<td>“Lab” UI chrome</td>
+<td>Monospace + uppercase rails in HR</td>
+<td>Reduce on HR path (already partial via <code>font-sans</code> in header).</td>
+</tr>
+<tr>
+<td>Missing link previews / SEO</td>
+<td>No <code>metadata</code> export in root layout</td>
+<td>Add title/description/OG.</td>
+</tr>
+<tr>
+<td>Compliance dead-end</td>
+<td>No <code>/privacy</code></td>
+<td>Add minimal policy page + footer link.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="7-workstream-5--brand--visual-system-directional">7. Workstream 5 — Brand &amp; visual system (directional)</h2>
+<p><strong>Observation:</strong> HR mode uses <code>font-sans</code> in the header (<a href="../frontend/src/components/SiteChrome.tsx"><code>SiteChrome.tsx</code></a>) but <strong>body remains <code>JetBrains_Mono</code></strong> globally (<a href="../frontend/app/layout.tsx"><code>layout.tsx</code></a>), so HR still “reads” terminal.</p>
+<p><strong>Directions to explore (design workshop, not decided here):</strong></p>
+<ol>
+<li><strong>Terminal-lab</strong> (current): maximize character; accept niche audience.</li>
+<li><strong>Sober security product:</strong> neutral sans primary, mono only in logs/code blocks.</li>
+<li><strong>Split theme:</strong> HR = sober marketing shell; Security = full hacker-chic console.</li>
+</ol>
+<p><strong>Constraint:</strong> OWASP-aligned “eggs” can stay playful <strong>if</strong> structural credibility (policies, IA) is fixed.</p>
+<hr>
+<h2 id="8-prioritized-recommendations-p0--p1--p2">8. Prioritized recommendations (P0 / P1 / P2)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Item</th>
+<th>Persona</th>
+<th>Effort</th>
+<th>Impact</th>
+<th>Phase</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P0-1</td>
+<td><strong>User-facing analytics &amp; data notice</strong> when ingest is enabled: what is collected, opt-in, GPC, retention (ring buffer vs future DB). Link from footer.</td>
+<td>Compliance, Candidate</td>
+<td>M</td>
+<td>H</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>P0-2</td>
+<td><strong>Minimal footer</strong> on all pages: Privacy (new or Resources anchor), GitHub, optional Security contact.</td>
+<td>All</td>
+<td>L</td>
+<td>H</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>P0-3</td>
+<td><strong>Differentiate HR primary framing</strong> from “RUN THE CV EXPERIMENT” (rename HR <code>experimentFlowLabel</code>; consider Security-only “experiment” language).</td>
+<td>HR</td>
+<td>S</td>
+<td>H</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>P1-1</td>
+<td><strong>Site metadata</strong> (<code>metadata</code> / OG / Twitter) in root or segment layouts for credible link sharing.</td>
+<td>All / SEO</td>
+<td>S</td>
+<td>M</td>
+<td>P1</td>
+</tr>
+<tr>
+<td>P1-2</td>
+<td><strong>Dedicated <code>/privacy</code> (and optional <code>/terms</code>)</strong> instead of only long Resources scroll.</td>
+<td>Compliance</td>
+<td>M</td>
+<td>M</td>
+<td>P1</td>
+</tr>
+<tr>
+<td>P1-3</td>
+<td>Oversize error: include <strong>numeric limit</strong> (4 MB) in client copy (<a href="../frontend/src/copy/hr.ts"><code>hr.ts</code> / <code>security.ts</code></a> <code>errorFileTooLarge</code>) — aligns with UX review follow-up.</td>
+<td>Candidate</td>
+<td>S</td>
+<td>M</td>
+<td>P1</td>
+</tr>
+<tr>
+<td>P1-4</td>
+<td><code>/api/eggs</code> loading: avoid “Instructions not available” flash (loading/retry state).</td>
+<td>All</td>
+<td>M</td>
+<td>M</td>
+<td>P1</td>
+</tr>
+<tr>
+<td>P2-1</td>
+<td><strong>Status page</strong> or “last deployed” / health hint for operators.</td>
+<td>DevOps</td>
+<td>M</td>
+<td>L</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>P2-2</td>
+<td>FAQ or <strong>About</strong> (founder story, open-source ethos) for social proof without fake testimonials.</td>
+<td>Candidate, HR</td>
+<td>M</td>
+<td>M</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>P2-3</td>
+<td>Skip link vs <code>&lt;main&gt;</code> <strong>click interception</strong> fix (<a href="UX_UI_REVIEW.html"><code>UX_UI_REVIEW.md</code></a>).</td>
+<td>a11y</td>
+<td>S</td>
+<td>L</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>P2-4</td>
+<td>HR <strong>Validation Lab</strong> rename + copy pass to reduce “classroom” tone.</td>
+<td>HR</td>
+<td>S</td>
+<td>L</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>P2-5</td>
+<td>Body font strategy: HR path <strong>sans</strong> body or reduced mono.</td>
+<td>HR</td>
+<td>M</td>
+<td>M</td>
+<td>P2</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="9-open-questions-post-launch-or-after-interviews">9. Open questions (post-launch or after interviews)</h2>
+<ol>
+<li>Do HR users <strong>ever</strong> want Security-style depth on the same URL, or is <strong>split entry</strong> (e.g. <code>/</code> vs <code>/lab</code>) healthier?</li>
+<li>Is <strong>B2B evaluation</strong> in scope? If yes, trust center depth (SOC2, DPIA) may move from P2 to P1.</li>
+<li>After analytics is <strong>on</strong> in production: what <strong>aggregate</strong> metrics justify the privacy cost (implementation plan’s rollup vision)?</li>
+<li>Do link previews drive any meaningful traffic—measure before investing in marketing pages.</li>
+</ol>
+<hr>
+<h2 id="10-site-map-current-vs-typical-additions">10. Site map (current vs typical additions)</h2>
+<pre><code class="language-mermaid">flowchart TB
+  subgraph current [Current]
+    H[Home_console]
+    R[Resources]
+    A[admin_canaries]
+  end
+  subgraph typical [Typical_additions_P0_P1]
+    P[privacy]
+    T[terms_optional]
+    GH[github_external]
+  end
+  H --&gt; R
+  H --&gt; typical
+  R --&gt; typical
+</code></pre>
+<hr>
+<h2 id="11-handoff">11. Handoff</h2>
+<p>Use <strong>Section 8</strong> as input to a future <strong>implementation plan</strong> (branch per <a href="../.cursorrules">.cursorrules</a>: tests first, feature branch). Key touchpoints: <a href="../frontend/app/layout.tsx"><code>layout.tsx</code></a>, new policy routes under <code>frontend/app/</code>, <a href="../frontend/src/components/SiteChrome.tsx"><code>SiteChrome.tsx</code></a>, <a href="../frontend/src/copy/hr.ts"><code>hr.ts</code></a> / <a href="../frontend/src/copy/security.ts"><code>security.ts</code></a>, <a href="../frontend/app/page.tsx"><code>page.tsx</code></a> for loading states.</p>
+<hr>
+<h2 id="references-internal">References (internal)</h2>
+<ul>
+<li><a href="UX_UI_REVIEW.html">UX_UI_REVIEW.md</a></li>
+<li><a href="PRIVACY_ANALYTICS_IMPLEMENTATION_PLAN.html">PRIVACY_ANALYTICS_IMPLEMENTATION_PLAN.md</a></li>
+<li><a href="../README.html">README.md</a></li>
+<li><a href="LAUNCH_IMPLEMENTATION_PLAN.html">LAUNCH_IMPLEMENTATION_PLAN.md</a></li>
+</ul>
+
+            
+            
+        </body>
+        </html>

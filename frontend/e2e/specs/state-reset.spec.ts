@@ -6,6 +6,9 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
 import fs from "fs";
+import { expandEngineConfigurationSection } from "../helpers/engine-section";
+import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
+import { securityUiRx } from "../helpers/security-ui";
 
 const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
 
@@ -43,11 +46,15 @@ test.describe("State reset", () => {
     mockHardenSuccess(page);
 
     await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
 
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
 
-    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
+    await expandEngineConfigurationSection(page);
+    await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
+      timeout: 15_000,
+    });
     await page.getByRole("button", { name: /harden/i }).click();
 
     await expect(
@@ -59,7 +66,7 @@ test.describe("State reset", () => {
     await changeFileBtn.click();
 
     await expect(page.getByText(/Drop your CV here/i)).toBeVisible();
-    await expect(page.getByText(/Armed CV:/i)).toHaveCount(0);
+    await expect(page.getByText(securityUiRx.armedCvLabel)).toHaveCount(0);
     await expect(page.getByText(/Hardened CV ready/i)).toHaveCount(0);
   });
 
@@ -88,11 +95,15 @@ test.describe("State reset", () => {
     });
 
     await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
 
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
 
-    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
+    await expandEngineConfigurationSection(page);
+    await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(page.getByText(/minimal\.docx/i)).toBeVisible();
     await page.getByRole("button", { name: /harden/i }).click();
 
@@ -108,7 +119,10 @@ test.describe("State reset", () => {
       buffer: docxBytes,
     });
 
-    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
+    await expandEngineConfigurationSection(page);
+    await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(page.getByText(/second\.docx/i)).toBeVisible();
     await page.getByRole("button", { name: /harden/i }).click();
 

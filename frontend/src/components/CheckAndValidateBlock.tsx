@@ -20,7 +20,8 @@ export interface CheckAndValidateBlockProps {
  */
 export const CheckAndValidateBlock: React.FC<CheckAndValidateBlockProps> = ({
   content,
-  className = "text-caption sm:text-xs text-noir-foreground/70",
+  /** Use theme foreground so HR (light) and security (dark) both meet contrast on panels. */
+  className = "text-caption sm:text-xs text-foreground/85",
   fallback,
 }) => {
   if (!content?.trim()) {
@@ -43,19 +44,19 @@ export const CheckAndValidateBlock: React.FC<CheckAndValidateBlockProps> = ({
     <div className="space-y-3">
       {quickContent.length > 0 && (
         <p className={className}>
-          <strong className="text-noir-foreground/90">Quick check:</strong>{" "}
+          <strong className="font-semibold text-foreground">Quick check:</strong>{" "}
           {quickContent}
         </p>
       )}
       {manualContent.length > 0 && (
         <p className={className}>
-          <strong className="text-noir-foreground/90">Manual check:</strong>{" "}
+          <strong className="font-semibold text-foreground">Manual check:</strong>{" "}
           {manualContent}
         </p>
       )}
       {validationContent.length > 0 && (
         <p className={className}>
-          <strong className="text-noir-foreground/90">Egg validation:</strong>{" "}
+          <strong className="font-semibold text-foreground">Egg validation:</strong>{" "}
           {validationContent}
         </p>
       )}

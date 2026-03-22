@@ -9,14 +9,17 @@ describe("copy", () => {
       expect(copy.tagline).toBe(securityCopy.tagline);
       expect(copy.experimentFlowCollapsibleTitle).toBe("How to run a fair test");
       expect(securityCopy.piiModeBadge).toMatch(/PII · client vault/i);
-      expect(securityCopy.intro).toMatch(/OWASP-aligned/i);
+      expect(securityCopy.introLead).toMatch(/educational adversarial simulation/i);
+      expect(securityCopy.introLead).toMatch(/hands-on professional exploration/i);
+      expect(securityCopy.introDetail).toMatch(/OWASP-aligned/i);
     });
 
     it("returns HR copy for audience hr", () => {
       const copy = getCopy("hr");
       expect(copy.tagline).toBe(hrCopy.tagline);
       expect(copy.privacyDetailsSummary).toBe("How we protect your contact details");
-      expect(hrCopy.intro).toBe("");
+      expect(hrCopy.introLead).toMatch(/compare before-and-after results/i);
+      expect(hrCopy.introDetail).toBe("");
       expect(hrCopy.piiModeBadge).toMatch(/Private processing: no CV storage/i);
     });
   });
@@ -34,6 +37,24 @@ describe("copy", () => {
     it("engineConfigTitle is set for both audiences", () => {
       expect(getCopy("security").engineConfigTitle).toBe("Engine Configuration");
       expect(getCopy("hr").engineConfigTitle).toBe("How it runs");
+    });
+
+    it("engine config intros differ by audience and state", () => {
+      const sec = getCopy("security");
+      const hr = getCopy("hr");
+      expect(sec.engineConfigIntroNoCv).toMatch(/eggs to run/i);
+      expect(sec.engineConfigIntroCvReady).toMatch(/Expand each egg/i);
+      expect(hr.engineConfigIntroNoCv).toMatch(/signals to add/i);
+      expect(hr.engineConfigIntroCvReady).toMatch(/Add signals/i);
+    });
+
+    it("preserve styles copy has summary, anchor, and expandable detail", () => {
+      const sec = getCopy("security");
+      const hr = getCopy("hr");
+      expect(sec.preserveStylesSummary.length).toBeGreaterThan(10);
+      expect(sec.preserveStylesDetailAnchor).toMatch(/more info/i);
+      expect(sec.preserveStylesDesc).toMatch(/rebuild|log/i);
+      expect(hr.preserveStylesDesc).toMatch(/rebuild|log|formatting/i);
     });
 
     it("positioningLine, flowSteps (length 6), philosophyLine, and experimentFlowLabel are set for both audiences", () => {

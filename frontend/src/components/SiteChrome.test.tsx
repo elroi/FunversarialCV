@@ -6,6 +6,10 @@ import { screen } from "@testing-library/react";
 import { renderWithAudience } from "../test-utils";
 import { SiteHeader, SiteTopBar } from "./SiteChrome";
 
+beforeEach(() => {
+  window.localStorage.setItem("funversarialcv-audience", "security");
+});
+
 describe("SiteHeader", () => {
   it("renders FunversarialCV title and tagline from copy", () => {
     renderWithAudience(<SiteHeader />);

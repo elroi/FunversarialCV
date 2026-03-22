@@ -3,14 +3,17 @@
  * TDD: tests define that main navigation flows work.
  */
 import { test, expect } from "@playwright/test";
+import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
+import { securityUiRx } from "../helpers/security-ui";
 
 test.describe("Navigation", () => {
   test("Home → Resources → Back home: URL and key content", async ({
     page,
   }) => {
     await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
 
-    await expect(page.getByText(/PII · client vault/i)).toBeVisible();
+    await expect(page.getByText(securityUiRx.piiModeBadge)).toBeVisible();
     const resourcesLink = page.getByRole("link", { name: /resources/i });
     await expect(resourcesLink).toBeVisible();
     await resourcesLink.click();
@@ -22,6 +25,6 @@ test.describe("Navigation", () => {
     await page.getByRole("link", { name: /back home/i }).click();
 
     await expect(page).toHaveURL("/");
-    await expect(page.getByText(/PII · client vault/i)).toBeVisible();
+    await expect(page.getByText(securityUiRx.piiModeBadge)).toBeVisible();
   });
 });

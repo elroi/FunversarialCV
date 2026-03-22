@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import clsx from "clsx";
+import { DisclosureChevron } from "./DisclosureChevron";
 
 const MD_MIN_WIDTH = "(min-width: 768px)";
 
@@ -25,13 +26,19 @@ export interface CollapsibleCardProps {
   children: React.ReactNode;
   /** Optional class for the outer card wrapper. */
   className?: string;
+  /**
+   * When set, replaces the default title typography (uppercase tracking used for egg cards).
+   * Use for prose-style titles such as privacy summaries.
+   */
+  titleClassName?: string;
   /** When true, trigger and content are not interactive (e.g. when egg is disabled). */
   disabled?: boolean;
 }
 
 /**
  * Collapsible card: title row is always visible and acts as a button to expand/collapse the body.
- * Default collapsed on all viewports; one tab stop, 44px min height, full-width trigger.
+ * Compact trigger (`min-h-10`, `px-3 py-2`) keeps label and chevron visually tight; `items-center`
+ * vertically centers label and glyph in the row.
  */
 export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
   title,
@@ -42,6 +49,7 @@ export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
   expandOnWide = false,
   children,
   className,
+  titleClassName,
   disabled = false,
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -58,7 +66,7 @@ export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
   return (
     <div
       className={clsx(
-        "rounded-xl border border-border bg-panel/70 noir-shell overflow-hidden",
+        "w-full min-w-0 rounded-xl border border-border bg-panel/70 noir-shell overflow-hidden",
         disabled && "opacity-60 pointer-events-none",
         className
       )}
@@ -70,20 +78,24 @@ export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
         aria-controls={contentId}
         aria-label={ariaLabel}
         onClick={() => setExpanded((e) => !e)}
-        className="flex w-full min-h-[44px] flex-shrink-0 items-center justify-between gap-2 px-4 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-inset"
+        className="flex w-full min-h-10 flex-shrink-0 items-center justify-between gap-1.5 px-3 py-2 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-inset"
       >
-        <span className="text-caption sm:text-xs font-semibold uppercase tracking-[0.2em] text-accent">
+        <span
+          className={clsx(
+            "min-w-0",
+            titleClassName ??
+              "text-caption sm:text-xs font-semibold uppercase tracking-[0.2em] text-accent"
+          )}
+        >
           {title}
         </span>
-        <span className="shrink-0 text-accent" aria-hidden="true">
-          {expanded ? "▼" : "▶"}
-        </span>
+        <DisclosureChevron expanded={expanded} />
       </button>
       <div
         id={contentId}
         role="region"
         aria-labelledby={titleId}
-        className={expanded ? "block border-t border-border p-4" : "hidden"}
+        className={expanded ? "block border-t border-border p-3" : "hidden"}
       >
         {children}
       </div>

@@ -5,6 +5,9 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
 import fs from "fs";
+import { expandEngineConfigurationSection } from "../helpers/engine-section";
+import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
+import { securityUiRx } from "../helpers/security-ui";
 
 const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
 const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx"));
@@ -12,6 +15,7 @@ const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx")
 test.describe("Errors", () => {
   test("500: shows generic message and Retry button", async ({ page }) => {
     await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
 
     await page.route("**/api/harden", (route) => {
       if (route.request().method() === "POST") {
@@ -27,7 +31,10 @@ test.describe("Errors", () => {
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
 
-    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
+    await expandEngineConfigurationSection(page);
+    await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
+      timeout: 15_000,
+    });
     await page.getByRole("button", { name: /harden/i }).click();
 
     await expect(page.getByText(/Alert:/i)).toBeVisible({ timeout: 10_000 });
@@ -62,10 +69,14 @@ test.describe("Errors", () => {
     });
 
     await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
 
-    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
+    await expandEngineConfigurationSection(page);
+    await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
+      timeout: 15_000,
+    });
     await page.getByRole("button", { name: /harden/i }).click();
     await expect(page.getByRole("button", { name: /retry/i })).toBeVisible({
       timeout: 10_000,
@@ -82,6 +93,7 @@ test.describe("Errors", () => {
     page,
   }) => {
     await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
 
     await page.route("**/api/harden", (route) => {
       if (route.request().method() === "POST") {
@@ -100,7 +112,10 @@ test.describe("Errors", () => {
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
 
-    await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
+    await expandEngineConfigurationSection(page);
+    await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
+      timeout: 15_000,
+    });
     await page.getByRole("button", { name: /harden/i }).click();
 
     await expect(page.getByText(/Alert:/i)).toBeVisible({ timeout: 10_000 });
@@ -111,6 +126,7 @@ test.describe("Errors", () => {
     page,
   }) => {
     await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
 
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles({
@@ -123,6 +139,6 @@ test.describe("Errors", () => {
     await expect(
       page.getByText(/looks like a PDF|support.*\.docx.*only|only.*word documents.*\.docx.*allowed/i)
     ).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText(/Armed CV:/i)).not.toBeVisible();
+    await expect(page.getByText(securityUiRx.armedCvLabel)).not.toBeVisible();
   });
 });

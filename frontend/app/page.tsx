@@ -147,6 +147,8 @@ export default function Home() {
   const [metadataShadowPayload, setMetadataShadowPayload] = useState<string>("");
   const [enabledEggIds, setEnabledEggIds] = useState<Set<string>>(() => new Set(DEFAULT_ENABLED_EGG_IDS));
   const [preserveStyles, setPreserveStyles] = useState(true);
+  const [preserveStylesDetailExpanded, setPreserveStylesDetailExpanded] =
+    useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const successMessageRef = useRef<HTMLParagraphElement>(null);
   const retryButtonRef = useRef<HTMLButtonElement>(null);
@@ -1060,23 +1062,65 @@ export default function Home() {
                 <p className="mt-0.5 text-caption text-foreground/50">
                   {copy.outputPlainTextHint}
                 </p>
-                <div className="mt-2">
-                  <label className="flex min-h-[44px] cursor-pointer items-center gap-2 py-2 text-sm text-foreground/80">
+                <div className="mt-2 rounded-md border border-border/50 bg-panel/40 px-3 py-2.5">
+                  <div className="flex min-h-[44px] items-center gap-3">
                     <input
+                      id="preserve-styles-checkbox"
                       type="checkbox"
                       checked={preserveStyles}
                       onChange={() => {
                         userHasChangedCheckboxesRef.current = true;
                         setPreserveStyles((p) => !p);
                       }}
-                      className="rounded border-border text-accent focus:ring-accent/50"
-                      aria-describedby="preserve-styles-desc"
+                      className="h-4 w-4 shrink-0 rounded border-border text-accent focus:ring-accent/50"
+                      aria-describedby={
+                        preserveStylesDetailExpanded
+                          ? "preserve-styles-summary preserve-styles-desc"
+                          : "preserve-styles-summary"
+                      }
                     />
-                    <span>{copy.preserveStylesLabel}</span>
-                  </label>
-                  <p id="preserve-styles-desc" className="text-caption text-foreground/50 ml-6 -mt-1">
-                    {copy.preserveStylesDesc}
-                  </p>
+                    <label
+                      htmlFor="preserve-styles-checkbox"
+                      className="min-w-0 flex-1 cursor-pointer text-sm font-medium leading-snug text-foreground/90"
+                    >
+                      {copy.preserveStylesLabel}
+                    </label>
+                  </div>
+                  <div className="mt-2 min-w-0 pl-7">
+                      <p
+                        id="preserve-styles-summary"
+                        className="text-caption leading-relaxed text-foreground/75 sm:text-xs"
+                      >
+                        {copy.preserveStylesSummary}{" "}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPreserveStylesDetailExpanded((e) => !e)
+                          }
+                          aria-expanded={preserveStylesDetailExpanded}
+                          aria-controls="preserve-styles-desc"
+                          id="preserve-styles-detail-trigger"
+                          className="text-accent underline underline-offset-2 hover:text-accent/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-1 focus-visible:ring-offset-bg rounded"
+                        >
+                          {copy.preserveStylesDetailAnchor}
+                          <span aria-hidden="true" className="ml-0.5">
+                            {preserveStylesDetailExpanded ? " ▼" : " ▸"}
+                          </span>
+                        </button>
+                      </p>
+                      <div
+                        id="preserve-styles-desc"
+                        role="region"
+                        aria-labelledby="preserve-styles-detail-trigger"
+                        className={
+                          preserveStylesDetailExpanded
+                            ? "mt-1.5 border-l-2 border-accent/40 pl-3 text-caption leading-relaxed text-foreground/80 sm:text-xs"
+                            : "hidden"
+                        }
+                      >
+                        {copy.preserveStylesDesc}
+                      </div>
+                  </div>
                 </div>
                 <div className="mt-3">
                   <Card className="px-4 py-3">

@@ -50,6 +50,11 @@ export interface Copy {
   engineConfigIntroCvReady: string;
   outputPlainTextHint: string;
   preserveStylesLabel: string;
+  /** Short line always visible next to Preserve styles. */
+  preserveStylesSummary: string;
+  /** Inline control label to expand full preserve-styles explanation (like “How to verify”). */
+  preserveStylesDetailAnchor: string;
+  /** Full explanation shown when the anchor is expanded. */
   preserveStylesDesc: string;
   eggsToRunTitle: string;
   engineConfigTitle: string;

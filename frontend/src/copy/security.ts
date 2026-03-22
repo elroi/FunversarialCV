@@ -53,8 +53,11 @@ export const securityCopy: Copy = {
   outputPlainTextHint:
     'Output uses plain-text layout unless "Preserve styles" is on (add-only eggs only).',
   preserveStylesLabel: "Preserve styles",
+  preserveStylesSummary:
+    "We keep layout via in-place structure edits when possible.",
+  preserveStylesDetailAnchor: "More info",
   preserveStylesDesc:
-    "We keep layout via in-place structure edits when possible. If an egg changes body text we rebuild and styles may not be preserved; the log will indicate which path was used.",
+    "If an egg changes body text we rebuild and styles may not be preserved; the log will indicate which path was used.",
   eggsToRunTitle: "Eggs to run",
   engineConfigTitle: "Engine Configuration",
   styleAffecting: "STYLE-AFFECTING",

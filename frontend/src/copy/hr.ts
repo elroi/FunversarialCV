@@ -56,8 +56,10 @@ export const hrCopy: Copy = {
   outputPlainTextHint:
     'The result will be plain text unless “Preserve styles” is on (for options that only add content).',
   preserveStylesLabel: "Preserve styles",
+  preserveStylesSummary: "We keep your layout and formatting when possible.",
+  preserveStylesDetailAnchor: "More info",
   preserveStylesDesc:
-    "We keep your layout and formatting when possible. If an option changes the main text, we may have to rebuild the document and some formatting might change; the log will say which approach was used.",
+    "If an option changes the main text, we may have to rebuild the document and some formatting might change; the log will say which approach was used.",
   eggsToRunTitle: "Options to add",
   engineConfigTitle: "How it runs",
   styleAffecting: "May change layout",

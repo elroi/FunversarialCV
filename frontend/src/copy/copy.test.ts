@@ -48,6 +48,15 @@ describe("copy", () => {
       expect(hr.engineConfigIntroCvReady).toMatch(/Add signals/i);
     });
 
+    it("preserve styles copy has summary, anchor, and expandable detail", () => {
+      const sec = getCopy("security");
+      const hr = getCopy("hr");
+      expect(sec.preserveStylesSummary.length).toBeGreaterThan(10);
+      expect(sec.preserveStylesDetailAnchor).toMatch(/more info/i);
+      expect(sec.preserveStylesDesc).toMatch(/rebuild|log/i);
+      expect(hr.preserveStylesDesc).toMatch(/rebuild|log|formatting/i);
+    });
+
     it("positioningLine, flowSteps (length 6), philosophyLine, and experimentFlowLabel are set for both audiences", () => {
       const security = getCopy("security");
       const hr = getCopy("hr");

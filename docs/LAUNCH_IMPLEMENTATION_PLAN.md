@@ -247,7 +247,7 @@
       - `{ level, route, event, message?, meta? }`.
 - **Apply to critical paths**
   - [x] `/api/harden`:
-    - Log rate-limit denials and successful harden operations with mime type.
+    - Log rate-limit denials and successful egg-injection operations with mime type.
   - [x] `/api/canary`:
     - Log hits (without PII) and rate-limit denials.
 
@@ -356,7 +356,7 @@ Phase 1 (disclosure tiers, defaults, safe state on change) is shipped. After v1 
 
 - [ ] **Typography by audience** — Document HR vs Security `font-sans` / `font-mono` surfaces (see [docs/UX_UI_REVIEW.md](UX_UI_REVIEW.md)).
 - [ ] **Semantic color / Tailwind tokens** — When to use `accent`, `success`, `panel`, `border`, `foreground/*`.
-- [ ] **Primary actions & Button variants** — Hierarchy for Upload / Harden / Download; touch targets.
+- [ ] **Primary actions & Button variants** — Hierarchy for Upload / Inject Eggs (security) or Add signals (HR) / Download; touch targets.
 - [ ] **Status & feedback** — `aria-live`, `role="alert"`, processing vs error patterns.
 - [ ] **Dialogs** — Modal consent pattern (focus, `aria-modal`, return focus).
 - [ ] **Forms & density** — Checkbox grids, egg toggles, labels.

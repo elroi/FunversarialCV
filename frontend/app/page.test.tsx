@@ -25,7 +25,7 @@ function createDocxFile(name: string) {
 
 /**
  * Engine fold may auto-open after arming a CV; only click if still collapsed
- * so we never toggle it shut before Harden / egg tests.
+ * so we never toggle it shut before Inject Eggs / egg tests.
  */
 function ensureEngineConfigExpanded() {
   const btn = screen.getByRole("button", {
@@ -200,7 +200,7 @@ describe("Home page", () => {
       expect(screen.getByText("Engine Configuration")).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Choose which eggs to run, expand each to set payloads, then arm a CV and Harden/i
+          /Choose which eggs to run, expand each to set payloads, then arm a CV and Inject Eggs/i
         )
       ).toBeInTheDocument();
       expect(screen.getAllByText(/The Invisible Hand/i).length).toBeGreaterThanOrEqual(1);
@@ -245,7 +245,7 @@ describe("Home page", () => {
   });
 
   describe("success message after download", () => {
-    it("shows success message with filename and Download button after successful harden", async () => {
+    it("shows success message with filename and Download button after successful egg injection", async () => {
       global.fetch = mockFetchSuccess("my-cv.docx");
       renderWithAudience(<Home />);
 
@@ -261,11 +261,11 @@ describe("Home page", () => {
       ensureEngineConfigExpanded();
 
       expect(
-        screen.getByText(/Expand each egg to set payloads, then click Harden/i)
+        screen.getByText(/Expand each egg to set payloads, then click Inject Eggs/i)
       ).toBeInTheDocument();
 
-      const hardenBtn = screen.getByRole("button", { name: /harden/i });
-      fireEvent.click(hardenBtn);
+      const injectBtn = screen.getByRole("button", { name: /inject eggs/i });
+      fireEvent.click(injectBtn);
 
       await waitFor(() => {
         expect(screen.getByText(/my-cv_final\.docx/i)).toBeInTheDocument();
@@ -322,7 +322,7 @@ describe("Home page", () => {
 
       ensureEngineConfigExpanded();
 
-      fireEvent.click(screen.getByRole("button", { name: /harden/i }));
+      fireEvent.click(screen.getByRole("button", { name: /inject eggs/i }));
 
       await waitFor(() => {
         expect(spyDehydrate).toHaveBeenCalledTimes(1);
@@ -343,8 +343,8 @@ describe("Home page", () => {
   });
 
   describe("retry on error", () => {
-    it("shows Retry button when processing fails and calls runHarden when clicked", async () => {
-      let hardenCallCount = 0;
+    it("shows Retry button when processing fails and calls egg injection again when clicked", async () => {
+      let injectCallCount = 0;
       const fetchMock: jest.MockedFunction<typeof global.fetch> = jest.fn(
         async (input: RequestInfo | URL) =>
           // Minimal Response-like shape for tests; cast for TS compatibility.
@@ -362,8 +362,8 @@ describe("Home page", () => {
             json: async () => ({ eggs: [] }),
           } as unknown as Response;
         }
-        hardenCallCount++;
-        if (hardenCallCount === 1) {
+        injectCallCount++;
+        if (injectCallCount === 1) {
           return {
             ok: false,
             json: async () => ({ error: "Server error" }),
@@ -390,10 +390,10 @@ describe("Home page", () => {
       ensureEngineConfigExpanded();
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /harden/i })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /inject eggs/i })).toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByRole("button", { name: /harden/i }));
+      fireEvent.click(screen.getByRole("button", { name: /inject eggs/i }));
 
       await waitFor(() => {
         expect(screen.getByText(/Alert:/i)).toBeInTheDocument();
@@ -435,8 +435,8 @@ describe("Home page", () => {
     });
   });
 
-  describe("Harden button accessibility", () => {
-    it("Harden button has aria-label reflecting state (Harden vs processing)", async () => {
+  describe("Inject Eggs button accessibility", () => {
+    it("Inject Eggs button has aria-label reflecting state (default vs injecting)", async () => {
       let resolveFetch: (value: Response) => void;
       const fetchPromise: Promise<Response> = new Promise((resolve) => {
         resolveFetch = resolve;
@@ -454,17 +454,17 @@ describe("Home page", () => {
       ensureEngineConfigExpanded();
 
       await waitFor(() => {
-        const btn = screen.getByRole("button", { name: /harden/i });
-        expect(btn).toHaveAttribute("aria-label", "Harden");
+        const btn = screen.getByRole("button", { name: /inject eggs/i });
+        expect(btn).toHaveAttribute("aria-label", "Inject Eggs");
       });
 
-      const hardenBtn = screen.getByRole("button", { name: /harden/i });
-      fireEvent.click(hardenBtn);
+      const injectBtn = screen.getByRole("button", { name: /inject eggs/i });
+      fireEvent.click(injectBtn);
 
       await waitFor(() => {
-        const processingBtn = screen.getByRole("button", { name: /processing/i });
+        const processingBtn = screen.getByRole("button", { name: /injecting/i });
         expect(processingBtn).toBeDisabled();
-        expect(processingBtn).toHaveAttribute("aria-label", "Harden (processing…)");
+        expect(processingBtn).toHaveAttribute("aria-label", "Inject Eggs (injecting…)");
       });
 
       resolveFetch!({
@@ -600,7 +600,7 @@ describe("Home page", () => {
       expect(changeFileBtn).toHaveClass("min-h-[44px]");
     });
 
-    it("Download and Re-process buttons have 44px minimum touch target when hardened", async () => {
+    it("Download and Re-process buttons have 44px minimum touch target after egg injection", async () => {
       global.fetch = mockFetchSuccess("out.docx");
       renderWithAudience(<Home />);
       const input = screen.getByTestId("dropzone-input");
@@ -609,8 +609,8 @@ describe("Home page", () => {
       });
       await waitFor(() => screen.getByText(/Armed CV:/i));
       ensureEngineConfigExpanded();
-      await waitFor(() => screen.getByRole("button", { name: /harden/i }));
-      fireEvent.click(screen.getByRole("button", { name: /harden/i }));
+      await waitFor(() => screen.getByRole("button", { name: /inject eggs/i }));
+      fireEvent.click(screen.getByRole("button", { name: /inject eggs/i }));
       await waitFor(() => screen.getByRole("button", { name: /download/i }));
       const downloadBtn = screen.getByRole("button", { name: /download/i });
       const reprocessBtn = screen.getByRole("button", { name: /re-process/i });
@@ -627,8 +627,8 @@ describe("Home page", () => {
       });
       await waitFor(() => screen.getByText(/Armed CV:/i));
       ensureEngineConfigExpanded();
-      await waitFor(() => screen.getByRole("button", { name: /harden/i }));
-      fireEvent.click(screen.getByRole("button", { name: /harden/i }));
+      await waitFor(() => screen.getByRole("button", { name: /inject eggs/i }));
+      fireEvent.click(screen.getByRole("button", { name: /inject eggs/i }));
       await waitFor(() => screen.getByRole("button", { name: /retry/i }));
       const retryBtn = screen.getByRole("button", { name: /retry/i });
       expect(retryBtn).toHaveClass("min-h-[44px]");
@@ -655,7 +655,7 @@ describe("Home page", () => {
       expect(label).toHaveClass("py-2");
     });
 
-    it("scrolls focused element into view when harden succeeds", async () => {
+    it("scrolls focused element into view when egg injection succeeds", async () => {
       const scrollIntoViewMock = jest.fn();
       HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
       global.fetch = mockFetchSuccess("out.docx");
@@ -666,13 +666,13 @@ describe("Home page", () => {
       });
       await waitFor(() => screen.getByText(/Armed CV:/i));
       ensureEngineConfigExpanded();
-      await waitFor(() => screen.getByRole("button", { name: /harden/i }));
-      fireEvent.click(screen.getByRole("button", { name: /harden/i }));
+      await waitFor(() => screen.getByRole("button", { name: /inject eggs/i }));
+      fireEvent.click(screen.getByRole("button", { name: /inject eggs/i }));
       await waitFor(() => screen.getByRole("button", { name: /download/i }));
       expect(scrollIntoViewMock).toHaveBeenCalled();
     });
 
-    it("scrolls retry button into view when harden fails", async () => {
+    it("scrolls retry button into view when egg injection fails", async () => {
       const scrollIntoViewMock = jest.fn();
       HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
       global.fetch = mockFetchError("Failed");
@@ -683,8 +683,8 @@ describe("Home page", () => {
       });
       await waitFor(() => screen.getByText(/Armed CV:/i));
       ensureEngineConfigExpanded();
-      await waitFor(() => screen.getByRole("button", { name: /harden/i }));
-      fireEvent.click(screen.getByRole("button", { name: /harden/i }));
+      await waitFor(() => screen.getByRole("button", { name: /inject eggs/i }));
+      fireEvent.click(screen.getByRole("button", { name: /inject eggs/i }));
       await waitFor(() => screen.getByRole("button", { name: /retry/i }));
       expect(scrollIntoViewMock).toHaveBeenCalled();
     });
@@ -868,7 +868,7 @@ describe("Home page", () => {
         expect(section).toHaveClass("md:flex-row");
       });
 
-      it("full flow: upload, harden, download", async () => {
+      it("full flow: upload, inject eggs, download", async () => {
         global.fetch = mockFetchSuccess("hardened-cv.docx");
         renderWithAudience(<Home />);
         fireEvent.change(screen.getByTestId("dropzone-input"), {
@@ -876,8 +876,8 @@ describe("Home page", () => {
         });
         await waitFor(() => screen.getByText(/Armed CV:/i));
         ensureEngineConfigExpanded();
-        await waitFor(() => screen.getByRole("button", { name: /harden/i }));
-        fireEvent.click(screen.getByRole("button", { name: /harden/i }));
+        await waitFor(() => screen.getByRole("button", { name: /inject eggs/i }));
+        fireEvent.click(screen.getByRole("button", { name: /inject eggs/i }));
         await waitFor(() => screen.getByRole("button", { name: /download/i }));
         fireEvent.click(screen.getByRole("button", { name: /download/i }));
         expect(global.URL.createObjectURL).toHaveBeenCalled();

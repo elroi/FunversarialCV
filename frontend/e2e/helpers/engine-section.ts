@@ -15,7 +15,7 @@ function armedCvInEngineSection(page: Page) {
 }
 
 /**
- * Ensures Engine / How it runs is expanded so Armed CV and Harden are visible.
+ * Ensures Engine / How it runs is expanded so Armed CV and Inject Eggs are visible.
  *
  * The UI auto-opens this fold when a CV is armed (`expandRevision`). A single
  * unconditional click when `aria-expanded` is already `true` would toggle it

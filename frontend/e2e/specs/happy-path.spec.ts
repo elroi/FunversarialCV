@@ -1,5 +1,5 @@
 /**
- * Happy path E2E: upload → harden → download for DOCX (v1 DOCX-only).
+ * Happy path E2E: upload → Inject Eggs → download for DOCX (v1 DOCX-only).
  * Uses real /api/harden and real fixtures. TDD: tests define expected flow.
  */
 import { test, expect } from "@playwright/test";
@@ -13,7 +13,7 @@ const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
 const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx"));
 
 test.describe("Happy path", () => {
-  test("DOCX: upload, harden, download yields valid DOCX", async ({ page }) => {
+  test("DOCX: upload, inject eggs, download yields valid DOCX", async ({ page }) => {
     await page.goto("/");
     await ensureSecurityAudienceForE2e(page);
 
@@ -24,7 +24,7 @@ test.describe("Happy path", () => {
     await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
       timeout: 15_000,
     });
-    await page.getByRole("button", { name: /harden/i }).click();
+    await page.getByRole("button", { name: /inject eggs/i }).click();
 
     await expect(
       page.getByRole("button", { name: /download/i })
@@ -88,7 +88,7 @@ test.describe("Happy path", () => {
     await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
       timeout: 15_000,
     });
-    await page.getByRole("button", { name: /harden/i }).click();
+    await page.getByRole("button", { name: /inject eggs/i }).click();
 
     await expect(
       page.getByRole("button", { name: /download/i })

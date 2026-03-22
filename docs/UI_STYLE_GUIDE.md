@@ -82,7 +82,7 @@ Use only when **long instructional** content should default **open** from the `m
 
 ## When not to fold
 
-- Do not place the **only** path to **Upload**, **Harden**, or **Download** inside a collapsed region without a strong onboarding reason.
+- Do not place the **only** path to **Upload**, **Inject Eggs** / **Add signals**, or **Download** inside a collapsed region without a strong onboarding reason.
 - Do not use a fold to hide **errors** or **blocking consent**; use dialogs, alerts, or inline error regions as appropriate.
 
 ---

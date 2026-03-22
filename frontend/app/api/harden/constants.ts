@@ -1,5 +1,5 @@
 /**
- * Shared constants for the harden API.
+ * Shared constants for POST /api/harden (egg injection).
  * Used by the route (body limit) and tests.
  */
 

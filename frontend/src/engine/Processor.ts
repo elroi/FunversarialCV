@@ -38,7 +38,7 @@ export interface ProcessorInput {
 
 export interface ProcessorOutput {
   buffer: Buffer;
-  /** Pre-hardening scan result (observational; does not block processing). */
+  /** Pre-injection scan result (observational; does not block processing). */
   dualityCheck: ScanResult;
   /** Duality feedback report; includes [DUALITY_ALERT] when existing adversarial layer detected. */
   scannerReport: ScannerReport;

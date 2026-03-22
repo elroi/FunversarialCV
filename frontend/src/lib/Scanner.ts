@@ -21,7 +21,7 @@ export interface ScanResult {
   details?: string[];
 }
 
-/** Duality feedback: report returned alongside the hardened buffer when an existing adversarial layer is detected. */
+/** Duality feedback: report returned alongside the output buffer when an existing adversarial layer is detected. */
 export interface ScannerReport {
   /** Pre-hardening scan result. */
   scan: ScanResult;

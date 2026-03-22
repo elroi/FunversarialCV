@@ -33,7 +33,7 @@ The following personas shape acceptance criteria, edge cases, and documentation.
 
 | Persona | Goal | Key concerns |
 |--------|------|----------------|
-| **Candidate** | Upload CV, configure eggs, download hardened file with confidence | Privacy (no retention), clear feedback (duality, errors), correct download, file type/size limits visible |
+| **Candidate** | Upload CV, configure eggs, download file with injected eggs with confidence | Privacy (no retention), clear feedback (duality, errors), correct download, file type/size limits visible |
 | **Recruiter** | Receive valid CVs; recognize “hidden layers” as signal | Output is standard PDF/DOCX; README explains what to look for |
 | **AI/HR-tech developer** | Test parsers against known adversarial inputs | Stable API contract, predictable egg payloads, docs for each egg |
 | **Security reviewer** | Verify no persistence, safe PII handling, no info leakage | Errors are generic where appropriate; no stack traces to client; logging server-side only |
@@ -105,8 +105,8 @@ The following personas shape acceptance criteria, edge cases, and documentation.
 
 **Flow**
 
-- **Two-step UX:** Selecting a file only "arms" it (stores in state); the user configures eggs via the config cards, then clicks a **Harden** button to run the pipeline. This allows configuring eggs before processing. See README "Using FunversarialCV."
-- On **Harden** click: set `processingState = "processing"`, `activeStage = "accept"`, log "[ACCEPT] Buffer received...". Build FormData from armed file + current payloads, POST to `/api/harden`. Then: FormData appends `file` and `payloads` JSON; on success decode base64 → blob → trigger download, set duality result and completed log; on error set `error` and processing state.
+- **Two-step UX:** Selecting a file only "arms" it (stores in state); the user configures eggs via the config cards, then clicks **Inject Eggs** (security) or **Add signals** (HR) to run the pipeline. This allows configuring eggs before processing. See README "Using FunversarialCV."
+- On primary pipeline click: set `processingState = "processing"`, `activeStage = "accept"`, log "[ACCEPT] Buffer received...". Build FormData from armed file + current payloads, POST to `/api/harden`. Then: FormData appends `file` and `payloads` JSON; on success decode base64 → blob → trigger download, set duality result and completed log; on error set `error` and processing state.
 
 **Candidate:** Clear `error` when user selects a new file. Optionally show file size limit near DropZone (e.g. “Max 4 MB”) if Next.js/Vercel limits are known.
 Auto-trigger download on success; no need to keep buffer in state.
@@ -154,7 +154,7 @@ Implement the Metadata Shadow egg and UI:
 
 ### 3.1 Format-preservation note and hosting
 
-- README: "Hardening rebuilds the document from extracted text; original layout and styling are not preserved." **Recruiter:** Keeps expectations clear when receiving hardened CVs. Add one sentence: "Implementation plan: see docs/IMPLEMENTATION_PLAN.md" for **Maintainer**.
+- README: "Egg injection rebuilds the document from extracted text; original layout and styling are not preserved." **Recruiter:** Keeps expectations clear when receiving CVs with injected eggs. Add one sentence: "Implementation plan: see docs/IMPLEMENTATION_PLAN.md" for **Maintainer**.
 - Optional: in-app hint near DropZone or download (**Candidate**).
 - Hosting: add a short “Hosting & Ops” section to the README describing runtime (Node/Serverless on Vercel), file size and rate limits, and where to find logs.
 

@@ -1,5 +1,5 @@
 /**
- * Demo preset E2E: Load preset (Clean/Dirty · PDF/DOCX) → Armed → Harden → Download.
+ * Demo preset E2E: Load preset (Clean/Dirty · PDF/DOCX) → Armed → Inject Eggs → Download.
  * Mocks GET /api/demo-cv and POST /api/harden for speed and determinism.
  */
 import { test, expect } from "@playwright/test";
@@ -52,7 +52,7 @@ function mockDemoCvAndHarden(
 }
 
 test.describe("Demo preset", () => {
-  test("Clean · DOCX: load preset, harden, download yields valid DOCX", async ({
+  test("Clean · DOCX: load preset, inject eggs, download yields valid DOCX", async ({
     page,
   }) => {
     mockDemoCvAndHarden(page, "docx");
@@ -67,9 +67,9 @@ test.describe("Demo preset", () => {
     await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
       timeout: 15_000,
     });
-    await expect(page.getByRole("button", { name: /harden/i })).toBeEnabled();
+    await expect(page.getByRole("button", { name: /inject eggs/i })).toBeEnabled();
 
-    await page.getByRole("button", { name: /harden/i }).click();
+    await page.getByRole("button", { name: /inject eggs/i }).click();
 
     await expect(
       page.getByRole("button", { name: /download/i })
@@ -89,7 +89,7 @@ test.describe("Demo preset", () => {
     expect(bytes[1]).toBe(0x4b);
   });
 
-  test("Dirty · DOCX: load preset, harden, download yields valid DOCX", async ({
+  test("Dirty · DOCX: load preset, inject eggs, download yields valid DOCX", async ({
     page,
   }) => {
     mockDemoCvAndHarden(page, "docx");
@@ -104,9 +104,9 @@ test.describe("Demo preset", () => {
     await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
       timeout: 15_000,
     });
-    await expect(page.getByRole("button", { name: /harden/i })).toBeEnabled();
+    await expect(page.getByRole("button", { name: /inject eggs/i })).toBeEnabled();
 
-    await page.getByRole("button", { name: /harden/i }).click();
+    await page.getByRole("button", { name: /inject eggs/i }).click();
 
     await expect(
       page.getByRole("button", { name: /download/i })

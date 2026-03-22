@@ -1,5 +1,5 @@
 /**
- * Harden API: POST /api/harden
+ * Egg injection API: POST /api/harden
  * Stateless — no files stored; buffer and PII live only for the request.
  */
 
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     return Response.json(
       {
         error:
-          "Too many harden requests from this client. Please wait a moment and try again.",
+          "Too many egg-injection requests from this client. Please wait a moment and try again.",
       },
       {
         status: 429,
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       return Response.json(
         {
           error:
-            "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored.",
+            "Server expected dehydrated tokens only; client dehydration may have failed. No document was produced or stored.",
         },
         { status: 400 }
       );
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
           return Response.json(
             {
               error:
-                "Server expected dehydrated tokens only; client dehydration may have failed. No document was hardened or stored.",
+                "Server expected dehydrated tokens only; client dehydration may have failed. No document was produced or stored.",
             },
             { status: 400 }
           );

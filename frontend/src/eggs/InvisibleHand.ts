@@ -37,7 +37,7 @@ export const invisibleHand: IEgg = {
   owaspMapping: OwaspMapping.LLM01_Prompt_Injection,
 
   manualCheckAndValidation:
-    "Quick check: Open the hardened document (DOCX) and press Ctrl/Cmd+A to see a tiny extra selected paragraph with the hidden trap text. Manual check: In Word, inspect the document or enable showing hidden content to find the hidden paragraph. Validation: Run the transform with a known payload, then parse the output DOCX; confirm the trap text is present in the hidden element.",
+    "Quick check: Open the output document (DOCX) and press Ctrl/Cmd+A to see a tiny extra selected paragraph with the hidden trap text. Manual check: In Word, inspect the document or enable showing hidden content to find the hidden paragraph. Validation: Run the transform with a known payload, then parse the output DOCX; confirm the trap text is present in the hidden element.",
 
   validatePayload(payload: string): boolean {
     if (payload.length > MAX_PAYLOAD_LENGTH) return false;

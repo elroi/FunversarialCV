@@ -17,7 +17,7 @@ describe("SiteHeader", () => {
       screen.getByRole("heading", { name: /funversarialcv/i, level: 1 })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/adversarial cv hardening console/i)
+      screen.getByText(/adversarial cv egg-injection console/i)
     ).toBeInTheDocument();
   });
 });

@@ -2,7 +2,7 @@ import { expect, type Page } from "@playwright/test";
 import { securityUiRx } from "./security-ui";
 
 /**
- * Home defaults to HR; E2E specs assert security strings (Armed CV, Harden, sample CV row, PII badge).
+ * Home defaults to HR; E2E specs assert security strings (Armed CV, Inject Eggs, sample CV row, PII badge).
  * Call after `page.goto("/")` (or `"/?…"`) before assertions or uploads.
  *
  * Waits for `AudienceProvider` hydration (`data-audience` on `<html>`) before clicking — otherwise

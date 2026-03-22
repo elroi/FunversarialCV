@@ -1,6 +1,6 @@
 # API: POST /api/harden
 
-Contract for the hardening endpoint. Use this to test parsers against a stable API without reading route code.
+Contract for the egg-injection endpoint (`/api/harden`). Use this to test parsers against a stable API without reading route code.
 
 ## Request
 
@@ -20,9 +20,9 @@ Contract for the hardening endpoint. Use this to test parsers against a stable A
 
 JSON body:
 
-- `bufferBase64` (string) — Base64-encoded hardened document. Decode and use as blob for download.
+- `bufferBase64` (string) — Base64-encoded output document (eggs applied). Decode and use as blob for download.
 - `mimeType` (string) — `application/vnd.openxmlformats-officedocument.wordprocessingml.document` (DOCX).
-- `scannerReport` — `{ scan: { hasSuspiciousPatterns, matchedPatterns, details? }, alerts: string[] }`. Pre-hardening scan result (duality check).
+- `scannerReport` — `{ scan: { hasSuspiciousPatterns, matchedPatterns, details? }, alerts: string[] }`. Pre-injection scan result (duality check).
 - `originalName` (string) — Original filename from the upload.
 
 ---

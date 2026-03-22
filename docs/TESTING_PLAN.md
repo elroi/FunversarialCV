@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-**Goal:** Systematically test the FunversarialCV codebase for bugs so that regressions are caught early, security guarantees hold, and users get a reliable hardening flow.
+**Goal:** Systematically test the FunversarialCV codebase for bugs so that regressions are caught early, security guarantees hold, and users get a reliable egg-injection flow.
 
 **Scope:** Unit tests (Jest), E2E tests (Playwright), coverage gaps, security-sensitive paths, and regression targets. The plan is **persona-aware** and incorporates feedback from each perspective before implementation.
 
@@ -36,7 +36,7 @@
 **E2E (Playwright)**
 
 - `smoke.spec.ts` – home loads, PII trust line visible, drop zone visible.
-- `happy-path.spec.ts` – DOCX upload → harden → download; client PII dehydration (tokenized payload).
+- `happy-path.spec.ts` – DOCX upload → Inject Eggs → download; client PII dehydration (tokenized payload).
 - `errors.spec.ts`, `oversize-limit.spec.ts`, `navigation.spec.ts`, `options.spec.ts`, `demo-preset.spec.ts`, `duality-monitor.spec.ts`, `state-reset.spec.ts`, `server-pdf-pii.spec.ts`.
 
 ### 2.3 Gaps and Risk Areas
@@ -71,7 +71,7 @@
 |-------|--------|--------------------|
 | **Unit** | Pure logic, edge cases, mocks for I/O | Wrong branching, bad parsing, PII regex, rate-limit math, egg payloads. |
 | **Integration** | API route + engine + eggs (Jest with NextRequest) | Wrong status codes, missing headers, malformed JSON, body size, eggIds/payloads. |
-| **E2E** | Real browser, real server, real files | Upload → harden → download; error messages; navigation; duality monitor; server-PDF consent. |
+| **E2E** | Real browser, real server, real files | Upload → Inject Eggs → download; error messages; navigation; duality monitor; server-PDF consent. |
 
 ### 3.3 Security-Sensitive Test Targets
 

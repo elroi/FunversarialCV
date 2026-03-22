@@ -13,7 +13,7 @@ const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
 const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx"));
 
 test.describe("Options", () => {
-  test("preserve styles toggle: harden succeeds when enabled", async ({
+  test("preserve styles toggle: inject eggs succeeds when enabled", async ({
     page,
   }) => {
     await page.route("**/api/harden", (route) => {
@@ -49,13 +49,13 @@ test.describe("Options", () => {
     ).toBeVisible();
     await page.getByRole("checkbox", { name: /preserve styles/i }).check();
 
-    await page.getByRole("button", { name: /harden/i }).click();
+    await page.getByRole("button", { name: /inject eggs/i }).click();
     await expect(
       page.getByRole("button", { name: /download/i })
     ).toBeVisible({ timeout: 60_000 });
   });
 
-  test("egg toggle: unchecking an egg still allows harden", async ({
+  test("egg toggle: unchecking an egg still allows inject eggs", async ({
     page,
   }) => {
     await page.route("**/api/harden", (route) => {
@@ -87,7 +87,7 @@ test.describe("Options", () => {
     });
 
     await page.getByRole("checkbox", { name: /Canary Wing/i }).uncheck();
-    await page.getByRole("button", { name: /harden/i }).click();
+    await page.getByRole("button", { name: /inject eggs/i }).click();
 
     await expect(
       page.getByRole("button", { name: /download/i })
@@ -126,7 +126,7 @@ test.describe("Options", () => {
     });
 
     await page.getByRole("checkbox", { name: /preserve styles/i }).check();
-    await page.getByRole("button", { name: /harden/i }).click();
+    await page.getByRole("button", { name: /inject eggs/i }).click();
 
     await expect(
       page.getByRole("button", { name: /download/i })

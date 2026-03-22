@@ -269,20 +269,25 @@ export default function Home() {
     });
   };
 
-  const onFileSelect = async (file: File) => {
-    const buf = await file.slice(0, 4).arrayBuffer();
+  /**
+   * Sniff magic bytes and arm the pipeline with a .docx only.
+   * Returns false when the file is rejected (error message already set).
+   * Used by DropZone and by demo preset load so callers can await before marking success.
+   */
+  const validateAndArmFile = async (file: File): Promise<boolean> => {
+    const buf = await file.slice(0, 8).arrayBuffer();
     const detected = detectDocumentTypeFromBuffer(buf);
     if (detected === "pdf") {
       setError(
         "This file looks like a PDF. We currently support Word documents (.docx) only."
       );
-      return;
+      return false;
     }
     if (detected !== "docx") {
       setError(
         "File content is not a valid Word document. Please upload a real .docx file."
       );
-      return;
+      return false;
     }
     setError(null);
     setSuccessMessage(null);
@@ -296,6 +301,11 @@ export default function Home() {
     setProcessingState("idle");
     setActiveStage(undefined);
     setClientPiiMap(null);
+    return true;
+  };
+
+  const onFileSelect = async (file: File) => {
+    await validateAndArmFile(file);
   };
 
   const clearFile = useCallback(() => {
@@ -750,16 +760,26 @@ export default function Home() {
     });
   };
 
-  const loadDemoCv = async (variant: "clean" | "dirty", format: "pdf" | "docx") => {
+  /** Fetches demo CV from API and arms the file if the buffer is a valid .docx. */
+  const loadDemoCv = async (
+    variant: "clean" | "dirty",
+    format: "pdf" | "docx"
+  ): Promise<boolean> => {
     try {
       setError(null);
       setSuccessMessage(null);
       const url = `/api/demo-cv?variant=${variant}&format=${format}`;
       const res = await fetch(url);
       const data = await res.json().catch(() => null);
-      if (!res.ok || !data || typeof data.bufferBase64 !== "string" || typeof data.mimeType !== "string" || typeof data.originalName !== "string") {
+      if (
+        !res.ok ||
+        !data ||
+        typeof data.bufferBase64 !== "string" ||
+        typeof data.mimeType !== "string" ||
+        typeof data.originalName !== "string"
+      ) {
         setError("Failed to fetch demo CV. Please try again.");
-        return;
+        return false;
       }
       const binaryString = atob(data.bufferBase64.trim());
       const bytes = new Uint8Array(binaryString.length);
@@ -768,12 +788,15 @@ export default function Home() {
       }
       if (bytes.length === 0) {
         setError("Demo CV document was empty. Please try again.");
-        return;
+        return false;
       }
-      const demoFile = new File([bytes], data.originalName, { type: data.mimeType });
-      onFileSelect(demoFile);
+      const demoFile = new File([bytes], data.originalName, {
+        type: data.mimeType,
+      });
+      return await validateAndArmFile(demoFile);
     } catch {
       setError("Failed to fetch demo CV. Please try again.");
+      return false;
     }
   };
 
@@ -810,7 +833,8 @@ export default function Home() {
   const loadPreset = async (variant: "clean" | "dirty", format: "pdf" | "docx") => {
     setIsDemoLoading(true);
     try {
-      await loadDemoCv(variant, format);
+      const ok = await loadDemoCv(variant, format);
+      if (!ok) return;
       setDemoVariant(variant);
       setDemoFormat(format);
       setHasDemoLoaded(true);

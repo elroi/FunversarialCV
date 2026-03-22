@@ -9,6 +9,8 @@ import Home from "./page";
 import * as ClientVault from "../src/lib/clientVault";
 import * as ClientDocumentCreate from "../src/lib/clientDocumentCreate";
 import * as ClientTokenReplace from "../src/lib/clientTokenReplaceInCopy";
+import { buildStyledDemoCvDocx } from "../src/lib/demoCvBuilders";
+import { MIME_DOCX } from "../src/engine/documentExtract";
 
 const createFile = (name: string, type: string) =>
   new File(["dummy"], name, { type });
@@ -731,6 +733,25 @@ describe("Home page", () => {
           originalName: "demo.pdf",
         }),
       } as unknown as Response);
+    });
+
+    it("arms the engine when Clean · DOCX returns a real docx buffer from the API", async () => {
+      const buffer = await buildStyledDemoCvDocx("clean");
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          bufferBase64: Buffer.from(buffer).toString("base64"),
+          mimeType: MIME_DOCX,
+          originalName: "FunversarialCV-demo-clean.docx",
+        }),
+      } as unknown as Response);
+
+      renderWithAudience(<Home />);
+      fireEvent.click(screen.getByRole("button", { name: /clean · docx/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(/CV loaded:|Armed CV:/i)).toBeInTheDocument();
+      });
     });
   });
 

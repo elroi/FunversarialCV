@@ -5,6 +5,9 @@ import {
 } from "@/lib/demoCvBuilders";
 import { MIME_DOCX, MIME_PDF, detectDocumentType } from "@/engine/documentExtract";
 
+/** Query string drives output; `request.url` is dynamic — do not probe at static generation. */
+export const dynamic = "force-dynamic";
+
 type Variant = "clean" | "dirty";
 type Format = "pdf" | "docx";
 

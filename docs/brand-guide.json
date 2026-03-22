@@ -1,6 +1,10 @@
 {
   "schemaVersion": 1,
   "document": "docs/BRAND_COMMUNICATION_STRATEGY.md",
+  "sourceDrafts": [
+    "docs/brand/drafts/Funversarial_Brand_Architecture_Universal.md",
+    "docs/brand/drafts/funversarial_brand_communication_final.md"
+  ],
   "essence": {
     "elevatorLine": "Funversarial is a safe, hands-on lab for exploring how automated systems behave—and how information layers shape outcomes—without breaking trust.",
     "taglines": ["Explore systems. Understand outcomes. Stay in control."]

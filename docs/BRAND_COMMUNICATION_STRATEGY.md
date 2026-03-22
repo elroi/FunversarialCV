@@ -158,5 +158,9 @@ How the two internal drafts were reconciled:
 
 ## Appendix C — Sources and revision
 
-- **Sources:** Derived from internal brand drafts: *Funversarial Brand Architecture (Universal)* and *Funversarial Brand Communication (Final)*, merged March 2026 for this repository.
+- **Source drafts (archived in repo):**
+  - [docs/brand/drafts/Funversarial_Brand_Architecture_Universal.md](brand/drafts/Funversarial_Brand_Architecture_Universal.md)
+  - [docs/brand/drafts/funversarial_brand_communication_final.md](brand/drafts/funversarial_brand_communication_final.md)
+  - Index: [docs/brand/drafts/README.md](brand/drafts/README.md)
+- **Consolidated guide:** This document and [`brand-guide.json`](brand-guide.json) are the canonical sources for product work; drafts are preserved inputs only.
 - **Revision:** Update this file and `brand-guide.json` in the same change when altering brand rules.

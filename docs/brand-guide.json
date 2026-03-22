@@ -21,7 +21,8 @@
         "defaultImplementation": "CollapsibleCard with default uppercase title styling; optional className on outer card.",
         "exampleRefs": [
           "frontend/app/page.tsx",
-          "frontend/src/components/InvisibleHandConfigCard.tsx"
+          "frontend/src/components/InvisibleHandConfigCard.tsx",
+          "frontend/src/components/ValidationLab.tsx"
         ],
         "status": "shipped",
         "defaultExpandedPolicy": "collapsed",

@@ -5,6 +5,7 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
 import fs from "fs";
+import { expandEngineConfigurationSection } from "../helpers/engine-section";
 
 const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
 const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx"));
@@ -36,6 +37,7 @@ test.describe("Options", () => {
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
     await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
+    await expandEngineConfigurationSection(page);
 
     await expect(
       page.getByRole("checkbox", { name: /preserve styles/i })
@@ -74,6 +76,7 @@ test.describe("Options", () => {
     const fileInput = page.getByTestId("dropzone-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
     await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
+    await expandEngineConfigurationSection(page);
 
     await page.getByRole("checkbox", { name: /Canary Wing/i }).uncheck();
     await page.getByRole("button", { name: /harden/i }).click();
@@ -111,6 +114,7 @@ test.describe("Options", () => {
 
     await page.getByRole("button", { name: /clean · docx/i }).click();
     await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
+    await expandEngineConfigurationSection(page);
 
     await page.getByRole("checkbox", { name: /preserve styles/i }).check();
     await page.getByRole("button", { name: /harden/i }).click();

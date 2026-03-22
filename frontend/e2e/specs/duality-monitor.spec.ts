@@ -1,13 +1,13 @@
 /**
- * Duality monitor E2E: after harden, open Pipeline status panel and assert log/duality content visible.
+ * Duality monitor E2E: after harden, Pipeline status section shows the monitor card and log (expanded by default).
+ * Copy is audience-specific (HR: "Processing steps" / "Log"; security: "Duality Monitor" / "Terminal Log").
  * Mocks /api/harden so scannerReport.scan is present and log is populated.
- * Uses mobile viewport so the Pipeline status toggle is visible (on desktop the panel is always shown).
- * DOCX-only: uses minimal.docx and mock returns DOCX.
  */
 import { test, expect } from "@playwright/test";
 import path from "path";
 
 import fs from "fs";
+import { expandEngineConfigurationSection } from "../helpers/engine-section";
 
 const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
 const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx"));
@@ -15,7 +15,7 @@ const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx")
 test.describe("Duality monitor", () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
-  test("after harden, open Pipeline status panel shows Duality Monitor and log content", async ({
+  test("after harden, Pipeline status panel shows monitor and log content", async ({
     page,
   }) => {
     await page.route("**/api/harden", (route) => {
@@ -45,27 +45,39 @@ test.describe("Duality monitor", () => {
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
 
     await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
+    await expandEngineConfigurationSection(page);
     await page.getByRole("button", { name: /harden/i }).click();
 
     await expect(
       page.getByRole("button", { name: /download/i })
     ).toBeVisible({ timeout: 60_000 });
 
-    const toggle = page.locator("#duality-monitor-toggle");
-    await toggle.scrollIntoViewIfNeeded();
-    await toggle.click();
+    const sectionToggle = page.getByRole("button", {
+      name: /pipeline status: show or hide|processing steps: show or hide/i,
+    });
+    await expect(sectionToggle).toHaveAttribute("aria-expanded", "true");
 
-    await expect(toggle).toHaveAttribute("aria-expanded", "true");
-    const content = page.locator("#duality-monitor-content");
+    const content = page.locator("#pipeline-status-section-content");
+    await content.scrollIntoViewIfNeeded();
     await expect(content).toBeVisible();
 
-    await expect(content.getByText("Duality Monitor")).toBeVisible();
-    await expect(content.getByText("Terminal Log")).toBeVisible();
     await expect(
-      content.getByText(/No suspicious prompt-injection patterns detected/i)
+      content.getByRole("heading", {
+        name: /Duality Monitor|Processing steps/i,
+      })
     ).toBeVisible();
     await expect(
-      content.locator("[role=log]").filter({ hasText: /ACCEPT|Hardened|Dehydrated/i })
+      content.getByText(/^Log$/i).or(content.getByText(/^Terminal Log$/i))
+    ).toBeVisible();
+    await expect(
+      content.getByText(
+        /No suspicious prompt-injection patterns detected|No existing hidden instructions or tracking links found/i
+      )
+    ).toBeVisible();
+    await expect(
+      content
+        .locator("[role=log]")
+        .filter({ hasText: /\[ACCEPT\]|\[DEHYDRATE\]|\[REHYDRATE\]|\[DUALITY\]/i })
     ).toBeVisible();
   });
 });

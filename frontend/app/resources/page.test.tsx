@@ -4,6 +4,10 @@ import { renderWithAudience } from "../../src/test-utils";
 import ResourcesPage from "./page";
 
 describe("Resources page", () => {
+  beforeEach(() => {
+    window.localStorage.setItem("funversarialcv-audience", "security");
+  });
+
   it("renders the main Resources heading", () => {
     renderWithAudience(<ResourcesPage />);
     expect(

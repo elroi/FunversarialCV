@@ -2,7 +2,7 @@ import type { Copy } from "./types";
 
 export const hrCopy: Copy = {
   tagline:
-    "Add invisible, AI-friendly signals to your CV so you can see how hiring tools that use AI read it.",
+    "Add subtle, AI-visible signals to your CV so you can see how hiring tools interpret it.",
   piiModeBadge: "Private processing: no CV storage",
   resourcesLink: "Resources",
   backHome: "Back home",
@@ -10,7 +10,7 @@ export const hrCopy: Copy = {
   experimentFlowCollapsibleTitle: "How to run a fair test",
   experimentFlowLabel: "RUN THE CV EXPERIMENT",
   positioningLine:
-    "Turn your CV into a controlled experiment on how AI systems read your document.",
+    "Run a simple before-and-after test to see whether AI-visible signals change the output.",
   flowSteps: [
     "Start with our sample CV (recommended) or upload your own CV",
     "Add subtle AI-visible signals to your CV",
@@ -23,7 +23,8 @@ export const hrCopy: Copy = {
     "Look for changes in tone, ranking, or interpretation of your experience.",
   philosophyLine:
     "This isn't about tricking the system — it's about understanding how your inputs shape the results.",
-  intro: "",
+  intro:
+    "Use this to compare before-and-after results and learn how AI tools interpret the same CV under slightly different signal conditions.",
   piiNotice:
     "Your CV is processed in your browser first. Before anything leaves your device, we replace your email, phone, and other contact details (we call this PII) with temporary placeholders. Our server only sees those placeholders, never your real contact information. Processing is in memory only—we don’t store your document after your new CV is generated.",
   privacyDetailsSummary: "How we protect your contact details",
@@ -228,6 +229,9 @@ export const hrCopy: Copy = {
     "If you’re in hiring or HR, run this in a test environment. Compare how normal and “signaled” CVs move through your pipeline and use that to improve prompts and guardrails.",
 
   validationLabTitle: "Validation Lab",
+  validationLabCollapsibleAriaLabel:
+    "Validation Lab: show or hide prompts for testing your CV in an external AI",
+  validationLabPromptCollapsibleAriaLabel: "Prompt {id}: show or hide full text and copy button",
   validationLabManualMirrorProtocol:
     "How to test your CV with added signals in an external AI:\n\n(1) Add signals and download your CV on this page.\n(2) Open an external AI (e.g. ChatGPT or Claude) in another tab and paste the downloaded CV into the chat.\n(3) Pick a prompt below, click Copy, and paste it into the same conversation.\n(4) Compare the AI’s reply to the goal described under that prompt (e.g. did it follow hidden instructions or use hidden metadata?). If the reply matches the goal, the test succeeded.",
   validationLabMatchBadgeHint:

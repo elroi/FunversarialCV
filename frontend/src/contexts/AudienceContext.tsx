@@ -7,14 +7,14 @@ export type Audience = "security" | "hr";
 const STORAGE_KEY = "funversarialcv-audience";
 
 function readStored(): Audience {
-  if (typeof window === "undefined") return "security";
+  if (typeof window === "undefined") return "hr";
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw === "security" || raw === "hr") return raw;
   } catch {
     // ignore
   }
-  return "security";
+  return "hr";
 }
 
 interface AudienceContextValue {
@@ -25,7 +25,7 @@ interface AudienceContextValue {
 const AudienceContext = createContext<AudienceContextValue | null>(null);
 
 export function AudienceProvider({ children }: { children: React.ReactNode }) {
-  const [audience, setAudienceState] = useState<Audience>("security");
+  const [audience, setAudienceState] = useState<Audience>("hr");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export function AudienceProvider({ children }: { children: React.ReactNode }) {
   }, [mounted, audience]);
 
   const value = useMemo(
-    () => ({ audience: mounted ? audience : "security", setAudience }),
+    () => ({ audience: mounted ? audience : "hr", setAudience }),
     [audience, setAudience, mounted]
   );
 

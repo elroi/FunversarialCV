@@ -1,7 +1,7 @@
 import type { Copy } from "./types";
 
 export const securityCopy: Copy = {
-  tagline: "Adversarial CV hardening console for hungry LLMs.",
+  tagline: "Adversarial CV hardening console for LLM-driven hiring workflows.",
   piiModeBadge: "PII · client vault (tokenized outbound)",
   resourcesLink: "Resources",
   backHome: "Back home",
@@ -9,7 +9,7 @@ export const securityCopy: Copy = {
   experimentFlowCollapsibleTitle: "How to run a fair test",
   experimentFlowLabel: "RUN THE CV EXPERIMENT",
   positioningLine:
-    "Turn your CV into a controlled experiment on how LLMs interpret documents.",
+    "Execute a controlled before/after evaluation to measure model behavior shifts.",
   flowSteps: [
     "Start with our sample CV (recommended)\nor upload your own CV",
     "Inject adversarial layers",
@@ -21,7 +21,7 @@ export const securityCopy: Copy = {
   philosophyLine:
     "This isn't about breaking the model — it's about understanding how inputs shape outcomes.",
   intro:
-    "Layers **OWASP-aligned** patterns into documents so you can observe LLM screening behavior—**authorized testing and research only**.",
+    "FunversarialCV is an educational adversarial simulation environment for authorized security testing and LLM research in hiring pipelines. It uses **OWASP-aligned** patterns and a zero-retention processing model (**authorized testing and research only**).",
   piiNotice:
     "Your CV is processed in your browser first. Before anything leaves your device, we replace email, phone, and other identifiers with short-lived tokens. Our server only sees tokens, never your raw contact details. Operation is in-memory with zero retention; PII is dehydrated for transit and rehydrated only in your browser for the final file.",
   privacyDetailsSummary: "PII handling (details)",
@@ -226,6 +226,9 @@ export const securityCopy: Copy = {
     "If you are part of a hiring or security team, wire Funversarial CVs into a sandbox or test tenant of your hiring stack. Compare how clean and Funversarial CVs move through your pipeline, and use the differences to tighten prompts, add guardrails, and reinforce human-in-the-loop review.",
 
   validationLabTitle: "Validation Lab",
+  validationLabCollapsibleAriaLabel:
+    "Validation Lab: show or hide Manual Mirror protocol and external LLM prompts",
+  validationLabPromptCollapsibleAriaLabel: "Prompt {id}: show or hide full text and copy control",
   validationLabManualMirrorProtocol:
     "Manual Mirror Protocol — How to test your Armed CV in an external LLM:\n\n(1) Harden and download your CV on this page.\n(2) Open an external LLM (e.g. ChatGPT, Claude) in another tab and paste the downloaded CV into the chat.\n(3) Pick a prompt below, click [COPY], and paste it into the same conversation.\n(4) Compare the model’s reply to the diagnostic goal under that prompt (e.g. did it follow hidden instructions, leak metadata, or over-trust the document?). If the behaviour matches the goal, your forensic proof-of-concept succeeds.",
   validationLabMatchBadgeHint:

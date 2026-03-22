@@ -20,7 +20,7 @@ export interface Copy {
   philosophyLine: string;
   intro: string;
   piiNotice: string;
-  /** `<summary>` for optional details block around full PII notice (reduces duplicate trust copy above the fold). */
+  /** Collapsed title for the foldable PII / privacy notice block (reduces duplicate trust copy above the fold). */
   privacyDetailsSummary: string;
 
   // —— Home: input ——
@@ -189,6 +189,10 @@ export interface Copy {
 
   // —— Validation Lab ——
   validationLabTitle: string;
+  /** Accessible name for the outer Validation Lab expand/collapse control. */
+  validationLabCollapsibleAriaLabel: string;
+  /** Template: {id} = prompt id (e.g. LLM01). Used for per-prompt fold buttons. */
+  validationLabPromptCollapsibleAriaLabel: string;
   validationLabManualMirrorProtocol: string;
   validationLabMatchBadgeHint: string;
   validationCopySuccessLogMessage: string; // template: use {id} for prompt id

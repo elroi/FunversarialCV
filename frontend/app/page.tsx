@@ -25,6 +25,7 @@ import { EGG_OPTIONS, DEFAULT_ENABLED_EGG_IDS } from "../src/eggs/eggMetadata";
 import { Button } from "../src/components/ui/Button";
 import { Card } from "../src/components/ui/Card";
 import { CollapsibleCard } from "../src/components/ui/CollapsibleCard";
+import { SectionFold } from "../src/components/ui/SectionFold";
 import { useCopy } from "../src/copy";
 import { useAudience } from "../src/contexts/AudienceContext";
 
@@ -157,7 +158,6 @@ export default function Home() {
     eggIds: string[];
     preserveStyles: boolean;
   } | null>(null);
-  const [dualityMonitorOpen, setDualityMonitorOpen] = useState(false);
   const openFilePickerRef = useRef<(() => void) | null>(null);
   /** True once the user has toggled an egg or preserve-styles; we only persist after that so we never overwrite saved state on load. */
   const userHasChangedCheckboxesRef = useRef(false);
@@ -904,10 +904,14 @@ export default function Home() {
 
         <section className="flex flex-1 flex-col gap-8 md:flex-row">
           <div className="flex-1">
-            <div className="functional-group p-4">
-              <div className="mb-4 text-caption uppercase tracking-[0.2em] text-accent">
-                {copy.inputChannel}
-              </div>
+            <SectionFold
+              className="functional-group p-4"
+              title={copy.inputChannel}
+              titleId="input-channel-section-title"
+              contentId="input-channel-section-content"
+              ariaLabel={`${copy.inputChannel}: show or hide`}
+              defaultExpanded
+            >
               <DropZone onFileSelect={onFileSelect} maxSizeBytes={MAX_FILE_SIZE_BYTES} openFilePickerRef={openFilePickerRef} />
               <p className="mt-1 text-caption text-foreground/50">
                 {copy.maxFileHint}
@@ -975,7 +979,7 @@ export default function Home() {
                   </p>
                 </div>
               </CollapsibleCard>
-            </div>
+            </SectionFold>
 
             <div className="functional-group mb-6 mt-8 overflow-hidden sm:mt-10">
               <CollapsibleCard
@@ -995,19 +999,26 @@ export default function Home() {
               <div className="mb-6">{renderIntro(copy.intro)}</div>
             ) : null}
 
-            <details className="mb-6 rounded-lg border border-border/60 bg-panel/40">
-              <summary className="flex min-h-[44px] cursor-pointer list-none items-center px-3 py-3 text-sm font-medium text-accent outline-none marker:content-none sm:px-4 [&::-webkit-details-marker]:hidden">
-                {copy.privacyDetailsSummary}
-              </summary>
-              <div className="border-t border-border/50 px-3 pb-3 pt-1 sm:px-4">
-                <PiiNoticeBlock copy={copy} audience={audience} />
-              </div>
-            </details>
+            <CollapsibleCard
+              className="mb-6 border-border/60 bg-panel/40"
+              title={copy.privacyDetailsSummary}
+              titleClassName="text-sm font-medium text-accent"
+              titleId="privacy-details-card-title"
+              contentId="privacy-details-card-content"
+              ariaLabel={`${copy.privacyDetailsSummary}: show or hide details`}
+              defaultExpanded={false}
+            >
+              <PiiNoticeBlock copy={copy} audience={audience} />
+            </CollapsibleCard>
 
-            <div className="functional-group mt-6 p-4">
-              <div className="mb-4 text-caption uppercase tracking-[0.2em] text-accent">
-              {copy.engineConfigTitle}
-            </div>
+            <SectionFold
+              className="functional-group mt-6 p-4"
+              title={copy.engineConfigTitle}
+              titleId="engine-config-section-title"
+              contentId="engine-config-section-content"
+              ariaLabel={`${copy.engineConfigTitle}: show or hide`}
+              defaultExpanded={false}
+            >
             {selectedFileName && (
               <div ref={armedSectionRef}>
                 <p className="mt-3 text-sm text-success">
@@ -1201,52 +1212,52 @@ export default function Home() {
                 manualCheckAndValidation={eggMetadataById["metadata-shadow"]?.manualCheckAndValidation}
               />
             </div>
-            </div>
-            <ValidationLab
-              enabledEggIds={enabledEggIds}
-              onPromptCopy={(id) =>
-                setLog((prev) => [
-                  ...prev,
-                  {
-                    id: `validation-copy-${id}`,
-                    stage: "accept",
-                    level: "success",
-                    message: copy.validationCopySuccessLogMessage.replace("{id}", id),
-                  },
-                ])
-              }
-            />
+            </SectionFold>
+
+            <SectionFold
+              sectionId="validation-lab"
+              className="functional-group mt-6 p-4"
+              title={copy.validationLabTitle}
+              titleId="validation-lab-section-title"
+              contentId="validation-lab-section-content"
+              ariaLabel={copy.validationLabCollapsibleAriaLabel}
+              defaultExpanded={false}
+            >
+              <ValidationLab
+                enabledEggIds={enabledEggIds}
+                onPromptCopy={(id) =>
+                  setLog((prev) => [
+                    ...prev,
+                    {
+                      id: `validation-copy-${id}`,
+                      stage: "accept",
+                      level: "success",
+                      message: copy.validationCopySuccessLogMessage.replace("{id}", id),
+                    },
+                  ])
+                }
+              />
+            </SectionFold>
           </div>
 
-          <aside className="functional-group mt-8 w-full p-4 text-sm text-foreground/80 md:mt-0 md:w-80 md:shrink-0 md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-3rem)] md:overflow-y-auto">
-            <div className="mb-4 text-caption uppercase tracking-[0.2em] text-accent">
-              {copy.pipelineStatusTitle}
-            </div>
-            <div className="block md:hidden mb-2">
-              <button
-                type="button"
-                onClick={() => setDualityMonitorOpen((o) => !o)}
-                className="flex w-full min-h-[44px] items-center justify-between rounded px-3 py-3 text-caption sm:text-xs uppercase tracking-[0.2em] text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-                aria-expanded={dualityMonitorOpen}
-                aria-controls="duality-monitor-content"
-                id="duality-monitor-toggle"
-              >
-                <span>{copy.pipelineStatusToggle}</span>
-                <span aria-hidden="true">{dualityMonitorOpen ? "▼" : "▶"}</span>
-              </button>
-            </div>
-            <div
-              id="duality-monitor-content"
-              className={`${dualityMonitorOpen ? "block" : "hidden md:block"} max-h-[60vh] overflow-y-auto md:max-h-none`}
-              aria-labelledby="duality-monitor-toggle"
+          <aside className="mt-8 w-full md:mt-0 md:w-80 md:shrink-0 md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-3rem)] md:overflow-y-auto">
+            <SectionFold
+              className="functional-group p-4 text-sm text-foreground/80"
+              title={copy.pipelineStatusTitle}
+              titleId="pipeline-status-section-title"
+              contentId="pipeline-status-section-content"
+              ariaLabel={`${copy.pipelineStatusTitle}: show or hide`}
+              defaultExpanded
             >
-            <DualityMonitor
-              processingState={processingState}
-              activeStage={activeStage}
-              log={log}
-              dualityResult={dualityResult ?? undefined}
-            />
-            </div>
+              <div className="max-h-[60vh] overflow-y-auto md:max-h-none">
+                <DualityMonitor
+                  processingState={processingState}
+                  activeStage={activeStage}
+                  log={log}
+                  dualityResult={dualityResult ?? undefined}
+                />
+              </div>
+            </SectionFold>
           </aside>
         </section>
       </div>

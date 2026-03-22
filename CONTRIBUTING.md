@@ -27,6 +27,7 @@ cd frontend && npm install && npm run dev
 
 - **TDD:** Write tests first, then implement until tests pass. Apply to every feature and fix (eggs, API route, helpers, UI behavior where testable).
 - **Feature branches:** All work happens on a feature branch (e.g. `feature/...`, `fix/...`). Never commit directly to `main`; merge via PR or after review.
+- **UI / progressive disclosure:** See `docs/UI_STYLE_GUIDE.md` (fold tiers, defaults, safe state on change); machine-readable tier IDs: `ui.disclosureTiers` in `docs/brand-guide.json`.
 
 ## Git workflow
 

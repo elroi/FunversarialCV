@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import clsx from "clsx";
+import { DisclosureChevron } from "./DisclosureChevron";
 
 const MD_MIN_WIDTH = "(min-width: 768px)";
 
@@ -25,6 +26,11 @@ export interface CollapsibleCardProps {
   children: React.ReactNode;
   /** Optional class for the outer card wrapper. */
   className?: string;
+  /**
+   * When set, replaces the default title typography (uppercase tracking used for egg cards).
+   * Use for prose-style titles such as privacy summaries.
+   */
+  titleClassName?: string;
   /** When true, trigger and content are not interactive (e.g. when egg is disabled). */
   disabled?: boolean;
 }
@@ -42,6 +48,7 @@ export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
   expandOnWide = false,
   children,
   className,
+  titleClassName,
   disabled = false,
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -72,12 +79,15 @@ export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
         onClick={() => setExpanded((e) => !e)}
         className="flex w-full min-h-[44px] flex-shrink-0 items-center justify-between gap-2 px-4 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-inset"
       >
-        <span className="text-caption sm:text-xs font-semibold uppercase tracking-[0.2em] text-accent">
+        <span
+          className={
+            titleClassName ??
+            "text-caption sm:text-xs font-semibold uppercase tracking-[0.2em] text-accent"
+          }
+        >
           {title}
         </span>
-        <span className="shrink-0 text-accent" aria-hidden="true">
-          {expanded ? "▼" : "▶"}
-        </span>
+        <DisclosureChevron expanded={expanded} />
       </button>
       <div
         id={contentId}

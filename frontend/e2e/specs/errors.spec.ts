@@ -5,6 +5,7 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
 import fs from "fs";
+import { expandEngineConfigurationSection } from "../helpers/engine-section";
 
 const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
 const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx"));
@@ -28,6 +29,7 @@ test.describe("Errors", () => {
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
 
     await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
+    await expandEngineConfigurationSection(page);
     await page.getByRole("button", { name: /harden/i }).click();
 
     await expect(page.getByText(/Alert:/i)).toBeVisible({ timeout: 10_000 });
@@ -66,6 +68,7 @@ test.describe("Errors", () => {
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
 
     await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
+    await expandEngineConfigurationSection(page);
     await page.getByRole("button", { name: /harden/i }).click();
     await expect(page.getByRole("button", { name: /retry/i })).toBeVisible({
       timeout: 10_000,
@@ -101,6 +104,7 @@ test.describe("Errors", () => {
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
 
     await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
+    await expandEngineConfigurationSection(page);
     await page.getByRole("button", { name: /harden/i }).click();
 
     await expect(page.getByText(/Alert:/i)).toBeVisible({ timeout: 10_000 });

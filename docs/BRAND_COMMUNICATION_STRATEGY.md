@@ -7,6 +7,7 @@ This document is the canonical **human-readable** guide for how the Funversarial
 | Situation | What to do |
 |-----------|------------|
 | Writing UI copy or marketing | Read **Brand essence**, **Tone and language**, **UX intent**, and **Vocabulary tiers**. Match copy to audience (HR vs security) as in the app’s `AudienceContext` (`frontend/src/contexts/AudienceContext.tsx`) and `frontend/src/copy/`. |
+| Layout, progressive disclosure, foldable UI | Use [**UI_STYLE_GUIDE.md**](UI_STYLE_GUIDE.md) for disclosure tiers, default expanded/collapsed rules, and safe state on context change. Tier IDs for agents: `ui.disclosureTiers` in [`brand-guide.json`](brand-guide.json). |
 | Planning a feature or experiment | Load [`brand-guide.json`](brand-guide.json) and add a short **Brand check** to your plan: confirm `tone.do` / `tone.dont`, `trustPillars`, and `userExperienceGoals` for the primary persona. |
 | Security or privacy review | Use **Trust and architecture as brand** for messaging-level promises; implementation detail stays in README and security docs. |
 
@@ -90,6 +91,8 @@ When someone uses Funversarial, they should feel:
 
 **Visual and interaction metaphor:** Interactive lab, high contrast, terminal-first **hacker-chic** aesthetic (dark mode default), aligned with project design rules in `.cursorrules`. Serious insights through an engaging, high-contrast lens—not a corporate training portal.
 
+**Interaction and IA details** (folds, defaults, context changes): see [`UI_STYLE_GUIDE.md`](UI_STYLE_GUIDE.md).
+
 ## Trust and architecture as brand
 
 Messaging should reflect what the product actually does:
@@ -118,7 +121,7 @@ Label any mention of these clearly as **vision / roadmap**, not a commitment.
 
 ## Machine-readable companion
 
-[`docs/brand-guide.json`](brand-guide.json) mirrors this document for agents, scripts, and plan templates. Use `schemaVersion` when evolving the shape of that file.
+[`docs/brand-guide.json`](brand-guide.json) mirrors this document for agents, scripts, and plan templates. Use `schemaVersion` when evolving the shape of that file. Disclosure tier metadata lives under `ui.disclosureTiers`; the narrative spec is [`UI_STYLE_GUIDE.md`](UI_STYLE_GUIDE.md).
 
 ### Brand check (for plans and PRs)
 

@@ -16,7 +16,7 @@ describe("copy", () => {
       const copy = getCopy("hr");
       expect(copy.tagline).toBe(hrCopy.tagline);
       expect(copy.privacyDetailsSummary).toBe("How we protect your contact details");
-      expect(hrCopy.intro).toBe("");
+      expect(hrCopy.intro).toMatch(/compare before-and-after results/i);
       expect(hrCopy.piiModeBadge).toMatch(/Private processing: no CV storage/i);
     });
   });

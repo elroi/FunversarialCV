@@ -38,6 +38,23 @@ describe("CollapsibleCard", () => {
     expect(trigger).toHaveAttribute("aria-expanded", "true");
   });
 
+  it("uses titleClassName for the title span when provided", () => {
+    render(
+      <CollapsibleCard
+        title="Privacy"
+        titleId="t"
+        contentId="c"
+        ariaLabel="Toggle privacy"
+        titleClassName="custom-title-class"
+      >
+        <p>Body</p>
+      </CollapsibleCard>
+    );
+    const titleSpan = screen.getByText("Privacy");
+    expect(titleSpan).toHaveClass("custom-title-class");
+    expect(titleSpan).not.toHaveClass("uppercase");
+  });
+
   it("hides content when trigger is clicked again", () => {
     render(
       <CollapsibleCard

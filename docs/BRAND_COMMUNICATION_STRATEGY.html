@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Funversarial &mdash; Brand communication strategy</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <h1 id="funversarial--brand-communication-strategy">Funversarial — Brand communication strategy</h1>
+<p>This document is the canonical <strong>human-readable</strong> guide for how the Funversarial brand speaks, what it promises, and how to apply that in product copy, UX, and planning. A machine-readable companion lives at <a href="brand-guide.json"><code>brand-guide.json</code></a>; <strong>when the brand changes, update both files together</strong>.</p>
+<h2 id="purpose-and-how-to-use-this-doc">Purpose and how to use this doc</h2>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>What to do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Writing UI copy or marketing</td>
+<td>Read <strong>Brand essence</strong>, <strong>Tone and language</strong>, <strong>UX intent</strong>, and <strong>Vocabulary tiers</strong>. Match copy to audience (HR vs security) as in the app’s <code>AudienceContext</code> (<code>frontend/src/contexts/AudienceContext.tsx</code>) and <code>frontend/src/copy/</code>.</td>
+</tr>
+<tr>
+<td>Planning a feature or experiment</td>
+<td>Load <a href="brand-guide.json"><code>brand-guide.json</code></a> and add a short <strong>Brand check</strong> to your plan: confirm <code>tone.do</code> / <code>tone.dont</code>, <code>trustPillars</code>, and <code>userExperienceGoals</code> for the primary persona.</td>
+</tr>
+<tr>
+<td>Security or privacy review</td>
+<td>Use <strong>Trust and architecture as brand</strong> for messaging-level promises; implementation detail stays in README and security docs.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="brand-essence">Brand essence</h2>
+<p><strong>Primary elevator line:</strong> Funversarial is a safe, hands-on lab for exploring how automated systems behave—and how information layers shape outcomes—without breaking trust.</p>
+<p><strong>Mindset tagline:</strong> Explore systems. Understand outcomes. Stay in control.</p>
+<p>Together, these say: we are not selling chaos or malice; we sell <strong>clarity through controlled experimentation</strong>. The name <em>Funversarial</em> encodes playful rigor and adversarial thinking in the security-research sense (stress-testing assumptions), not encouragement to harm people or break laws.</p>
+<h2 id="what-we-believe-unified-principles">What we believe (unified principles)</h2>
+<ol>
+<li><strong>Understanding, not breaking</strong> — We observe behavior and reveal mechanics of influence; we do not frame the product as teaching illegal or unethical exploitation.</li>
+<li><strong>Systems are shapeable</strong> — Inputs influence outputs; small, deliberate changes can produce large, observable effects. That is a literacy insight, not a guarantee of bad outcomes.</li>
+<li><strong>A lab, not a lecture</strong> — Insight comes from instrumentation and experimentation in a sandbox-like experience, not from dense theory alone.</li>
+<li><strong>Complexity should be approachable</strong> — Advanced ideas are available without dumbing them down; technical and non-technical audiences both deserve language that fits their context.</li>
+<li><strong>Curiosity is valuable</strong> — Questioning outcomes and exploring “why” is encouraged; blind trust in opaque systems is not required.</li>
+<li><strong>Responsibility matters</strong> — Exploration pairs with ethics: respect for data, safe experimentation, and clarity about intent (red-team / audit framing where appropriate).</li>
+<li><strong>The architecture of duality</strong> — Good security literacy means understanding the interplay between human intent and automated logic (“technical handshake”). Data sovereignty is supported by knowing what crosses that boundary.</li>
+</ol>
+<h2 id="audiences-and-translation-the-universal-translator">Audiences and translation (the universal translator)</h2>
+<p>Funversarial is a shared space where perspectives align on risk and literacy:</p>
+<table>
+<thead>
+<tr>
+<th>Audience</th>
+<th>What they should get</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Technical professionals</strong></td>
+<td>A tactical toolkit for auditing information flow, red-teaming processes, and validating parsers—precise terms where they earn clarity.</td>
+</tr>
+<tr>
+<td><strong>Non-technical professionals</strong></td>
+<td>An interpretability lens: less “black box” mystery, more strategic confidence—plain language by default.</td>
+</tr>
+</tbody>
+</table>
+<p>The product may expose <strong>two modes</strong> (e.g. HR vs security) for the same truth told at different depths. That is intentional: one brand, <strong>tiered vocabulary</strong> (see below).</p>
+<h2 id="tone-and-language">Tone and language</h2>
+<h3 id="character">Character</h3>
+<table>
+<thead>
+<tr>
+<th>Trait</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Curious</td>
+<td>Encourages exploration and questioning</td>
+</tr>
+<tr>
+<td>Clear</td>
+<td>Makes complex ideas understandable</td>
+</tr>
+<tr>
+<td>Practical</td>
+<td>Focused on real interaction, not theory alone</td>
+</tr>
+<tr>
+<td>Balanced</td>
+<td>Depth with accessibility</td>
+</tr>
+<tr>
+<td>Responsible</td>
+<td>Trust and thoughtful use</td>
+</tr>
+</tbody>
+</table>
+<h3 id="do">Do</h3>
+<ul>
+<li>Be <strong>direct</strong>, <strong>thoughtful</strong>, and <strong>grounded</strong>.</li>
+<li>Allow <strong>light playfulness</strong> (wit, lab metaphors)—never trivializing risk or people.</li>
+<li>Use <strong>persona-appropriate</strong> vocabulary (see tiers below).</li>
+</ul>
+<h3 id="dont">Don’t</h3>
+<ul>
+<li>Use <strong>unnecessary jargon</strong> in default / HR-facing surfaces.</li>
+<li>Sound <strong>aggressive</strong> toward people (“trick recruiters,” “destroy parsers”)—prefer systems, processes, and measurable behavior.</li>
+<li><strong>Sensationalize</strong> or <strong>over-promise</strong> (“unbeatable,” “foolproof”).</li>
+<li>Imply <strong>illegal or unethical</strong> use.</li>
+</ul>
+<h3 id="vocabulary-tiers">Vocabulary tiers</h3>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>When to use</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Plain (default)</strong></td>
+<td>Primary UI, onboarding, HR mode</td>
+<td>explore, understand, configure, download, privacy, scan</td>
+</tr>
+<tr>
+<td><strong>Technical (security / audit)</strong></td>
+<td>Security mode, docs for builders</td>
+<td>instrument, vector, audit, triage, red team, OWASP, parser</td>
+</tr>
+<tr>
+<td><strong>Product lexicon</strong></td>
+<td>Consistent across modes when naming features</td>
+<td>Egg, Harden, Duality Monitor (define once, link to glossary)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Reconciling “strategic language” with “avoid jargon”:</strong> Prefer plain language until the reader has opted into—or clearly benefits from—precision. The brand is <strong>sharp</strong>, not <strong>inaccessible</strong>.</p>
+<h3 id="adversarial-in-copy">“Adversarial” in copy</h3>
+<ul>
+<li><strong>OK:</strong> Product family name, technical domain (adversarial ML, adversarial robustness), responsible red-team framing.</li>
+<li><strong>Avoid in user-facing marketing:</strong> Language that sounds like attacking individuals, cheating, or breaking rules.</li>
+</ul>
+<h2 id="ux-intent">UX intent</h2>
+<p>When someone uses Funversarial, they should feel:</p>
+<ul>
+<li>“I can explore this myself.”</li>
+<li>“I understand more than I did before.”</li>
+<li>“This is something I can reason about.”</li>
+<li>“I am not dependent on blind trust.”</li>
+</ul>
+<p><strong>Visual and interaction metaphor:</strong> Interactive lab, high contrast, terminal-first <strong>hacker-chic</strong> aesthetic (dark mode default), aligned with project design rules in <code>.cursorrules</code>. Serious insights through an engaging, high-contrast lens—not a corporate training portal.</p>
+<h2 id="trust-and-architecture-as-brand">Trust and architecture as brand</h2>
+<p>Messaging should reflect what the product actually does:</p>
+<ul>
+<li><strong>Stateless / zero-retention</strong> — Files exist only in volatile processing paths; no long-term storage of uploads as a core promise.</li>
+<li><strong>PII awareness</strong> — Dehydration/rehydration or sanitization patterns support experimentation without unnecessarily exposing raw sensitive data to processing logic; describe at a <strong>promise</strong> level here, implementation in code and README.</li>
+<li><strong>Responsible experimentation</strong> — Features are framed as literacy, audit, and resilience testing—not harassment or fraud enablement.</li>
+</ul>
+<p>These points are <strong>brand proof points</strong> as well as architecture.</p>
+<h2 id="product-scope">Product scope</h2>
+<h3 id="today-funversarialcv">Today: FunversarialCV</h3>
+<p>The repository ships <strong>FunversarialCV</strong>—tools to harden and audit <strong>professional documents</strong> (CVs/resumes) with OWASP-aligned “eggs,” scans, and privacy-conscious processing. All contributor and roadmap docs should treat this as the <strong>current product scope</strong> unless stated otherwise.</p>
+<h3 id="vision-broader-funversarial-ecosystem-not-shipped-as-one-product">Vision: broader Funversarial ecosystem (not shipped as one product)</h3>
+<p>Illustrative future directions for the <strong>family</strong> brand (do not present as available unless built):</p>
+<ul>
+<li><strong>Funversarial Prompts</strong> — Layering of instructions and defensive input design.</li>
+<li><strong>Funversarial Policies</strong> — Stress-testing organizational rules against realistic scenarios.</li>
+<li><strong>Funversarial Fraud</strong> — Awareness patterns for social-engineering resilience (ethical simulation framing).</li>
+</ul>
+<p>Label any mention of these clearly as <strong>vision / roadmap</strong>, not a commitment.</p>
+<h2 id="machine-readable-companion">Machine-readable companion</h2>
+<p><a href="brand-guide.json"><code>docs/brand-guide.json</code></a> mirrors this document for agents, scripts, and plan templates. Use <code>schemaVersion</code> when evolving the shape of that file.</p>
+<h3 id="brand-check-for-plans-and-prs">Brand check (for plans and PRs)</h3>
+<ol>
+<li>Name the primary persona (candidate, HR, security, privacy/compliance, builder).</li>
+<li>Confirm copy tier (plain vs technical) matches the surface.</li>
+<li>Verify no <code>tone.dont</code> violations and at least one relevant <code>userExperienceGoal</code> addressed.</li>
+<li>If the feature touches data, cite how it upholds <code>trustPillars</code> at user-visible level.</li>
+</ol>
+<hr>
+<h2 id="appendix-a--draft-comparison-matrix-merge-notes">Appendix A — Draft comparison matrix (merge notes)</h2>
+<p>How the two internal drafts were reconciled:</p>
+<table>
+<thead>
+<tr>
+<th>Theme</th>
+<th>Universal architecture draft</th>
+<th>Final communication draft</th>
+<th>Resolution in this doc</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Core essence</td>
+<td>Safe hands-on lab; systems influenced</td>
+<td>Explore / understand / control</td>
+<td>Both: elevator line + mindset tagline</td>
+</tr>
+<tr>
+<td>Principles ×6</td>
+<td>Four principles + duality</td>
+<td>Six communication commitments</td>
+<td>Merged into seven non-redundant beliefs</td>
+</tr>
+<tr>
+<td>Tone</td>
+<td>Playful + sharp; strategic terms</td>
+<td>Direct; avoid jargon and aggression</td>
+<td>Tiers + explicit “adversarial” copy rules</td>
+</tr>
+<tr>
+<td>UX</td>
+<td>Lab, terminal, hacker-chic</td>
+<td>Four “should feel” bullets</td>
+<td>Combined in <strong>UX intent</strong> + aesthetic pointer</td>
+</tr>
+<tr>
+<td>Trust</td>
+<td>Stateless vault, dehydration</td>
+<td>Responsibility</td>
+<td><strong>Trust and architecture</strong> section</td>
+</tr>
+<tr>
+<td>Scope</td>
+<td>Ecosystem list with CV pilot</td>
+<td>(implicit single brand)</td>
+<td><strong>Product scope</strong>: CV today, vision labeled</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="appendix-b--glossary-product-lexicon">Appendix B — Glossary (product lexicon)</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Egg</strong></td>
+<td>A pluggable transformation mapped to an OWASP LLM risk (or creative category); user-configurable.</td>
+</tr>
+<tr>
+<td><strong>Harden</strong></td>
+<td>Run the pipeline to produce an output document with selected eggs applied.</td>
+</tr>
+<tr>
+<td><strong>Duality</strong></td>
+<td>Human-facing vs machine-facing layers of the same document; also the security-for-AI / AI-for-security framing.</td>
+</tr>
+<tr>
+<td><strong>Instrument / vector / audit / triage</strong></td>
+<td>Technical vocabulary for security-mode copy—signals, paths of influence, structured review, prioritization.</td>
+</tr>
+<tr>
+<td><strong>Stateless Vault</strong></td>
+<td>Pattern: dehydrate sensitive patterns for processing, rehydrate for output—brand + architecture name.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="appendix-c--sources-and-revision">Appendix C — Sources and revision</h2>
+<ul>
+<li><strong>Sources:</strong> Derived from internal brand drafts: <em>Funversarial Brand Architecture (Universal)</em> and <em>Funversarial Brand Communication (Final)</em>, merged March 2026 for this repository.</li>
+<li><strong>Revision:</strong> Update this file and <code>brand-guide.json</code> in the same change when altering brand rules.</li>
+</ul>
+
+            
+            
+        </body>
+        </html>

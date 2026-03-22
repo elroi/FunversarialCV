@@ -1,5 +1,6 @@
 import React from "react";
 import { screen } from "@testing-library/react";
+import { hrCopy } from "../copy/hr";
 import { renderWithAudience } from "../test-utils";
 import { DualityMonitor } from "./DualityMonitor";
 import type { DualityCheckResult } from "../engine/dualityCheck";
@@ -19,11 +20,11 @@ describe("DualityMonitor", () => {
       />
     );
 
-    expect(screen.getByText(/accept buffer/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/duality check/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/dehydration/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/injection/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/rehydration/i)).toBeInTheDocument();
+    expect(screen.getByText(hrCopy.stageAccept)).toBeInTheDocument();
+    expect(screen.getByText(hrCopy.stageDualityCheck)).toBeInTheDocument();
+    expect(screen.getByText(hrCopy.stageDehydration)).toBeInTheDocument();
+    expect(screen.getByText(hrCopy.stageInjection)).toBeInTheDocument();
+    expect(screen.getByText(hrCopy.stageRehydration)).toBeInTheDocument();
   });
 
   it("shows a friendly message when no suspicious patterns are found", () => {
@@ -35,9 +36,7 @@ describe("DualityMonitor", () => {
       />
     );
 
-    expect(
-      screen.getByText(/no suspicious prompt-injection patterns detected/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(hrCopy.noSuspiciousPatterns)).toBeInTheDocument();
   });
 
   it("lists matched patterns when the duality check finds issues", () => {
@@ -55,7 +54,7 @@ describe("DualityMonitor", () => {
       />
     );
 
-    expect(screen.getByText(/pre-hardening scan/i)).toBeInTheDocument();
+    expect(screen.getByText(hrCopy.preHardeningScanTitle)).toBeInTheDocument();
     expect(screen.getAllByText(/ignore_previous_instructions/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/jailbreak_style/i)).toBeInTheDocument();
     expect(
@@ -78,12 +77,8 @@ describe("DualityMonitor", () => {
       />
     );
 
-    expect(screen.getByText("Remediation")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /existing adversarial layers.*may decrease document readability for modern LLM parsers/i
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByText(hrCopy.dualityRemediationLabel)).toBeInTheDocument();
+    expect(screen.getByText(hrCopy.dualityRemediationMessage)).toBeInTheDocument();
   });
 
   it("renders terminal log entries", () => {
@@ -123,14 +118,9 @@ describe("DualityMonitor", () => {
       />
     );
 
-    const heading = screen.getByText(
-      /Pre-hardening scan \(Duality – original vs\. funversarial layer\)/i
-    );
+    const heading = screen.getByText(hrCopy.preHardeningScanTitle);
     expect(heading).toBeInTheDocument();
-    expect(heading).toHaveAttribute(
-      "title",
-      expect.stringMatching(/original adversarial surface.*additional patterns introduced by eggs/i)
-    );
+    expect(heading).toHaveAttribute("title", hrCopy.preHardeningScanTooltip);
   });
 
   it("copies terminal log text to clipboard when Copy Log is clicked", async () => {

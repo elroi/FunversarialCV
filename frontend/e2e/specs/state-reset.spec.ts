@@ -6,6 +6,7 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
 import fs from "fs";
+import { expandEngineConfigurationSection } from "../helpers/engine-section";
 
 const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
 
@@ -48,6 +49,7 @@ test.describe("State reset", () => {
     await fileInput.setInputFiles(path.join(fixturesDir, "minimal.docx"));
 
     await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
+    await expandEngineConfigurationSection(page);
     await page.getByRole("button", { name: /harden/i }).click();
 
     await expect(
@@ -94,6 +96,7 @@ test.describe("State reset", () => {
 
     await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText(/minimal\.docx/i)).toBeVisible();
+    await expandEngineConfigurationSection(page);
     await page.getByRole("button", { name: /harden/i }).click();
 
     await expect(
@@ -110,6 +113,7 @@ test.describe("State reset", () => {
 
     await expect(page.getByText(/Armed CV:/i)).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText(/second\.docx/i)).toBeVisible();
+    await expandEngineConfigurationSection(page);
     await page.getByRole("button", { name: /harden/i }).click();
 
     await expect(

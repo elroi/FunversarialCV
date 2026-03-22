@@ -1,6 +1,54 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "document": "docs/BRAND_COMMUNICATION_STRATEGY.md",
+  "ui": {
+    "styleGuide": "docs/UI_STYLE_GUIDE.md",
+    "disclosureTiers": [
+      {
+        "id": "section",
+        "label": "Section folding",
+        "intent": "Collapse an entire major region; never hide the sole path to the primary action without a clear alternative.",
+        "defaultImplementation": "Target: dedicated section wrapper. Today: static functional-group + uppercase section caption in frontend/app/page.tsx.",
+        "exampleRefs": ["frontend/app/page.tsx"],
+        "status": "target",
+        "defaultExpandedPolicy": "n/a",
+        "contextResetNotes": "If implemented, validate against primary CTA visibility and audience switch."
+      },
+      {
+        "id": "inSection",
+        "label": "In-section foldable",
+        "intent": "Optional detail inside a section after the primary control.",
+        "defaultImplementation": "CollapsibleCard with default uppercase title styling; optional className on outer card.",
+        "exampleRefs": [
+          "frontend/app/page.tsx",
+          "frontend/src/components/InvisibleHandConfigCard.tsx"
+        ],
+        "status": "shipped",
+        "defaultExpandedPolicy": "collapsed",
+        "contextResetNotes": "Preserve on file change unless panel is file-specific; reset on audience switch if copy differs."
+      },
+      {
+        "id": "outOfSection",
+        "label": "Out-of-section foldable",
+        "intent": "Standalone trust or mechanism copy between major blocks.",
+        "defaultImplementation": "CollapsibleCard with titleClassName for sentence-case and panel className overrides.",
+        "exampleRefs": ["frontend/app/page.tsx"],
+        "status": "shipped",
+        "defaultExpandedPolicy": "collapsed",
+        "contextResetNotes": "Reset on audience switch; preserve on file change."
+      },
+      {
+        "id": "inlineMicro",
+        "label": "Inline micro-disclosure",
+        "intent": "Small expansion inside running text (e.g. verification).",
+        "defaultImplementation": "Local button + aria-expanded + role=region; see PiiNoticeBlock in frontend/app/page.tsx.",
+        "exampleRefs": ["frontend/app/page.tsx"],
+        "status": "shipped",
+        "defaultExpandedPolicy": "collapsed",
+        "contextResetNotes": "Security-only regions: reset when switching away from security audience."
+      }
+    ]
+  },
   "sourceDrafts": [
     "docs/brand/drafts/Funversarial_Brand_Architecture_Universal.md",
     "docs/brand/drafts/funversarial_brand_communication_final.md"

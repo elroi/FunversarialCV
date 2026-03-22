@@ -30,6 +30,7 @@ You are an expert Fullstack Security Engineer and AI Architect. You are assistin
 
 ## 🎨 Design & Aesthetic
 - Brand voice and structured checks: See `docs/BRAND_COMMUNICATION_STRATEGY.md` and `docs/brand-guide.json` (update both when brand rules change).
+- Progressive disclosure and foldable UI: See `docs/UI_STYLE_GUIDE.md` and `ui.disclosureTiers` in `docs/brand-guide.json`.
 - Theme: "Hacker-Chic" / Terminal style. Dark mode by default.
 - Tone: Professional, adaptive, and witty.
 - Personal Touch: Subtly reference the creator's background in Music (M.Mus/BA.Mus) in CSS animations or loading states.

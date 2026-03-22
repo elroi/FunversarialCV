@@ -41,4 +41,23 @@ describe("SectionFold", () => {
     fireEvent.click(screen.getByRole("button", { name: /closed: toggle/i }));
     expect(screen.getByText("Hidden at first")).toBeVisible();
   });
+
+  it("uses the same compact trigger padding as CollapsibleCard (px-3 py-2, full width)", () => {
+    render(
+      <SectionFold
+        title="Aligned"
+        titleId="align-title"
+        contentId="align-body"
+        ariaLabel="Aligned: toggle"
+      >
+        <p>Body</p>
+      </SectionFold>
+    );
+    const btn = screen.getByRole("button", { name: /aligned: toggle/i });
+    expect(btn.className).toContain("px-3");
+    expect(btn.className).toContain("py-2");
+    expect(btn.className).toContain("w-full");
+    expect(btn.className).not.toContain("-mx-4");
+    expect(btn.className).toContain("items-center");
+  });
 });

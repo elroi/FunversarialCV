@@ -20,8 +20,10 @@ export const securityCopy: Copy = {
   ] as const,
   philosophyLine:
     "This isn't about breaking the model — it's about understanding how inputs shape outcomes.",
-  intro:
-    "FunversarialCV is an educational adversarial simulation environment for authorized security testing and LLM research in hiring pipelines. It uses **OWASP-aligned** patterns and a zero-retention processing model (**authorized testing and research only**).",
+  introLead:
+    "**FunversarialCV** is an educational adversarial simulation for **hands-on professional exploration**, **authorized** security testing, and LLM research in hiring pipelines.",
+  introDetail:
+    "Signals are implemented as **OWASP-aligned** patterns; PII is dehydrated in your browser so outbound traffic carries tokens only; the service keeps **zero retention** after each response (**authorized testing and research only**).",
   piiNotice:
     "Your CV is processed in your browser first. Before anything leaves your device, we replace email, phone, and other identifiers with short-lived tokens. Our server only sees tokens, never your raw contact details. Operation is in-memory with zero retention; PII is dehydrated for transit and rehydrated only in your browser for the final file.",
   privacyDetailsSummary: "PII handling (details)",
@@ -45,7 +47,9 @@ export const securityCopy: Copy = {
   downloadDemoLabel: "Download to view current demo as-is",
   selectDemoLabel: "Select demo document and click here to view as-is",
   changeFileButton: "Change file",
-  configureThenHarden: "Configure eggs below, then click Harden.",
+  engineConfigIntroNoCv:
+    "Choose which eggs to run, expand each to set payloads, then arm a CV and Harden.",
+  engineConfigIntroCvReady: "Expand each egg to set payloads, then click Harden.",
   outputPlainTextHint:
     'Output uses plain-text layout unless "Preserve styles" is on (add-only eggs only).',
   preserveStylesLabel: "Preserve styles",

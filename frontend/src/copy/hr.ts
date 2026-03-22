@@ -23,8 +23,9 @@ export const hrCopy: Copy = {
     "Look for changes in tone, ranking, or interpretation of your experience.",
   philosophyLine:
     "This isn't about tricking the system — it's about understanding how your inputs shape the results.",
-  intro:
+  introLead:
     "Use this to compare before-and-after results and learn how AI tools interpret the same CV under slightly different signal conditions.",
+  introDetail: "",
   piiNotice:
     "Your CV is processed in your browser first. Before anything leaves your device, we replace your email, phone, and other contact details (we call this PII) with temporary placeholders. Our server only sees those placeholders, never your real contact information. Processing is in memory only—we don’t store your document after your new CV is generated.",
   privacyDetailsSummary: "How we protect your contact details",
@@ -48,7 +49,10 @@ export const hrCopy: Copy = {
   downloadDemoLabel: "Download the current sample as-is",
   selectDemoLabel: "Choose a sample above and click here to view it",
   changeFileButton: "Change file",
-  configureThenHarden: "Pick the options below, then click Add signals.",
+  engineConfigIntroNoCv:
+    "Choose which signals to add, open each section to adjust details, then upload a CV and run Add signals.",
+  engineConfigIntroCvReady:
+    "Open each section to adjust details, then click Add signals.",
   outputPlainTextHint:
     'The result will be plain text unless “Preserve styles” is on (for options that only add content).',
   preserveStylesLabel: "Preserve styles",

@@ -904,8 +904,11 @@ export default function Home() {
 
         <section className="flex flex-1 flex-col gap-8 md:flex-row">
           <div className="flex-1">
+            {copy.introLead.trim() ? (
+              <div className="mb-6">{renderIntro(copy.introLead)}</div>
+            ) : null}
             <SectionFold
-              className="functional-group p-4"
+              className="functional-group"
               title={copy.inputChannel}
               titleId="input-channel-section-title"
               contentId="input-channel-section-content"
@@ -995,14 +998,14 @@ export default function Home() {
               </CollapsibleCard>
             </div>
 
-            {copy.intro.trim() ? (
-              <div className="mb-6">{renderIntro(copy.intro)}</div>
+            {audience === "security" && copy.introDetail.trim() ? (
+              <div className="mb-6">{renderIntro(copy.introDetail)}</div>
             ) : null}
 
             <CollapsibleCard
               className="mb-6 border-border/60 bg-panel/40"
               title={copy.privacyDetailsSummary}
-              titleClassName="text-sm font-medium text-accent"
+              titleClassName="text-caption sm:text-xs font-medium text-accent normal-case"
               titleId="privacy-details-card-title"
               contentId="privacy-details-card-content"
               ariaLabel={`${copy.privacyDetailsSummary}: show or hide details`}
@@ -1012,16 +1015,21 @@ export default function Home() {
             </CollapsibleCard>
 
             <SectionFold
-              className="functional-group mt-6 p-4"
+              className="functional-group mt-6"
               title={copy.engineConfigTitle}
               titleId="engine-config-section-title"
               contentId="engine-config-section-content"
               ariaLabel={`${copy.engineConfigTitle}: show or hide`}
               defaultExpanded={false}
             >
+            <p className="mb-3 text-caption text-foreground/60">
+              {selectedFileName
+                ? copy.engineConfigIntroCvReady
+                : copy.engineConfigIntroNoCv}
+            </p>
             {selectedFileName && (
               <div ref={armedSectionRef}>
-                <p className="mt-3 text-sm text-success">
+                <p className="mt-0 text-sm text-success">
                   {copy.armedCvLabel} <span className="font-semibold">{selectedFileName}</span>
                 </p>
                 <div className="mt-1 flex flex-col items-start gap-1">
@@ -1049,9 +1057,6 @@ export default function Home() {
                     {copy.changeFileButton}
                   </Button>
                 </div>
-                <p className="mt-1 text-caption text-foreground/60">
-                  {copy.configureThenHarden}
-                </p>
                 <p className="mt-0.5 text-caption text-foreground/50">
                   {copy.outputPlainTextHint}
                 </p>
@@ -1216,7 +1221,7 @@ export default function Home() {
 
             <SectionFold
               sectionId="validation-lab"
-              className="functional-group mt-6 p-4"
+              className="functional-group mt-6"
               title={copy.validationLabTitle}
               titleId="validation-lab-section-title"
               contentId="validation-lab-section-content"
@@ -1242,7 +1247,7 @@ export default function Home() {
 
           <aside className="mt-8 w-full md:mt-0 md:w-80 md:shrink-0 md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-3rem)] md:overflow-y-auto">
             <SectionFold
-              className="functional-group p-4 text-sm text-foreground/80"
+              className="functional-group"
               title={copy.pipelineStatusTitle}
               titleId="pipeline-status-section-title"
               contentId="pipeline-status-section-content"

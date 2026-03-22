@@ -37,7 +37,8 @@ export interface CollapsibleCardProps {
 
 /**
  * Collapsible card: title row is always visible and acts as a button to expand/collapse the body.
- * Default collapsed on all viewports; one tab stop, 44px min height, full-width trigger.
+ * Compact trigger (`min-h-10`, `px-3 py-2`) keeps label and chevron visually tight; `items-center`
+ * vertically centers label and glyph in the row.
  */
 export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
   title,
@@ -65,7 +66,7 @@ export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
   return (
     <div
       className={clsx(
-        "rounded-xl border border-border bg-panel/70 noir-shell overflow-hidden",
+        "w-full min-w-0 rounded-xl border border-border bg-panel/70 noir-shell overflow-hidden",
         disabled && "opacity-60 pointer-events-none",
         className
       )}
@@ -77,13 +78,14 @@ export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
         aria-controls={contentId}
         aria-label={ariaLabel}
         onClick={() => setExpanded((e) => !e)}
-        className="flex w-full min-h-[44px] flex-shrink-0 items-center justify-between gap-2 px-4 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-inset"
+        className="flex w-full min-h-10 flex-shrink-0 items-center justify-between gap-1.5 px-3 py-2 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-inset"
       >
         <span
-          className={
+          className={clsx(
+            "min-w-0",
             titleClassName ??
-            "text-caption sm:text-xs font-semibold uppercase tracking-[0.2em] text-accent"
-          }
+              "text-caption sm:text-xs font-semibold uppercase tracking-[0.2em] text-accent"
+          )}
         >
           {title}
         </span>
@@ -93,7 +95,7 @@ export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
         id={contentId}
         role="region"
         aria-labelledby={titleId}
-        className={expanded ? "block border-t border-border p-4" : "hidden"}
+        className={expanded ? "block border-t border-border p-3" : "hidden"}
       >
         {children}
       </div>

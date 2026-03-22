@@ -8,7 +8,7 @@ export interface DisclosureChevronProps {
 
 /**
  * Shared expand/collapse glyph for SectionFold, CollapsibleCard, and similar triggers.
- * Sized independently of parent `text-caption` so major sections match card disclosures.
+ * `text-sm` and fixed box size sit cleanly next to caption-sized titles with trigger `items-center`.
  */
 export function DisclosureChevron({
   expanded,
@@ -17,7 +17,7 @@ export function DisclosureChevron({
   return (
     <span
       className={clsx(
-        "inline-flex shrink-0 items-center justify-center text-lg leading-none text-accent",
+        "inline-flex size-5 shrink-0 items-center justify-center text-sm leading-none text-accent",
         className
       )}
       aria-hidden="true"

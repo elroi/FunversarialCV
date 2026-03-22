@@ -18,7 +18,10 @@ export interface Copy {
   /** Optional helper line below flow steps (e.g. HR-only). */
   experimentFlowClarifier?: string;
   philosophyLine: string;
-  intro: string;
+  /** Short framing above the input channel (both audiences). */
+  introLead: string;
+  /** Extra security framing after the experiment panel; use "" for HR. */
+  introDetail: string;
   piiNotice: string;
   /** Collapsed title for the foldable PII / privacy notice block (reduces duplicate trust copy above the fold). */
   privacyDetailsSummary: string;
@@ -41,7 +44,10 @@ export interface Copy {
   downloadDemoLabel: string;
   selectDemoLabel: string;
   changeFileButton: string;
-  configureThenHarden: string;
+  /** Shown at top of Engine Configuration when no CV is loaded yet. */
+  engineConfigIntroNoCv: string;
+  /** Shown at top of Engine Configuration once a CV is armed (replaces upload/arm step). */
+  engineConfigIntroCvReady: string;
   outputPlainTextHint: string;
   preserveStylesLabel: string;
   preserveStylesDesc: string;

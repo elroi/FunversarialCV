@@ -172,6 +172,8 @@ export default function Home() {
   const [demoFormat, setDemoFormat] = useState<"pdf" | "docx">("docx");
   const [hasDemoLoaded, setHasDemoLoaded] = useState(false);
   const [isDemoLoading, setIsDemoLoading] = useState(false);
+  /** Bumped when a CV is armed so Engine Configuration opens (it starts collapsed). */
+  const [engineFoldExpandSignal, setEngineFoldExpandSignal] = useState(0);
   const [clientPiiMap, setClientPiiMap] = useState<PiiMap | null>(null);
 
   /** Egg metadata from GET /api/eggs (id -> { name, manualCheckAndValidation }). */
@@ -217,16 +219,17 @@ export default function Home() {
     }
   }, [error]);
 
-  // When a CV (user or demo) is armed, bring the Armed CV + Harden controls into view.
+  // After the engine fold opens, scroll to Armed CV (fold content may paint one frame later).
   useEffect(() => {
-    if (
-      selectedFileName &&
-      armedSectionRef.current &&
-      typeof armedSectionRef.current.scrollIntoView === "function"
-    ) {
-      armedSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [selectedFileName]);
+    if (engineFoldExpandSignal === 0) return;
+    const t = window.setTimeout(() => {
+      const el = armedSectionRef.current;
+      if (el && typeof el.scrollIntoView === "function") {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 200);
+    return () => window.clearTimeout(t);
+  }, [engineFoldExpandSignal]);
 
   // Hydrate checkbox state from localStorage on mount (client-only).
   useEffect(() => {
@@ -286,6 +289,7 @@ export default function Home() {
     setProcessingState("idle");
     setActiveStage(undefined);
     setClientPiiMap(null);
+    setEngineFoldExpandSignal((n) => n + 1);
   }, []);
 
   /**
@@ -1063,6 +1067,15 @@ export default function Home() {
                       {demoFormat.toUpperCase()}
                     </span>
                   </p>
+                  {hasDemoLoaded && selectedFileName ? (
+                    <p
+                      className="text-caption text-success font-mono mt-2"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      {copy.demoArmedInlineHint}
+                    </p>
+                  ) : null}
                 </div>
               </CollapsibleCard>
             </SectionFold>
@@ -1104,6 +1117,7 @@ export default function Home() {
               contentId="engine-config-section-content"
               ariaLabel={`${copy.engineConfigTitle}: show or hide`}
               defaultExpanded={false}
+              expandRevision={engineFoldExpandSignal}
             >
             <p className="mb-3 text-caption text-foreground/60">
               {selectedFileName

@@ -42,6 +42,8 @@ export const securityCopy: Copy = {
   dirtyLabel: "Dirty · DOCX",
   dirtySublabel: "Adversarial sample",
   demoLoadingMessage: "> Generating demo CV… this may take a few seconds.",
+  demoArmedInlineHint:
+    "> Sample CV armed — Engine Configuration opened below. Use Harden when ready.",
   lastPresetLabel: "> Last preset:",
   armedCvLabel: "> Armed CV:",
   downloadDemoLabel: "Download to view current demo as-is",

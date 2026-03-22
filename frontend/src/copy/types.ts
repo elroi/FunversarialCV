@@ -39,6 +39,8 @@ export interface Copy {
   dirtyLabel: string;
   dirtySublabel: string;
   demoLoadingMessage: string;
+  /** Shown under “Last preset” after a sample CV arms successfully (Engine section auto-opens). */
+  demoArmedInlineHint: string;
   lastPresetLabel: string;
   armedCvLabel: string;
   downloadDemoLabel: string;

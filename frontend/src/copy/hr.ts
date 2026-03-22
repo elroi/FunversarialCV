@@ -44,6 +44,8 @@ export const hrCopy: Copy = {
   dirtyLabel: "Dirty · DOCX",
   dirtySublabel: "Sample with hidden signals",
   demoLoadingMessage: "Generating sample CV… this may take a few seconds.",
+  demoArmedInlineHint:
+    "Sample CV loaded — Engine Configuration is open below. Use Add signals when you're ready.",
   lastPresetLabel: "Last sample:",
   armedCvLabel: "CV loaded:",
   downloadDemoLabel: "Download the current sample as-is",

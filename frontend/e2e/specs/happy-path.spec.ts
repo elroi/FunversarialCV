@@ -24,11 +24,28 @@ test.describe("Happy path", () => {
     await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
       timeout: 15_000,
     });
-    await page.getByRole("button", { name: /inject eggs/i }).click();
+
+    const injectBtn = page.getByRole("button", { name: /inject eggs/i });
+    await expect(injectBtn).toBeEnabled({ timeout: 15_000 });
+
+    const hardenResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes("/api/harden") &&
+        response.request().method() === "POST",
+      { timeout: 90_000 }
+    );
+    await injectBtn.click();
+    const hardenResponse = await hardenResponsePromise;
+    if (!hardenResponse.ok()) {
+      const body = await hardenResponse.text();
+      throw new Error(
+        `POST /api/harden failed ${hardenResponse.status()}: ${body.slice(0, 500)}`
+      );
+    }
 
     await expect(
       page.getByRole("button", { name: /download/i })
-    ).toBeVisible({ timeout: 30_000 });
+    ).toBeVisible({ timeout: 60_000 });
 
     const downloadPromise = page.waitForEvent("download");
     await page.getByRole("button", { name: /download/i }).click();

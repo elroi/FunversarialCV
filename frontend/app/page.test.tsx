@@ -318,6 +318,9 @@ describe("Home page", () => {
         securityCopy.hardenAriaAwaitingConfigChange
       );
       expect(screen.queryByRole("button", { name: /re-process/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(securityCopy.downloadStaleConfigWarning)
+      ).not.toBeInTheDocument();
 
       fireEvent.click(downloadBtn);
       expect(createObjectURL).toHaveBeenCalled();
@@ -345,8 +348,17 @@ describe("Home page", () => {
       });
 
       expect(screen.getByRole("button", { name: /inject eggs/i })).toBeDisabled();
+      expect(
+        screen.queryByText(securityCopy.downloadStaleConfigWarning)
+      ).not.toBeInTheDocument();
 
       fireEvent.click(screen.getByRole("checkbox", { name: /Canary Wing/i }));
+
+      expect(
+        screen.getByText(securityCopy.downloadStaleConfigWarning)
+      ).toBeInTheDocument();
+      const downloadBtn = screen.getByRole("button", { name: /download/i });
+      expect(downloadBtn).toHaveAttribute("aria-describedby", "download-stale-hint");
 
       const injectEnabled = screen.getByRole("button", { name: /inject eggs/i });
       expect(injectEnabled).not.toBeDisabled();

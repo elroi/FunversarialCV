@@ -62,6 +62,15 @@ describe("copy", () => {
       expect(hr.hardenAriaAwaitingConfigChange).toMatch(/Add signals/i);
     });
 
+    it("downloadStaleConfigWarning explains prior run vs current UI for both audiences", () => {
+      const sec = getCopy("security");
+      const hr = getCopy("hr");
+      expect(sec.downloadStaleConfigWarning).toMatch(/last successful run/i);
+      expect(sec.downloadStaleConfigWarning).toMatch(/Inject Eggs again/i);
+      expect(hr.downloadStaleConfigWarning).toMatch(/last successful run/i);
+      expect(hr.downloadStaleConfigWarning).toMatch(/Add signals again/i);
+    });
+
     it("engine config intros differ by audience and state", () => {
       const sec = getCopy("security");
       const hr = getCopy("hr");

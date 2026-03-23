@@ -19,6 +19,7 @@ const config: Config = {
         accent: "var(--color-accent)",
         "accent-foreground": "var(--color-accent-foreground)",
         success: "var(--color-success)",
+        warning: "var(--color-warning)",
         error: "var(--color-error)",
         /* Legacy noir/neon (still used where semantic not yet applied) */
         "noir-bg": "#050814",

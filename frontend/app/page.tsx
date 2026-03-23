@@ -402,6 +402,11 @@ export default function Home() {
         ? copy.hardenAriaAwaitingConfigChange
         : copy.hardenAriaDefault;
 
+  const downloadReflectsStaleConfig =
+    Boolean(successMessage) &&
+    lastHardenedSnap !== null &&
+    haveEggsChanged();
+
   const runHarden = () => {
     if (!selectedFile) return;
     void startPipelineForFile(selectedFile);
@@ -1302,12 +1307,23 @@ export default function Home() {
                     : copy.successHardenedReady}{" "}
                   <span className="font-mono">{successMessage}</span>
                 </p>
+                {downloadReflectsStaleConfig ? (
+                  <p
+                    id="download-stale-hint"
+                    className="mt-2 max-w-prose text-sm text-warning border-l-2 border-warning/70 pl-3"
+                  >
+                    {copy.downloadStaleConfigWarning}
+                  </p>
+                ) : null}
                 <div className="mt-1 flex flex-wrap gap-2">
                   <Button
                     variant="primary"
                     onClick={triggerDownload}
                     className="min-h-[44px] py-2"
-                    aria-label={`Download ${successMessage}`}
+                    aria-label={`${copy.downloadButton} ${successMessage}`}
+                    aria-describedby={
+                      downloadReflectsStaleConfig ? "download-stale-hint" : undefined
+                    }
                   >
                     {copy.downloadButton}
                   </Button>

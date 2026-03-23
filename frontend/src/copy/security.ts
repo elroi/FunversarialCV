@@ -73,6 +73,8 @@ export const securityCopy: Copy = {
   successScanComplete: "Scan complete (no eggs applied — document unchanged):",
   successHardenedReady: "CV ready (eggs injected):",
   downloadButton: "Download",
+  downloadStaleConfigWarning:
+    "This file matches your last successful run, not the egg settings on screen now. Inject Eggs again to refresh the download.",
   errorAlertPrefix: "> Alert:",
   retryButton: "Retry",
   retryAria: "Retry",

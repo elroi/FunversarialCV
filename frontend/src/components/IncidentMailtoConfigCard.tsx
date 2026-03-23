@@ -168,9 +168,9 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
     >
       <p
         className="text-caption sm:text-sm text-foreground/70 mb-4"
-        title="This egg identifies the email token in your CV and turns it into a rich mailto: link with configurable subject, body, CC, and BCC."
+        title={copy.incidentMailtoCardTooltip}
       >
-        LLM02: Insecure Output — wrap candidate email in a pre-filled mailto link.
+        {copy.incidentMailtoDescription}
       </p>
 
       {/* —— Email fields (routing) —— */}

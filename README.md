@@ -30,7 +30,7 @@ Every feature in FunversarialCV is an "Egg" mapped to the **OWASP Top 10 for LLM
 
 * **The Invisible Hand (LLM01: Prompt Injection):** Injects white-font "system instructions" (0.5pt) to influence LLM-based ranking systems.
 * **The Metadata Shadow (LLM02: Insecure Output):** Embeds custom key-value pairs in file properties (e.g., `Ranking: Top_1%`).
-* **The Logic Bomb (Creative):** Wraps your email address in a pre-filled `mailto:` link formatted as a system log entry. For DOCX, when **Preserve styles** is enabled, it attempts a style-preserving insertion by adding a small mailto hyperlink paragraph without altering your existing layout; in complex documents it may fall back to a simplified, rebuilt layout.
+* **The Logic Bomb (Creative):** Wraps your email address in a pre-filled `mailto:` link formatted as a system log entry—useful for testing **link trust** and social-engineering-style behavior (clicks/opens from a CV), not only abstract “LLM output” abuse. For DOCX, when **Preserve styles** is enabled, it attempts a style-preserving insertion by adding a small mailto hyperlink paragraph without altering your existing layout; in complex documents it may fall back to a simplified, rebuilt layout.
 * **The Canary Wing (LLM10: Model Theft):** Embeds trackable tokens to notify you when your CV is processed in specific environments.
 
 ---

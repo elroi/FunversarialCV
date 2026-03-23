@@ -137,7 +137,7 @@ export const securityCopy: Copy = {
   errorFileTooLarge: "File is too large.",
 
   eggInvisibleHandTitle: "The Invisible Hand (LLM01)",
-  eggIncidentMailtoTitle: "Mailto Surprise (LLM02)",
+  eggIncidentMailtoTitle: "Mailto Surprise (LLM02, output / links)",
   eggCanaryWingTitle: "Canary Wing (LLM10)",
   eggMetadataShadowTitle: "The Metadata Shadow (LLM02)",
 
@@ -149,7 +149,10 @@ export const securityCopy: Copy = {
     "{n}/{max} characters. No HTML or script; letters, digits, spaces, and basic punctuation only.",
   invisibleHandHowToTitle: "How to check & validate",
 
-  incidentMailtoDescription: "", // card-specific; uses manualCheckAndValidation or fallback
+  incidentMailtoDescription:
+    "OWASP LLM02 (insecure output handling): this plants a rich mailto: on your contact line. Primary risk is social engineering and unsafe trust in document links—people or mail clients following a planted link—not a model jailbreak. Secondary angle: pipelines that turn document links into actions without review.",
+  incidentMailtoCardTooltip:
+    "Finds the dehydrated email token in your CV and builds a mailto: link with configurable subject, body, CC, and BCC.",
   incidentMailtoResultingLink: "Resulting link — copy to enrich your CV manually",
   incidentMailtoCopyButton: "Copy link",
   incidentMailtoPlaceholderBody: "This incident was triggered by an adversarial CV layer.",

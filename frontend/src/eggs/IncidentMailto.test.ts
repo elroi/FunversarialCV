@@ -29,6 +29,16 @@ describe("IncidentMailto", () => {
       expect(incidentMailto.manualCheckAndValidation).toBeTruthy();
       expect(incidentMailto.manualCheckAndValidation.length).toBeGreaterThan(20);
     });
+    it("description frames LLM02 and primary link-trust / social engineering risk", () => {
+      const d = incidentMailto.description.toLowerCase();
+      expect(d).toMatch(/llm02/);
+      expect(d).toMatch(/social engineering|trust in .*link|link trust/);
+    });
+    it("manualCheckAndValidation prefixes expectation about mailto trust vs LLM compromise", () => {
+      const m = incidentMailto.manualCheckAndValidation.toLowerCase();
+      expect(m).toMatch(/mailto|cv-embedded|cv embedded|trust/);
+      expect(m).toMatch(/not necessarily|llm|model/);
+    });
   });
 
   describe("validatePayload", () => {

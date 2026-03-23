@@ -1379,7 +1379,7 @@ export default function Home() {
                   setLog((prev) => [
                     ...prev,
                     {
-                      id: `validation-copy-${id}`,
+                      id: `validation-copy-${id}-${crypto.randomUUID()}`,
                       stage: "accept",
                       level: "success",
                       message: copy.validationCopySuccessLogMessage.replace("{id}", id),

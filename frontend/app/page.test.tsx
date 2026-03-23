@@ -231,6 +231,42 @@ describe("Home page", () => {
       expect(screen.getByText("BASE-00")).toBeInTheDocument();
       expect(screen.getByTestId("validation-prompt-LLM01")).toBeInTheDocument();
     });
+
+    it("does not emit duplicate-key warnings when copying the same validation prompt twice", async () => {
+      const writeText = jest.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, "clipboard", {
+        value: { writeText },
+        configurable: true,
+      });
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+
+      renderWithAudience(<Home />);
+      fireEvent.click(
+        screen.getByRole("button", { name: /validation lab: show or hide/i })
+      );
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: /Prompt LLM01: show or hide full text and copy control/i,
+        })
+      );
+
+      const copyBtn = screen.getByRole("button", { name: /Copy LLM01 prompt/i });
+      fireEvent.click(copyBtn);
+      fireEvent.click(copyBtn);
+
+      await waitFor(() => {
+        expect(writeText).toHaveBeenCalledTimes(2);
+      });
+
+      const duplicateKeyLogged = consoleError.mock.calls.some(
+        (args) =>
+          typeof args[0] === "string" &&
+          args[0].includes("Encountered two children with the same key")
+      );
+      expect(duplicateKeyLogged).toBe(false);
+
+      consoleError.mockRestore();
+    });
   });
 
   afterEach(() => {

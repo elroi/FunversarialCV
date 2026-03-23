@@ -41,3 +41,5 @@ jobs:
         env:
           CI: "true"
           NEXT_TELEMETRY_DISABLED: "1"
+          # All requests share ip "unknown" in route handler; avoid 429 if the suite grows real /api/harden calls.
+          RATE_LIMIT_HARDEN_MAX: "1000"

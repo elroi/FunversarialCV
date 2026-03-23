@@ -1,8 +1,9 @@
 /**
  * Happy path E2E: upload → Inject Eggs → download for DOCX (v1 DOCX-only).
- * Uses real /api/harden and real fixtures. TDD: tests define expected flow.
+ * Mocks POST /api/harden for deterministic CI (Next server + Processor timing/PII-guard
+ * variance); the second test still asserts the real client payload to /api/harden.
  */
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import path from "path";
 import fs from "fs";
 import { expandEngineConfigurationSection } from "../helpers/engine-section";
@@ -12,9 +13,49 @@ import { securityUiRx } from "../helpers/security-ui";
 const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
 const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx"));
 
+/** Same key as home page `CHECKBOX_STORAGE_KEY` — clear so parallel E2E workers never inherit egg toggles. */
+const CHECKBOX_STORAGE_KEY = "funversarialcv-checkboxes";
+
+/** Stable handle for the post-inject Download control (may sit inside a collapsed engine fold). */
+function downloadHardenedButton(page: Page) {
+  return page.getByTestId("download-hardened-docx");
+}
+
+function minimalHardenSuccessBody(originalName: string): string {
+  return JSON.stringify({
+    bufferBase64: minimalDocxBuffer.toString("base64"),
+    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    originalName,
+    scannerReport: {
+      scan: { hasSuspiciousPatterns: false, matchedPatterns: [] },
+      alerts: [],
+    },
+  });
+}
+
 test.describe("Happy path", () => {
   test("DOCX: upload, inject eggs, download yields valid DOCX", async ({ page }) => {
+    let hardenPosts = 0;
+    await page.route("**/api/harden", async (route) => {
+      if (route.request().method() !== "POST") {
+        return route.continue();
+      }
+      hardenPosts += 1;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: minimalHardenSuccessBody("minimal.docx"),
+      });
+    });
+
     await page.goto("/");
+    await page.evaluate((key) => {
+      try {
+        window.localStorage.removeItem(key);
+      } catch {
+        /* ignore */
+      }
+    }, CHECKBOX_STORAGE_KEY);
     await ensureSecurityAudienceForE2e(page);
 
     const fileInput = page.getByTestId("dropzone-input");
@@ -24,14 +65,31 @@ test.describe("Happy path", () => {
     await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
       timeout: 15_000,
     });
-    await page.getByRole("button", { name: /inject eggs/i }).click();
 
-    await expect(
-      page.getByRole("button", { name: /download/i })
-    ).toBeVisible({ timeout: 30_000 });
+    const injectBtn = page.getByRole("button", { name: /inject eggs/i });
+    await expect(injectBtn).toBeEnabled({ timeout: 15_000 });
+
+    await injectBtn.click();
+
+    const downloadBtn = downloadHardenedButton(page);
+    try {
+      await downloadBtn.waitFor({ state: "attached", timeout: 60_000 });
+    } catch {
+      const alert = page.locator("#main-content [role='alert']");
+      if (await alert.isVisible().catch(() => false)) {
+        throw new Error(
+          `Download control did not attach; UI error: ${(await alert.innerText()).slice(0, 800)}`
+        );
+      }
+      throw new Error(
+        "Download button (data-testid=download-hardened-docx) did not attach within 60s."
+      );
+    }
+
+    expect(hardenPosts).toBe(1);
 
     const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("button", { name: /download/i }).click();
+    await downloadBtn.click({ force: true });
     const download = await downloadPromise;
 
     expect(download.suggestedFilename()).toMatch(/\.docx$/i);
@@ -66,19 +124,18 @@ test.describe("Happy path", () => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify({
-          bufferBase64: minimalDocxBuffer.toString("base64"),
-          mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          originalName: "pii-sample.docx",
-          scannerReport: {
-            scan: { hasSuspiciousPatterns: false, matchedPatterns: [] },
-            alerts: [],
-          },
-        }),
+        body: minimalHardenSuccessBody("pii-sample.docx"),
       });
     });
 
     await page.goto("/");
+    await page.evaluate((key) => {
+      try {
+        window.localStorage.removeItem(key);
+      } catch {
+        /* ignore */
+      }
+    }, CHECKBOX_STORAGE_KEY);
     await ensureSecurityAudienceForE2e(page);
 
     const fileInput = page.getByTestId("dropzone-input");
@@ -90,9 +147,7 @@ test.describe("Happy path", () => {
     });
     await page.getByRole("button", { name: /inject eggs/i }).click();
 
-    await expect(
-      page.getByRole("button", { name: /download/i })
-    ).toBeVisible({ timeout: 60_000 });
+    await downloadHardenedButton(page).waitFor({ state: "attached", timeout: 60_000 });
 
     expect(capturedBody).toBeTruthy();
     const isTextMode = capturedBody!.includes("tokenizedText");

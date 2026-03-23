@@ -2,7 +2,7 @@
  * Happy path E2E: upload → Inject Eggs → download for DOCX (v1 DOCX-only).
  * Uses real /api/harden and real fixtures. TDD: tests define expected flow.
  */
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import path from "path";
 import fs from "fs";
 import { expandEngineConfigurationSection } from "../helpers/engine-section";
@@ -11,6 +11,16 @@ import { securityUiRx } from "../helpers/security-ui";
 
 const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
 const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx"));
+
+/**
+ * Post-inject Download uses aria-label `Download <buildFinalFileName>` (e.g. …_final.docx).
+ * Avoid /^download/i alone: demo row can expose "Download to view current demo as-is".
+ */
+function downloadResultButton(page: Page) {
+  return page
+    .locator("#main-content")
+    .getByRole("button", { name: /download .+_final/i });
+}
 
 test.describe("Happy path", () => {
   test("DOCX: upload, inject eggs, download yields valid DOCX", async ({ page }) => {
@@ -43,12 +53,23 @@ test.describe("Happy path", () => {
       );
     }
 
-    await expect(
-      page.getByRole("button", { name: /download/i })
-    ).toBeVisible({ timeout: 60_000 });
+    const downloadBtn = downloadResultButton(page);
+    try {
+      await expect(downloadBtn).toBeVisible({ timeout: 60_000 });
+    } catch {
+      const alert = page.locator("#main-content [role='alert']");
+      if (await alert.isVisible().catch(() => false)) {
+        throw new Error(
+          `Download did not appear; UI error: ${(await alert.innerText()).slice(0, 800)}`
+        );
+      }
+      throw new Error(
+        "Download did not appear within 60s and no role=alert was visible in main."
+      );
+    }
 
     const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("button", { name: /download/i }).click();
+    await downloadBtn.click();
     const download = await downloadPromise;
 
     expect(download.suggestedFilename()).toMatch(/\.docx$/i);
@@ -107,9 +128,7 @@ test.describe("Happy path", () => {
     });
     await page.getByRole("button", { name: /inject eggs/i }).click();
 
-    await expect(
-      page.getByRole("button", { name: /download/i })
-    ).toBeVisible({ timeout: 60_000 });
+    await expect(downloadResultButton(page)).toBeVisible({ timeout: 60_000 });
 
     expect(capturedBody).toBeTruthy();
     const isTextMode = capturedBody!.includes("tokenizedText");

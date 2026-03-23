@@ -10,6 +10,7 @@
   --color-accent: #00d4ff;
   --color-accent-foreground: #050814;
   --color-success: #00ff41;
+  --color-warning: #fbbf24;
   --color-error: #ff3131;
   --color-neon-green: #00ff41;
   --color-neon-red: #ff3131;
@@ -26,6 +27,7 @@
   --color-accent: #0369a1;
   --color-accent-foreground: #fafaf9;
   --color-success: #047857;
+  --color-warning: #b45309;
   --color-error: #b91c1c;
 }
 

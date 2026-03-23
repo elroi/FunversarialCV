@@ -7,6 +7,7 @@ import fs from "fs";
 import { expandEngineConfigurationSection } from "../helpers/engine-section";
 import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
 import { securityUiRx } from "../helpers/security-ui";
+import { securityCopy } from "../../src/copy/security";
 
 const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
 const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx"));
@@ -57,6 +58,7 @@ test.describe("Inject gating", () => {
 
     await page.getByRole("checkbox", { name: /Canary Wing/i }).uncheck();
     await expect(injectBtn).toBeEnabled();
+    await expect(page.getByText(securityCopy.downloadStaleConfigWarning)).toBeVisible();
 
     await injectBtn.click();
     await expect(page.getByRole("button", { name: /download/i })).toBeVisible({

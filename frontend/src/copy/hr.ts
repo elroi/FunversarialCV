@@ -75,6 +75,8 @@ export const hrCopy: Copy = {
   successScanComplete: "Scan complete (no options applied — document unchanged):",
   successHardenedReady: "Your new CV is ready:",
   downloadButton: "Download",
+  downloadStaleConfigWarning:
+    "This file matches your last successful run, not the options on screen now. Add signals again to refresh the download.",
   errorAlertPrefix: "Something went wrong:",
   retryButton: "Retry",
   retryAria: "Retry",

@@ -71,6 +71,8 @@ export interface Copy {
   successScanComplete: string;
   successHardenedReady: string;
   downloadButton: string;
+  /** Shown when egg/options in the UI differ from the last successful output; download still serves that prior run. */
+  downloadStaleConfigWarning: string;
   errorAlertPrefix: string;
   retryButton: string;
   retryAria: string;

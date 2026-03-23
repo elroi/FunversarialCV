@@ -68,11 +68,11 @@ export const securityCopy: Copy = {
   hardenProcessing: "Injecting…",
   hardenAriaProcessing: "Inject Eggs (injecting…)",
   hardenAriaDefault: "Inject Eggs",
+  hardenAriaAwaitingConfigChange:
+    "Inject Eggs — output matches your current egg settings; change eggs or options, then run again.",
   successScanComplete: "Scan complete (no eggs applied — document unchanged):",
   successHardenedReady: "CV ready (eggs injected):",
   downloadButton: "Download",
-  reprocessButton: "Re-process",
-  reprocessAria: "Re-process with current egg config",
   errorAlertPrefix: "> Alert:",
   retryButton: "Retry",
   retryAria: "Retry",
@@ -241,7 +241,7 @@ export const securityCopy: Copy = {
   validationLabManualMirrorProtocol:
     "Manual Mirror Protocol — How to test your Armed CV in an external LLM:\n\n(1) Inject Eggs and download your CV on this page.\n(2) Open an external LLM (e.g. ChatGPT, Claude) in another tab and paste the downloaded CV into the chat.\n(3) Pick a prompt below, click [COPY], and paste it into the same conversation.\n(4) Compare the model’s reply to the diagnostic goal under that prompt (e.g. did it follow hidden instructions, leak metadata, or over-trust the document?). If the behaviour matches the goal, your forensic proof-of-concept succeeds.",
   validationLabMatchBadgeHint:
-    "ENABLED means this prompt’s egg was applied in your last successful Inject Eggs run on this page—the badge reflects your latest downloaded CV, not checkboxes alone. After you change eggs or payloads, Inject Eggs or Re-process to refresh.",
+    "ENABLED means this prompt’s egg was applied in your last successful Inject Eggs run on this page—the badge reflects your latest downloaded CV, not checkboxes alone. After you change eggs or payloads, click Inject Eggs again to refresh.",
   validationMatchBadgeAriaLabel:
     "ENABLED: this prompt’s egg was applied in your last successful Inject Eggs run on this page.",
   validationCopySuccessLogMessage: "> [SYSTEM] {id} Prompt copied to clipboard",

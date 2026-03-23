@@ -48,9 +48,18 @@ describe("copy", () => {
       const sec = getCopy("security");
       const hr = getCopy("hr");
       expect(sec.validationLabMatchBadgeHint).toMatch(/last successful Inject Eggs/i);
+      expect(sec.validationLabMatchBadgeHint).not.toMatch(/re-process/i);
+      expect(sec.validationLabMatchBadgeHint).toMatch(/Inject Eggs again/i);
       expect(sec.validationMatchBadgeAriaLabel).toMatch(/last successful Inject Eggs/i);
       expect(hr.validationLabMatchBadgeHint).toMatch(/last successful Add signals/i);
       expect(hr.validationMatchBadgeAriaLabel).toMatch(/last successful run/i);
+    });
+
+    it("hardenAriaAwaitingConfigChange is set for both audiences and includes the primary action name", () => {
+      const sec = getCopy("security");
+      const hr = getCopy("hr");
+      expect(sec.hardenAriaAwaitingConfigChange).toMatch(/Inject Eggs/i);
+      expect(hr.hardenAriaAwaitingConfigChange).toMatch(/Add signals/i);
     });
 
     it("engine config intros differ by audience and state", () => {

@@ -387,6 +387,21 @@ export default function Home() {
     metadataShadowPayload,
   ]);
 
+  // Gate the primary pipeline action after a successful run so users do not re-POST identical egg/config to /api/harden until selection or payloads drift.
+  const lastHardenedSnap = lastHardenedConfigRef.current;
+  const pipelineConfigMatchesLastSuccess =
+    lastHardenedSnap !== null && !haveEggsChanged();
+  const pipelineHardenDisabled =
+    processingState === "processing" ||
+    !selectedFile ||
+    pipelineConfigMatchesLastSuccess;
+  const pipelineHardenAria =
+    processingState === "processing"
+      ? copy.hardenAriaProcessing
+      : pipelineConfigMatchesLastSuccess
+        ? copy.hardenAriaAwaitingConfigChange
+        : copy.hardenAriaDefault;
+
   const runHarden = () => {
     if (!selectedFile) return;
     void startPipelineForFile(selectedFile);
@@ -1257,8 +1272,8 @@ export default function Home() {
                 </div>
                 <Button
                   onClick={runHarden}
-                  disabled={processingState === "processing"}
-                  aria-label={processingState === "processing" ? copy.hardenAriaProcessing : copy.hardenAriaDefault}
+                  disabled={pipelineHardenDisabled}
+                  aria-label={pipelineHardenAria}
                   className="mt-4 w-full flex items-center justify-center gap-2"
                 >
                   {processingState === "processing" && (
@@ -1295,15 +1310,6 @@ export default function Home() {
                     aria-label={`Download ${successMessage}`}
                   >
                     {copy.downloadButton}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={runHarden}
-                    disabled={processingState === "processing" || !haveEggsChanged()}
-                    className="min-h-[44px] py-2"
-                    aria-label={copy.reprocessAria}
-                  >
-                    {copy.reprocessButton}
                   </Button>
                 </div>
               </div>
@@ -1373,7 +1379,7 @@ export default function Home() {
                   setLog((prev) => [
                     ...prev,
                     {
-                      id: `validation-copy-${id}`,
+                      id: `validation-copy-${id}-${crypto.randomUUID()}`,
                       stage: "accept",
                       level: "success",
                       message: copy.validationCopySuccessLogMessage.replace("{id}", id),

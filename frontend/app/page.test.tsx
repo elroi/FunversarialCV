@@ -11,6 +11,7 @@ import * as ClientDocumentCreate from "../src/lib/clientDocumentCreate";
 import * as ClientTokenReplace from "../src/lib/clientTokenReplaceInCopy";
 import { buildStyledDemoCvDocx } from "../src/lib/demoCvBuilders";
 import { MIME_DOCX } from "../src/engine/documentExtract";
+import { securityCopy } from "../src/copy/security";
 
 const createFile = (name: string, type: string) =>
   new File(["dummy"], name, { type });
@@ -273,9 +274,47 @@ describe("Home page", () => {
 
       const downloadBtn = screen.getByRole("button", { name: /download/i });
       expect(downloadBtn).toBeInTheDocument();
+
+      const injectAfterSuccess = screen.getByRole("button", { name: /inject eggs/i });
+      expect(injectAfterSuccess).toBeDisabled();
+      expect(injectAfterSuccess).toHaveAttribute(
+        "aria-label",
+        securityCopy.hardenAriaAwaitingConfigChange
+      );
+      expect(screen.queryByRole("button", { name: /re-process/i })).not.toBeInTheDocument();
+
       fireEvent.click(downloadBtn);
       expect(createObjectURL).toHaveBeenCalled();
       expect(revokeObjectURL).toHaveBeenCalled();
+    });
+
+    it("re-enables Inject Eggs after egg selection changes post-success", async () => {
+      global.fetch = mockFetchSuccess("my-cv.docx");
+      renderWithAudience(<Home />);
+
+      const input = screen.getByTestId("dropzone-input");
+      fireEvent.change(input, {
+        target: { files: [createDocxFile("my-cv.docx")] },
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Armed CV:/i)).toBeInTheDocument();
+      });
+      ensureEngineConfigExpanded();
+
+      fireEvent.click(screen.getByRole("button", { name: /inject eggs/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(/my-cv_final\.docx/i)).toBeInTheDocument();
+      });
+
+      expect(screen.getByRole("button", { name: /inject eggs/i })).toBeDisabled();
+
+      fireEvent.click(screen.getByRole("checkbox", { name: /Canary Wing/i }));
+
+      const injectEnabled = screen.getByRole("button", { name: /inject eggs/i });
+      expect(injectEnabled).not.toBeDisabled();
+      expect(injectEnabled).toHaveAttribute("aria-label", securityCopy.hardenAriaDefault);
     });
   });
 
@@ -476,6 +515,15 @@ describe("Home page", () => {
           scannerReport: { scan: { hasSuspiciousPatterns: false, matchedPatterns: [] } },
         }),
       } as unknown as Response);
+
+      await waitFor(() => {
+        const doneBtn = screen.getByRole("button", { name: /inject eggs/i });
+        expect(doneBtn).toBeDisabled();
+        expect(doneBtn).toHaveAttribute(
+          "aria-label",
+          securityCopy.hardenAriaAwaitingConfigChange
+        );
+      });
     });
   });
 
@@ -600,7 +648,7 @@ describe("Home page", () => {
       expect(changeFileBtn).toHaveClass("min-h-[44px]");
     });
 
-    it("Download and Re-process buttons have 44px minimum touch target after egg injection", async () => {
+    it("Download and gated Inject Eggs have 44px minimum touch target after egg injection", async () => {
       global.fetch = mockFetchSuccess("out.docx");
       renderWithAudience(<Home />);
       const input = screen.getByTestId("dropzone-input");
@@ -613,9 +661,9 @@ describe("Home page", () => {
       fireEvent.click(screen.getByRole("button", { name: /inject eggs/i }));
       await waitFor(() => screen.getByRole("button", { name: /download/i }));
       const downloadBtn = screen.getByRole("button", { name: /download/i });
-      const reprocessBtn = screen.getByRole("button", { name: /re-process/i });
+      const injectBtn = screen.getByRole("button", { name: /inject eggs/i });
       expect(downloadBtn).toHaveClass("min-h-[44px]");
-      expect(reprocessBtn).toHaveClass("min-h-[44px]");
+      expect(injectBtn).toHaveClass("min-h-[44px]");
     });
 
     it("Retry button has 44px minimum touch target when error is shown", async () => {

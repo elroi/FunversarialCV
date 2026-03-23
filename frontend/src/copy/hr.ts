@@ -70,11 +70,11 @@ export const hrCopy: Copy = {
   hardenProcessing: "Processing…",
   hardenAriaProcessing: "Add signals (processing…)",
   hardenAriaDefault: "Add signals",
+  hardenAriaAwaitingConfigChange:
+    "Add signals — output matches your current options; change options, then run again.",
   successScanComplete: "Scan complete (no options applied — document unchanged):",
   successHardenedReady: "Your new CV is ready:",
   downloadButton: "Download",
-  reprocessButton: "Run again",
-  reprocessAria: "Run again with current options",
   errorAlertPrefix: "Something went wrong:",
   retryButton: "Retry",
   retryAria: "Retry",

@@ -66,11 +66,11 @@ export interface Copy {
   hardenProcessing: string;
   hardenAriaProcessing: string;
   hardenAriaDefault: string;
+  /** Shown when the pipeline button is disabled because output already matches current egg/options config. */
+  hardenAriaAwaitingConfigChange: string;
   successScanComplete: string;
   successHardenedReady: string;
   downloadButton: string;
-  reprocessButton: string;
-  reprocessAria: string;
   errorAlertPrefix: string;
   retryButton: string;
   retryAria: string;

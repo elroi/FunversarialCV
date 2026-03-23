@@ -34,6 +34,10 @@ function minimalHardenSuccessBody(originalName: string): string {
 }
 
 test.describe("Happy path", () => {
+  // Serial: both tests hit heavy client dehydration; parallel workers + parallel tests
+  // can push wall-clock past 60s on small CI runners before success UI appears.
+  test.describe.configure({ mode: "serial", timeout: 120_000 });
+
   test("DOCX: upload, inject eggs, download yields valid DOCX", async ({ page }) => {
     let hardenPosts = 0;
     await page.route("**/api/harden", async (route) => {
@@ -69,11 +73,23 @@ test.describe("Happy path", () => {
     const injectBtn = page.getByRole("button", { name: /inject eggs/i });
     await expect(injectBtn).toBeEnabled({ timeout: 15_000 });
 
+    const hardenResponsePromise = page.waitForResponse(
+      (r) =>
+        r.url().includes("/api/harden") && r.request().method() === "POST",
+      { timeout: 85_000 }
+    );
     await injectBtn.click();
+    const hardenRes = await hardenResponsePromise;
+    if (!hardenRes.ok()) {
+      throw new Error(
+        `POST /api/harden returned ${hardenRes.status()} (expected mock 200).`
+      );
+    }
+    expect(hardenPosts).toBe(1);
 
     const downloadBtn = downloadHardenedButton(page);
     try {
-      await downloadBtn.waitFor({ state: "attached", timeout: 60_000 });
+      await downloadBtn.waitFor({ state: "attached", timeout: 85_000 });
     } catch {
       const alert = page.locator("#main-content [role='alert']");
       if (await alert.isVisible().catch(() => false)) {
@@ -82,11 +98,9 @@ test.describe("Happy path", () => {
         );
       }
       throw new Error(
-        "Download button (data-testid=download-hardened-docx) did not attach within 60s."
+        "Download button (data-testid=download-hardened-docx) did not attach within 85s."
       );
     }
-
-    expect(hardenPosts).toBe(1);
 
     const downloadPromise = page.waitForEvent("download");
     await downloadBtn.click({ force: true });
@@ -145,9 +159,16 @@ test.describe("Happy path", () => {
     await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
       timeout: 15_000,
     });
+    const hardenResponsePromise = page.waitForResponse(
+      (r) =>
+        r.url().includes("/api/harden") && r.request().method() === "POST",
+      { timeout: 85_000 }
+    );
     await page.getByRole("button", { name: /inject eggs/i }).click();
+    const hardenRes = await hardenResponsePromise;
+    expect(hardenRes.ok()).toBeTruthy();
 
-    await downloadHardenedButton(page).waitFor({ state: "attached", timeout: 60_000 });
+    await downloadHardenedButton(page).waitFor({ state: "attached", timeout: 85_000 });
 
     expect(capturedBody).toBeTruthy();
     const isTextMode = capturedBody!.includes("tokenizedText");

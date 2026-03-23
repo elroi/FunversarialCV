@@ -71,12 +71,11 @@ test.describe("Demo preset", () => {
 
     await page.getByRole("button", { name: /inject eggs/i }).click();
 
-    await expect(
-      page.getByRole("button", { name: /download/i })
-    ).toBeVisible({ timeout: 30_000 });
+    const hardenedDownload = page.getByTestId("download-hardened-docx");
+    await expect(hardenedDownload).toBeVisible({ timeout: 30_000 });
 
     const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("button", { name: /download/i }).click();
+    await hardenedDownload.click({ force: true });
     const download = await downloadPromise;
 
     expect(download.suggestedFilename()).toMatch(/\.docx$/i);
@@ -108,12 +107,11 @@ test.describe("Demo preset", () => {
 
     await page.getByRole("button", { name: /inject eggs/i }).click();
 
-    await expect(
-      page.getByRole("button", { name: /download/i })
-    ).toBeVisible({ timeout: 30_000 });
+    const hardenedDownload = page.getByTestId("download-hardened-docx");
+    await expect(hardenedDownload).toBeVisible({ timeout: 30_000 });
 
     const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("button", { name: /download/i }).click();
+    await hardenedDownload.click({ force: true });
     const download = await downloadPromise;
 
     expect(download.suggestedFilename()).toMatch(/\.docx$/i);

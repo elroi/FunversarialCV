@@ -150,7 +150,10 @@ export const hrCopy: Copy = {
     "{n}/{max} characters. Letters, numbers, spaces, and basic punctuation only (no HTML or code).",
   invisibleHandHowToTitle: "How to check and validate",
 
-  incidentMailtoDescription: "",
+  incidentMailtoDescription:
+    "Adds a \"report by email\" style link on or next to your address. This mostly tests whether someone—or their apps—clicks or opens mail from a CV without checking. It is different from hidden notes to an AI; it is closer to phishing-style trust in links.",
+  incidentMailtoCardTooltip:
+    "Finds your contact email in the file and adds a mailto link you can customize (subject, message, optional CC/BCC).",
   incidentMailtoResultingLink: "Resulting link — copy to add to your CV manually",
   incidentMailtoCopyButton: "Copy link",
   incidentMailtoPlaceholderBody:

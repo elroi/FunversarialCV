@@ -141,6 +141,7 @@ export interface Copy {
 
   // —— IncidentMailtoConfigCard ——
   incidentMailtoDescription: string;
+  incidentMailtoCardTooltip: string;
   incidentMailtoResultingLink: string;
   incidentMailtoCopyButton: string;
   incidentMailtoPlaceholderBody: string;

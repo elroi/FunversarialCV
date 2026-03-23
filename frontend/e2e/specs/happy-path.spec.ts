@@ -12,19 +12,29 @@ import { securityUiRx } from "../helpers/security-ui";
 const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
 const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx"));
 
+/** Same key as home page `CHECKBOX_STORAGE_KEY` — clear so parallel E2E workers never inherit egg toggles. */
+const CHECKBOX_STORAGE_KEY = "funversarialcv-checkboxes";
+
 /**
- * Post-inject Download uses aria-label `Download <buildFinalFileName>` (e.g. …_final.docx).
- * Avoid /^download/i alone: demo row can expose "Download to view current demo as-is".
+ * Post-inject Download uses aria-label `Download <filename>.docx` (eggs on → …_final.docx; scan-only → original name).
+ * Demo row "Download to view…" does not end with `.docx`, so it stays excluded.
  */
 function downloadResultButton(page: Page) {
   return page
     .locator("#main-content")
-    .getByRole("button", { name: /download .+_final/i });
+    .getByRole("button", { name: /download .+\.docx$/i });
 }
 
 test.describe("Happy path", () => {
   test("DOCX: upload, inject eggs, download yields valid DOCX", async ({ page }) => {
     await page.goto("/");
+    await page.evaluate((key) => {
+      try {
+        window.localStorage.removeItem(key);
+      } catch {
+        /* ignore */
+      }
+    }, CHECKBOX_STORAGE_KEY);
     await ensureSecurityAudienceForE2e(page);
 
     const fileInput = page.getByTestId("dropzone-input");
@@ -53,6 +63,9 @@ test.describe("Happy path", () => {
       );
     }
 
+    // Download + success live inside the engine SectionFold; if it collapsed, the control exists but is not visible.
+    await expandEngineConfigurationSection(page);
+
     const downloadBtn = downloadResultButton(page);
     try {
       await expect(downloadBtn).toBeVisible({ timeout: 60_000 });
@@ -63,12 +76,16 @@ test.describe("Happy path", () => {
           `Download did not appear; UI error: ${(await alert.innerText()).slice(0, 800)}`
         );
       }
+      const engineBody = page.locator("#engine-config-section-content");
+      const engineHidden = await engineBody.getAttribute("hidden");
+      const count = await downloadResultButton(page).count();
       throw new Error(
-        "Download did not appear within 60s and no role=alert was visible in main."
+        `Download did not appear within 60s (engine content hidden=${engineHidden}, matching download buttons=${count}).`
       );
     }
 
     const downloadPromise = page.waitForEvent("download");
+    await downloadBtn.scrollIntoViewIfNeeded();
     await downloadBtn.click();
     const download = await downloadPromise;
 
@@ -117,6 +134,13 @@ test.describe("Happy path", () => {
     });
 
     await page.goto("/");
+    await page.evaluate((key) => {
+      try {
+        window.localStorage.removeItem(key);
+      } catch {
+        /* ignore */
+      }
+    }, CHECKBOX_STORAGE_KEY);
     await ensureSecurityAudienceForE2e(page);
 
     const fileInput = page.getByTestId("dropzone-input");
@@ -128,6 +152,7 @@ test.describe("Happy path", () => {
     });
     await page.getByRole("button", { name: /inject eggs/i }).click();
 
+    await expandEngineConfigurationSection(page);
     await expect(downloadResultButton(page)).toBeVisible({ timeout: 60_000 });
 
     expect(capturedBody).toBeTruthy();

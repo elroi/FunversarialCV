@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import clsx from "clsx";
 import { CollapsibleCard } from "./ui/CollapsibleCard";
 import { CheckAndValidateBlock } from "./CheckAndValidateBlock";
@@ -58,25 +58,26 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
   manualCheckAndValidation,
 }) => {
   const copy = useCopy();
-  const config = parsePayloadSafe(payload);
+  const initial = parsePayloadSafe(payload);
 
-  const [url, setUrl] = useState(config.url ?? "");
-  const [baseUrl, setBaseUrl] = useState(config.baseUrl ?? "");
-  const [token, setToken] = useState(config.token ?? "");
+  const [url, setUrl] = useState(initial.url ?? "");
+  const [baseUrl, setBaseUrl] = useState(initial.baseUrl ?? "");
+  const [token, setToken] = useState(initial.token ?? "");
   const [docxHiddenText, setDocxHiddenText] = useState(
-    config.docxHiddenText ?? (config.docxLinkStyle === "hidden" || !config.docxLinkStyle)
+    initial.docxHiddenText ?? (initial.docxLinkStyle === "hidden" || !initial.docxLinkStyle)
   );
   const [docxClickableLink, setDocxClickableLink] = useState(
-    config.docxClickableLink ?? (config.docxLinkStyle === "clickable" || config.docxLinkStyle === "clickable-with-text")
+    initial.docxClickableLink ??
+      (initial.docxLinkStyle === "clickable" || initial.docxLinkStyle === "clickable-with-text")
   );
-  const [docxClickableVisible, setDocxClickableVisible] = useState(config.docxClickableVisible ?? false);
-  const [docxPlacement, setDocxPlacement] = useState<"end" | "footer">(config.docxPlacement ?? "end");
-  const [docxDisplayText, setDocxDisplayText] = useState(config.docxDisplayText ?? "");
+  const [docxClickableVisible, setDocxClickableVisible] = useState(initial.docxClickableVisible ?? false);
+  const [docxPlacement, setDocxPlacement] = useState<"end" | "footer">(initial.docxPlacement ?? "end");
+  const [docxDisplayText, setDocxDisplayText] = useState(initial.docxDisplayText ?? "");
   const [pdfHiddenText, setPdfHiddenText] = useState(
-    config.pdfHiddenText ?? (config.pdfLinkStyle !== "clickable")
+    initial.pdfHiddenText ?? (initial.pdfLinkStyle !== "clickable")
   );
   const [pdfClickableLink, setPdfClickableLink] = useState(
-    config.pdfClickableLink ?? (config.pdfLinkStyle === "clickable")
+    initial.pdfClickableLink ?? (initial.pdfLinkStyle === "clickable")
   );
 
   // Default base when url and baseUrl are both empty. Same value on server and first client render to avoid hydration mismatch; then set to window.location.origin in useEffect (client-only).
@@ -89,26 +90,27 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
   const [statusLoading, setStatusLoading] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
 
-  // Sync from parent when payload changes externally (e.g. reset or load).
-  useEffect(() => {
-    setUrl(config.url ?? "");
-    setBaseUrl(config.baseUrl ?? "");
-    setToken(config.token ?? "");
-    setDocxHiddenText(
-      config.docxHiddenText ?? (config.docxLinkStyle === "hidden" || !config.docxLinkStyle)
-    );
+  // Sync from parent when the payload *string* changes. Parsed `config` must not be a
+  // dependency: parsePayloadSafe returns a new object every render, which would re-run
+  // this on every frame, fight the emit effect, and can loop (e.g. Maximum preset +
+  // docxDisplayText). Layout effect runs before the emit useEffect so local state matches
+  // payload before we stringify and call onPayloadChange.
+  useLayoutEffect(() => {
+    const cfg = parsePayloadSafe(payload);
+    setUrl(cfg.url ?? "");
+    setBaseUrl(cfg.baseUrl ?? "");
+    setToken(cfg.token ?? "");
+    setDocxHiddenText(cfg.docxHiddenText ?? (cfg.docxLinkStyle === "hidden" || !cfg.docxLinkStyle));
     setDocxClickableLink(
-      config.docxClickableLink ?? (config.docxLinkStyle === "clickable" || config.docxLinkStyle === "clickable-with-text")
+      cfg.docxClickableLink ??
+        (cfg.docxLinkStyle === "clickable" || cfg.docxLinkStyle === "clickable-with-text")
     );
-    setDocxClickableVisible(config.docxClickableVisible ?? false);
-    setDocxPlacement(config.docxPlacement ?? "end");
-    setDocxDisplayText(config.docxDisplayText ?? "");
-    setPdfHiddenText(config.pdfHiddenText ?? (config.pdfLinkStyle !== "clickable"));
-    setPdfClickableLink(config.pdfClickableLink ?? (config.pdfLinkStyle === "clickable"));
-    // We intentionally depend on the parsed config derived from payload rather than
-    // individual fields to keep the effect stable and avoid noisy dependency lists.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config]);
+    setDocxClickableVisible(cfg.docxClickableVisible ?? false);
+    setDocxPlacement(cfg.docxPlacement ?? "end");
+    setDocxDisplayText(cfg.docxDisplayText ?? "");
+    setPdfHiddenText(cfg.pdfHiddenText ?? (cfg.pdfLinkStyle !== "clickable"));
+    setPdfClickableLink(cfg.pdfClickableLink ?? (cfg.pdfLinkStyle === "clickable"));
+  }, [payload]);
 
   // After mount, use current origin for default canary base so the preview matches what the server would use in dev.
   useEffect(() => {
@@ -116,14 +118,6 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
       setDefaultCanaryBase(`${window.location.origin}/api/canary`);
     }
   }, []);
-
-  const emit = useCallback(
-    (next: CanaryWingConfig) => {
-      const str = JSON.stringify(next);
-      onPayloadChange(str);
-    },
-    [onPayloadChange]
-  );
 
   useEffect(() => {
     const next: CanaryWingConfig = {};
@@ -137,7 +131,11 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
     if (docxDisplayText.trim()) next.docxDisplayText = docxDisplayText.trim();
     next.pdfHiddenText = pdfHiddenText;
     next.pdfClickableLink = pdfClickableLink;
-    emit(next);
+    const str = JSON.stringify(next);
+    const prev = payload ?? "";
+    if (str !== prev) {
+      onPayloadChange(str);
+    }
   }, [
     url,
     baseUrl,
@@ -149,7 +147,8 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
     docxDisplayText,
     pdfHiddenText,
     pdfClickableLink,
-    emit,
+    payload,
+    onPayloadChange,
   ]);
 
   const resultingUrl =

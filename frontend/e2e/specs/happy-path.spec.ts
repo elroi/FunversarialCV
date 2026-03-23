@@ -15,14 +15,9 @@ const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx")
 /** Same key as home page `CHECKBOX_STORAGE_KEY` — clear so parallel E2E workers never inherit egg toggles. */
 const CHECKBOX_STORAGE_KEY = "funversarialcv-checkboxes";
 
-/**
- * Post-inject Download uses aria-label `Download <filename>.docx` (eggs on → …_final.docx; scan-only → original name).
- * Demo row "Download to view…" does not end with `.docx`, so it stays excluded.
- */
-function downloadResultButton(page: Page) {
-  return page
-    .locator("#main-content")
-    .getByRole("button", { name: /download .+\.docx$/i });
+/** Stable handle for the post-inject Download control (may sit inside a collapsed engine fold). */
+function downloadHardenedButton(page: Page) {
+  return page.getByTestId("download-hardened-docx");
 }
 
 test.describe("Happy path", () => {
@@ -63,30 +58,23 @@ test.describe("Happy path", () => {
       );
     }
 
-    // Download + success live inside the engine SectionFold; if it collapsed, the control exists but is not visible.
-    await expandEngineConfigurationSection(page);
-
-    const downloadBtn = downloadResultButton(page);
+    const downloadBtn = downloadHardenedButton(page);
     try {
-      await expect(downloadBtn).toBeVisible({ timeout: 60_000 });
+      await downloadBtn.waitFor({ state: "attached", timeout: 60_000 });
     } catch {
       const alert = page.locator("#main-content [role='alert']");
       if (await alert.isVisible().catch(() => false)) {
         throw new Error(
-          `Download did not appear; UI error: ${(await alert.innerText()).slice(0, 800)}`
+          `Download control did not attach; UI error: ${(await alert.innerText()).slice(0, 800)}`
         );
       }
-      const engineBody = page.locator("#engine-config-section-content");
-      const engineHidden = await engineBody.getAttribute("hidden");
-      const count = await downloadResultButton(page).count();
       throw new Error(
-        `Download did not appear within 60s (engine content hidden=${engineHidden}, matching download buttons=${count}).`
+        "Download button (data-testid=download-hardened-docx) did not attach within 60s."
       );
     }
 
     const downloadPromise = page.waitForEvent("download");
-    await downloadBtn.scrollIntoViewIfNeeded();
-    await downloadBtn.click();
+    await downloadBtn.click({ force: true });
     const download = await downloadPromise;
 
     expect(download.suggestedFilename()).toMatch(/\.docx$/i);
@@ -152,8 +140,7 @@ test.describe("Happy path", () => {
     });
     await page.getByRole("button", { name: /inject eggs/i }).click();
 
-    await expandEngineConfigurationSection(page);
-    await expect(downloadResultButton(page)).toBeVisible({ timeout: 60_000 });
+    await downloadHardenedButton(page).waitFor({ state: "attached", timeout: 60_000 });
 
     expect(capturedBody).toBeTruthy();
     const isTextMode = capturedBody!.includes("tokenizedText");

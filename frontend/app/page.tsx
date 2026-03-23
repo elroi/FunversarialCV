@@ -1320,6 +1320,7 @@ export default function Home() {
                     variant="primary"
                     onClick={triggerDownload}
                     className="min-h-[44px] py-2"
+                    data-testid="download-hardened-docx"
                     aria-label={`${copy.downloadButton} ${successMessage}`}
                     aria-describedby={
                       downloadReflectsStaleConfig ? "download-stale-hint" : undefined

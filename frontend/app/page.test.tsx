@@ -121,6 +121,55 @@ describe("Home page", () => {
       ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
     });
 
+    it("places How to run a fair test fold after HR intro and before Upload your CV (DOM order)", async () => {
+      window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "hr");
+      renderWithAudience(<Home />);
+      const intro = await screen.findByText(
+        /compare before-and-after results and learn how AI tools interpret the same CV under slightly different signal conditions/i
+      );
+      const experimentFold = await screen.findByRole("button", {
+        name: /how to run a fair test: show or hide steps/i,
+      });
+      const inputChannelToggle = await screen.findByRole("button", {
+        name: /upload your cv: show or hide/i,
+      });
+      expect(
+        experimentFold.compareDocumentPosition(intro) &
+          Node.DOCUMENT_POSITION_PRECEDING
+      ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
+      expect(
+        inputChannelToggle.compareDocumentPosition(experimentFold) &
+          Node.DOCUMENT_POSITION_PRECEDING
+      ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
+    });
+
+    it("places How to run a fair test fold after security intro lead and before Input Channel (DOM order)", async () => {
+      window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "security");
+      renderWithAudience(<Home />);
+      const lead = await screen.findByText((_content, element) => {
+        const text = element?.textContent ?? "";
+        return (
+          element?.tagName === "P" &&
+          /educational adversarial simulation/i.test(text) &&
+          /hiring pipelines/i.test(text)
+        );
+      });
+      const experimentFold = await screen.findByRole("button", {
+        name: /how to run a fair test: show or hide steps/i,
+      });
+      const inputChannelToggle = await screen.findByRole("button", {
+        name: /input channel: show or hide/i,
+      });
+      expect(
+        experimentFold.compareDocumentPosition(lead) &
+          Node.DOCUMENT_POSITION_PRECEDING
+      ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
+      expect(
+        inputChannelToggle.compareDocumentPosition(experimentFold) &
+          Node.DOCUMENT_POSITION_PRECEDING
+      ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
+    });
+
     it("places security intro detail (OWASP) after the input channel (DOM order)", async () => {
       window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "security");
       renderWithAudience(<Home />);

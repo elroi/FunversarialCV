@@ -118,11 +118,8 @@ export default function ResourcesPage() {
               </div>
               <section
                 aria-label="Stateless Vault data flow diagram"
-                className="rounded-lg border border-border bg-panel/60 p-3"
+                className="min-w-0"
               >
-                <h3 className="mb-2 text-caption font-semibold uppercase tracking-[0.2em] text-accent">
-                  {copy.resourcesSecurityDiagramTitle}
-                </h3>
                 <pre className="font-mono text-caption sm:text-xs whitespace-pre leading-relaxed text-foreground/80">
 {`+------------------------------------------------------------+
 |                      Browser client                        |

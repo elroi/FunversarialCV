@@ -1,6 +1,10 @@
 import React from "react";
 import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { renderWithAudience } from "../test-utils";
+
+beforeEach(() => {
+  window.localStorage.removeItem("funversarialcv-audience");
+});
 import {
   ValidationLab,
   VALIDATION_PROMPTS,
@@ -27,6 +31,28 @@ describe("ValidationLab", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("BASE-00")).toBeInTheDocument();
     expect(screen.getByText("General Recruiter (Baseline)")).toBeInTheDocument();
+  });
+
+  it("renders structured protocol steps and security copy for badge explainer and list caption", async () => {
+    window.localStorage.setItem("funversarialcv-audience", "security");
+    renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("About the ENABLED badge")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Test prompts")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Inject Eggs and download your CV on this page/i)
+    ).toBeInTheDocument();
+  });
+
+  it("uses HR copy for badge explainer and prompt list caption", async () => {
+    renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("About the Enabled badge")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Sample prompts")).toBeInTheDocument();
   });
 
   it("keeps prompt descriptions inside collapsed prompt panels until expanded", () => {

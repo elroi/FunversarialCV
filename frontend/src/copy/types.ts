@@ -210,7 +210,11 @@ export interface Copy {
   /** Template: {id} = prompt id (e.g. LLM01). Used for per-prompt fold buttons. */
   validationLabPromptCollapsibleAriaLabel: string;
   validationLabManualMirrorProtocol: string;
+  /** Short label for the collapsible block that explains the ENABLED / Enabled badge. */
+  validationLabMatchBadgeHintTitle: string;
   validationLabMatchBadgeHint: string;
+  /** Caption above the list of validation prompt rows. */
+  validationLabPromptListCaption: string;
   /** Full aria-label for the ENABLED / Enabled match badge on a validation prompt row. */
   validationMatchBadgeAriaLabel: string;
   validationCopySuccessLogMessage: string; // template: use {id} for prompt id

@@ -26,8 +26,8 @@
   - Env vars and branch protection rules in place.
 - **M5 – Launch baseline**
   - All tests green on `main`.
-  - Manual smoke tests on production.
-  - Launch commit tagged (e.g. `v1.0.0-launch`).
+  - Manual smoke tests on production (**core:** DOCX happy path verified on Vercel; PDF / oversize / canary prod checks optional and **waived** for this v1 — see WS6).
+  - Launch commit tagged (e.g. `v1.0.0-launch`) — **waived** for this v1; baseline is `main` + deployment SHA (add a tag anytime later if desired).
 
 ### 3. Progress summary
 
@@ -38,7 +38,7 @@
 | **WS3 – PII** | Done | Address patterns, vault, unit tests, README, Processor integration test (address round-trip). |
 | **WS4 – Rate limit & logging** | Done | rateLimit.ts, log.ts; integrated in harden and canary routes; tests. |
 | **WS5 – Vercel & CI** | Done | Project root, build, env vars, Hosting & Ops docs. Preview/Production verified. Branch ruleset on `main`: require PR, unit-and-lint + e2e, block force push. |
-| **WS6 – Pre-launch** | In progress | E2E in CI; PR merge (done). Remaining: production smoke; tag v1.0.0-launch; optional changelog. |
+| **WS6 – Pre-launch** | **Done** | E2E in CI; production DOCX happy path verified. PDF / oversize-invalid / canary prod smoke **waived** (optional). **`v1.0.0-launch` tag and release notes waived** by stakeholder; ship baseline = live Vercel deploy + green `main`. |
 
 ---
 
@@ -321,17 +321,17 @@
 ### 6.3 Production Smoke Tests
 
 - **Manual checks on Vercel production**
-  - [ ] Reject PDF with DOCX-only message (client and/or server).
-  - [ ] Happy-path for DOCX (upload, harden, download, Duality Monitor).
-  - [ ] Oversize or invalid upload to confirm user-facing error.
-  - [ ] Canary Wing hit to confirm `/api/canary` logs (and analytics, if implemented).
+  - [N/A] **Reject PDF (DOCX-only message):** Deferred — PDF support is post–v1; manual prod smoke for PDF upload not required for this launch. Server behavior remains DOCX-only and is covered by [`route.test.ts`](../frontend/app/api/harden/route.test.ts).
+  - [x] Happy-path for DOCX (upload, harden, download, Duality Monitor).
+  - [N/A] **Oversize or invalid upload:** Optional prod check **waived** for v1; behavior covered by E2E and API tests.
+  - [N/A] **Canary Wing hit + `/api/canary` logs:** Optional prod check **waived** for v1. *What this was:* open the trackable canary URL from an output CV (or hit `/api/canary/...`) so the server records a hit, then confirm in **Vercel function logs** or **Check for triggers** in the UI — validates signal-only analytics wiring in production.
 
 ### 6.4 Tagging the Launch
 
 - **Git tag**
-  - [ ] Create a tag (e.g. `v1.0.0-launch`) on the commit that passed all checks.
+  - [N/A] Create a tag (e.g. `v1.0.0-launch`) on the commit that passed all checks — **waived** for v1; can add later for semver hygiene.
 - **Changelog**
-  - [ ] Optionally add a short “Release Notes / Changelog” section to `README.md` or a dedicated file summarizing what v1 includes.
+  - [N/A] Optionally add a short “Release Notes / Changelog” section to `README.md` or a dedicated file summarizing what v1 includes — **waived** for v1.
 
 ---
 

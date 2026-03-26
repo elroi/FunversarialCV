@@ -245,6 +245,8 @@ export const securityCopy: Copy = {
   validationLabPromptCollapsibleAriaLabel: "Prompt {id}: show or hide full text and copy control",
   validationLabManualMirrorProtocol:
     "Manual Mirror Protocol — How to test your Armed CV in an external LLM:\n\n(1) Inject Eggs and download your CV on this page.\n(2) Open an external LLM (e.g. ChatGPT, Claude) in another tab and paste the downloaded CV into the chat.\n(3) Pick a prompt below, click [COPY], and paste it into the same conversation.\n(4) Compare the model’s reply to the diagnostic goal under that prompt (e.g. did it follow hidden instructions, leak metadata, or over-trust the document?). If the behaviour matches the goal, your forensic proof-of-concept succeeds.",
+  validationLabMatchBadgeHintTitle: "About the ENABLED badge",
+  validationLabPromptListCaption: "Test prompts",
   validationLabMatchBadgeHint:
     "ENABLED means this prompt’s egg was applied in your last successful Inject Eggs run on this page—the badge reflects your latest downloaded CV, not checkboxes alone. After you change eggs or payloads, click Inject Eggs again to refresh.",
   validationMatchBadgeAriaLabel:

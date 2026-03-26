@@ -1014,6 +1014,20 @@ export default function Home() {
             {copy.introLead.trim() ? (
               <div className="mb-6">{renderIntro(copy.introLead)}</div>
             ) : null}
+            <div className="functional-group mb-6 overflow-hidden">
+              <CollapsibleCard
+                className="rounded-none border-0 bg-transparent shadow-none"
+                title={copy.experimentFlowCollapsibleTitle}
+                titleId="experiment-flow-card-title"
+                contentId="experiment-flow-card-content"
+                ariaLabel={`${copy.experimentFlowCollapsibleTitle}: show or hide steps`}
+                defaultExpanded={false}
+                expandOnWide
+              >
+                <ExperimentFlowPanelBody copy={copy} showPositioningLine />
+              </CollapsibleCard>
+            </div>
+
             <SectionFold
               className="functional-group"
               title={copy.inputChannel}
@@ -1099,20 +1113,6 @@ export default function Home() {
                 </div>
               </CollapsibleCard>
             </SectionFold>
-
-            <div className="functional-group mb-6 mt-8 overflow-hidden sm:mt-10">
-              <CollapsibleCard
-                className="rounded-none border-0 bg-transparent shadow-none"
-                title={copy.experimentFlowCollapsibleTitle}
-                titleId="experiment-flow-card-title"
-                contentId="experiment-flow-card-content"
-                ariaLabel={`${copy.experimentFlowCollapsibleTitle}: show or hide steps`}
-                defaultExpanded={false}
-                expandOnWide
-              >
-                <ExperimentFlowPanelBody copy={copy} showPositioningLine />
-              </CollapsibleCard>
-            </div>
 
             {audience === "security" && copy.introDetail.trim() ? (
               <div className="mb-6">{renderIntro(copy.introDetail)}</div>

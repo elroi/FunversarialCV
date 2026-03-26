@@ -6,6 +6,9 @@ import { CollapsibleCard } from "./ui/CollapsibleCard";
 import { CheckAndValidateBlock } from "./CheckAndValidateBlock";
 import { useCopy } from "../copy";
 
+/** v1 is DOCX-only: no PDF embedding UI. Egg still accepts these keys when PDF returns. */
+const PINNED_PDF_CANARY_OPTS = { pdfHiddenText: true, pdfClickableLink: false } as const;
+
 export interface CanaryWingConfig {
   url?: string;
   baseUrl?: string;
@@ -73,12 +76,6 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
   const [docxClickableVisible, setDocxClickableVisible] = useState(initial.docxClickableVisible ?? false);
   const [docxPlacement, setDocxPlacement] = useState<"end" | "footer">(initial.docxPlacement ?? "end");
   const [docxDisplayText, setDocxDisplayText] = useState(initial.docxDisplayText ?? "");
-  const [pdfHiddenText, setPdfHiddenText] = useState(
-    initial.pdfHiddenText ?? (initial.pdfLinkStyle !== "clickable")
-  );
-  const [pdfClickableLink, setPdfClickableLink] = useState(
-    initial.pdfClickableLink ?? (initial.pdfLinkStyle === "clickable")
-  );
 
   // Default base when url and baseUrl are both empty. Same value on server and first client render to avoid hydration mismatch; then set to window.location.origin in useEffect (client-only).
   const [defaultCanaryBase, setDefaultCanaryBase] = useState(
@@ -108,8 +105,6 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
     setDocxClickableVisible(cfg.docxClickableVisible ?? false);
     setDocxPlacement(cfg.docxPlacement ?? "end");
     setDocxDisplayText(cfg.docxDisplayText ?? "");
-    setPdfHiddenText(cfg.pdfHiddenText ?? (cfg.pdfLinkStyle !== "clickable"));
-    setPdfClickableLink(cfg.pdfClickableLink ?? (cfg.pdfLinkStyle === "clickable"));
   }, [payload]);
 
   // After mount, use current origin for default canary base so the preview matches what the server would use in dev.
@@ -129,8 +124,8 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
     next.docxClickableVisible = docxClickableVisible;
     next.docxPlacement = docxPlacement;
     if (docxDisplayText.trim()) next.docxDisplayText = docxDisplayText.trim();
-    next.pdfHiddenText = pdfHiddenText;
-    next.pdfClickableLink = pdfClickableLink;
+    next.pdfHiddenText = PINNED_PDF_CANARY_OPTS.pdfHiddenText;
+    next.pdfClickableLink = PINNED_PDF_CANARY_OPTS.pdfClickableLink;
     const str = JSON.stringify(next);
     const prev = payload ?? "";
     if (str !== prev) {
@@ -145,8 +140,6 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
     docxClickableVisible,
     docxPlacement,
     docxDisplayText,
-    pdfHiddenText,
-    pdfClickableLink,
     payload,
     onPayloadChange,
   ]);
@@ -293,7 +286,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
           Embedding options
         </legend>
         <p className="text-caption text-foreground/50 mb-3">
-          Only options for the format of the file you upload are applied. You can enable more than one option per format.
+          v1 supports Word (.docx) uploads only — only DOCX options below apply. You can enable more than one DOCX option at a time.
         </p>
         <div className="space-y-3">
           <div>
@@ -395,39 +388,11 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
             </div>
           </div>
           <div>
-            <span className="block text-caption text-foreground/70 mb-1">PDF</span>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={pdfHiddenText}
-                  onChange={(e) => setPdfHiddenText(e.target.checked)}
-                  disabled={disabled}
-                  className="rounded border-border text-accent focus:ring-accent"
-                />
-                <span className="text-caption text-foreground/80">Include invisible canary text</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={pdfClickableLink}
-                  onChange={(e) => setPdfClickableLink(e.target.checked)}
-                  disabled={disabled}
-                  className="rounded border-border text-accent focus:ring-accent"
-                />
-                <span className="text-caption text-foreground/80">Add clickable link region</span>
-              </label>
-              <p className="text-caption text-foreground/50 ml-5">
-                Invisible region over the canary text that opens the URL when clicked. Can be used together with invisible text.
-              </p>
-            </div>
-          </div>
-          <div>
             <span className="block text-caption text-foreground/70 mb-1">Presets</span>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => { setDocxHiddenText(true); setDocxClickableLink(false); setPdfHiddenText(true); setPdfClickableLink(false); setDocxDisplayText(""); }}
+                onClick={() => { setDocxHiddenText(true); setDocxClickableLink(false); setDocxDisplayText(""); }}
                 disabled={disabled}
                 className="rounded border border-border bg-panel px-2 py-1 text-caption text-foreground hover:bg-border/50 focus:border-accent focus:outline-none disabled:opacity-50"
               >
@@ -435,7 +400,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => { setDocxHiddenText(true); setDocxClickableLink(true); setPdfHiddenText(true); setPdfClickableLink(true); setDocxDisplayText(""); }}
+                onClick={() => { setDocxHiddenText(true); setDocxClickableLink(true); setDocxDisplayText(""); }}
                 disabled={disabled}
                 className="rounded border border-border bg-panel px-2 py-1 text-caption text-foreground hover:bg-border/50 focus:border-accent focus:outline-none disabled:opacity-50"
               >
@@ -443,7 +408,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => { setDocxHiddenText(true); setDocxClickableLink(true); setPdfHiddenText(true); setPdfClickableLink(true); setDocxDisplayText("Verify document integrity"); }}
+                onClick={() => { setDocxHiddenText(true); setDocxClickableLink(true); setDocxDisplayText("Verify document integrity"); }}
                 disabled={disabled}
                 className="rounded border border-border bg-panel px-2 py-1 text-caption text-foreground hover:bg-border/50 focus:border-accent focus:outline-none disabled:opacity-50"
               >
@@ -451,7 +416,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
               </button>
             </div>
             <p className="text-caption text-foreground/50 mt-1">
-              Stealth: hidden text only. Balanced: hidden + clickable link (both formats). Maximum: same + custom link text.
+              Stealth: DOCX hidden text only. Balanced: hidden + clickable link. Maximum: same + custom link text.
             </p>
           </div>
         </div>
@@ -472,7 +437,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
           Copy this URL to add it manually to your CV (e.g. in your editor). When the link is followed, your canary will record the hit.
         </p>
         <p className="text-caption text-foreground/50 mb-2">
-          Each embedding type uses a different URL (e.g. <code className="text-sm">…/docx-hidden</code>, <code className="text-sm">…/pdf-clickable</code>), so when a canary fires you can see which vector was triggered.
+          Each embedding type uses a different URL path (e.g. <code className="text-sm">…/docx-hidden</code>, <code className="text-sm">…/docx-clickable</code>), so when a canary fires you can see which vector was triggered.
         </p>
         <div className="flex gap-2 items-center">
           <code
@@ -511,7 +476,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
         <ol className="text-caption text-foreground/70 list-decimal list-inside space-y-1 mb-2 ml-0.5">
           <li><strong>Find the egg</strong> — Open your output document (DOCX). Use Select All (Ctrl/Cmd+A) or search for a URL; the canary is embedded as nearly invisible text and/or a clickable region.</li>
           <li><strong>Trigger it</strong> — Click the canary link (or have someone/something else open it). The server logs the hit and associates it with your token.</li>
-          <li><strong>Watch the result</strong> — Click <strong>Check for triggers</strong> below. You&apos;ll see each trigger with variant (e.g. <code className="text-sm">pdf-clickable</code>) and timestamp; repeated triggers appear in the list.</li>
+          <li><strong>Watch the result</strong> — Click <strong>Check for triggers</strong> below. You&apos;ll see each trigger with variant (e.g. <code className="text-sm">docx-hidden</code>) and timestamp; repeated triggers appear in the list.</li>
         </ol>
         <p className="text-caption text-foreground/50 mb-2">
           Hits are stored per server process. If you just triggered the link and see no results, click Check for triggers again once the request was handled by this app.

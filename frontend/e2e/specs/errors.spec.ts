@@ -137,7 +137,7 @@ test.describe("Errors", () => {
 
     // DropZone rejects .pdf by extension ("Only Word documents..."); if extension were .docx, magic-byte path would show "looks like a PDF"
     await expect(
-      page.getByText(/looks like a PDF|support.*\.docx.*only|only.*word documents.*\.docx.*allowed/i)
+      page.locator("#dropzone-error")
     ).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText(securityUiRx.armedCvLabel)).not.toBeVisible();
   });

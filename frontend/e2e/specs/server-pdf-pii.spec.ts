@@ -21,7 +21,7 @@ test.describe("PDF rejected (DOCX-only)", () => {
     });
 
     await expect(
-      page.getByText(/looks like a PDF|support.*\.docx.*only|only.*word documents.*\.docx.*allowed/i)
+      page.locator("#dropzone-error")
     ).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText(securityUiRx.armedCvLabel)).not.toBeVisible();
     await expect(

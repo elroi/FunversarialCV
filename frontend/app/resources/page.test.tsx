@@ -107,11 +107,10 @@ describe("Resources page", () => {
 
   it("renders a simple system diagram that matches the Stateless Vault flow", () => {
     renderWithAudience(<ResourcesPage />);
-    const heading = screen.getByText(/system diagram/i);
-    expect(heading).toBeInTheDocument();
-    const asciiBlock = heading
-      .closest("section")
-      ?.querySelector("pre");
+    const diagramRegion = screen.getByRole("region", {
+      name: /stateless vault data flow diagram/i,
+    });
+    const asciiBlock = diagramRegion.querySelector("pre");
     expect(asciiBlock).not.toBeNull();
     expect(asciiBlock?.textContent || "").toMatch(/\[1] Load/i);
     expect(asciiBlock?.textContent || "").toMatch(/\[4] Apply eggs/i);

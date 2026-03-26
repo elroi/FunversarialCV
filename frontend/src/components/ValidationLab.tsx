@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useMemo } from "react";
 import clsx from "clsx";
 import { ExternalLink } from "lucide-react";
 import { useCopy } from "../copy";
+import { useAudience } from "../contexts/AudienceContext";
+import { parseValidationLabProtocol } from "../lib/validationLabProtocol";
 import { CollapsibleCard } from "./ui/CollapsibleCard";
 
 export interface ValidationPrompt {
@@ -74,8 +76,15 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
   onPromptCopy,
 }) => {
   const copy = useCopy();
+  const { audience } = useAudience();
+  const isHr = audience === "hr";
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const protocolParsed = useMemo(
+    () => parseValidationLabProtocol(copy.validationLabManualMirrorProtocol),
+    [copy.validationLabManualMirrorProtocol]
+  );
 
   const handleCopy = useCallback(
     async (prompt: ValidationPrompt) => {
@@ -101,19 +110,64 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
     [onPromptCopy]
   );
 
-  return (
-    <>
-      <div className="mb-4 space-y-2 text-sm text-foreground/80 font-mono">
-        {copy.validationLabManualMirrorProtocol.split(/\n\n+/).map((paragraph, i) => (
-          <p key={i} className={paragraph.includes("\n") ? "whitespace-pre-line" : undefined}>
-            {paragraph}
-          </p>
-        ))}
-        <p className="text-caption text-foreground/60 mt-2">
+  const protocolIntro = protocolParsed ? (
+    <div className="mb-5 space-y-3">
+      <div className="rounded-lg border border-border/70 border-l-[3px] border-l-accent/50 bg-bg/40 p-3 shadow-sm sm:p-4">
+        <h3
+          className={clsx(
+            "mb-3 text-caption uppercase tracking-[0.18em] text-accent",
+            isHr ? "font-sans font-semibold" : "font-mono"
+          )}
+        >
+          {protocolParsed.headline}
+        </h3>
+        <ol className="list-none space-y-3 font-sans text-sm leading-relaxed text-foreground/85">
+          {protocolParsed.steps.map((step, i) => (
+            <li key={i} className="flex gap-3">
+              <span
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-accent/35 bg-accent/[0.07] text-caption font-mono font-semibold text-accent"
+                aria-hidden
+              >
+                {i + 1}
+              </span>
+              <span className="min-w-0 pt-1">{step}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <details className="group rounded-md border border-border/50 bg-panel/30 text-foreground/80">
+        <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 font-sans text-caption uppercase tracking-[0.12em] text-foreground/55 transition-colors hover:bg-panel/50 hover:text-foreground/75 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 [&::-webkit-details-marker]:hidden">
+          <span
+            aria-hidden
+            className="inline-block text-accent transition-transform duration-200 group-open:rotate-90"
+          >
+            ▸
+          </span>
+          {copy.validationLabMatchBadgeHintTitle}
+        </summary>
+        <p className="border-t border-border/40 px-3 py-2.5 font-sans text-caption leading-relaxed text-foreground/65">
           {copy.validationLabMatchBadgeHint}
         </p>
-      </div>
-      <div className="space-y-3">
+      </details>
+    </div>
+  ) : (
+    <div className="mb-5 space-y-2 text-sm text-foreground/80 font-sans leading-relaxed">
+      {copy.validationLabManualMirrorProtocol.split(/\n\n+/).map((paragraph, i) => (
+        <p key={i} className={paragraph.includes("\n") ? "whitespace-pre-line" : undefined}>
+          {paragraph}
+        </p>
+      ))}
+      <p className="text-caption text-foreground/60">{copy.validationLabMatchBadgeHint}</p>
+    </div>
+  );
+
+  return (
+    <>
+      {protocolIntro}
+      <div className="space-y-2.5">
+        <p className="mb-1 font-sans text-caption uppercase tracking-[0.14em] text-foreground/50">
+          {copy.validationLabPromptListCaption}
+        </p>
         {VALIDATION_PROMPTS.map((prompt) => {
             const isMatch =
               prompt.eggIds.length > 0 &&
@@ -126,9 +180,11 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
               <div key={prompt.id} data-testid={`validation-prompt-${prompt.id}`}>
                 <CollapsibleCard
                   title={
-                    <span className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                    <span className="grid w-full min-w-0 grid-cols-1 items-center gap-x-3 gap-y-2 sm:min-h-[3.25rem] sm:grid-cols-[minmax(5rem,auto)_1fr] sm:gap-y-1">
                       <span className="flex min-w-0 flex-wrap items-center gap-2">
-                        <span className="font-semibold text-foreground/90">{prompt.id}</span>
+                        <span className="font-mono text-sm font-semibold tabular-nums text-accent/95">
+                          {prompt.id}
+                        </span>
                         {isMatch && (
                           <span
                             className="rounded border border-success/60 bg-success/10 px-2 py-0.5 text-caption uppercase tracking-wider text-success"
@@ -138,7 +194,9 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
                           </span>
                         )}
                       </span>
-                      <span className="min-w-0 text-foreground/90">{prompt.title}</span>
+                      <span className="min-w-0 font-sans text-sm font-medium leading-snug text-foreground/90 sm:py-0.5">
+                        {prompt.title}
+                      </span>
                     </span>
                   }
                   titleId={titleId}
@@ -149,7 +207,7 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
                   )}
                   defaultExpanded={false}
                   titleClassName="block w-full min-w-0 [&>span]:max-w-full"
-                  className="rounded-lg border-border/70 bg-panel/50"
+                  className="rounded-lg border border-border/80 bg-panel/50 transition-colors hover:border-accent/25"
                 >
                   {prompt.owaspLink ? (
                     <p className="mb-3">
@@ -174,11 +232,10 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
                       type="button"
                       onClick={() => handleCopy(prompt)}
                       className={clsx(
-                        "inline-flex items-center justify-center rounded border px-3 py-1.5 text-caption font-medium uppercase tracking-[0.15em]",
-                        "border-border/60 bg-bg/60 text-foreground/70",
-                        "hover:border-accent/60 hover:text-accent",
+                        "inline-flex min-h-10 min-w-[5.5rem] items-center justify-center rounded-md border px-4 py-2 text-caption font-semibold uppercase tracking-[0.12em]",
+                        "border-accent/45 bg-accent/10 text-accent hover:border-accent/70 hover:bg-accent/15",
                         "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50",
-                        isCopied && "border-success/60 text-success"
+                        isCopied && "border-success/60 bg-success/10 text-success hover:border-success/60 hover:bg-success/15"
                       )}
                       aria-label={`Copy ${prompt.id} prompt`}
                     >

@@ -247,6 +247,8 @@ export const hrCopy: Copy = {
   validationLabPromptCollapsibleAriaLabel: "Prompt {id}: show or hide full text and copy button",
   validationLabManualMirrorProtocol:
     "How to test your CV with added signals in an external AI:\n\n(1) Add signals and download your CV on this page.\n(2) Open an external AI (e.g. ChatGPT or Claude) in another tab and paste the downloaded CV into the chat.\n(3) Pick a prompt below, click Copy, and paste it into the same conversation.\n(4) Compare the AI’s reply to the goal described under that prompt (e.g. did it follow hidden instructions or use hidden metadata?). If the reply matches the goal, the test succeeded.",
+  validationLabMatchBadgeHintTitle: "About the Enabled badge",
+  validationLabPromptListCaption: "Sample prompts",
   validationLabMatchBadgeHint:
     "Enabled means this prompt’s option was applied in your last successful Add signals run on this page—the badge reflects your latest downloaded CV, not checkboxes alone. After you change options, run Add signals again to refresh.",
   validationMatchBadgeAriaLabel:

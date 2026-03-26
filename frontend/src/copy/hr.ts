@@ -78,6 +78,8 @@ export const hrCopy: Copy = {
   downloadStaleConfigWarning:
     "This file matches your last successful run, not the options on screen now. Add signals again to refresh the download.",
   errorAlertPrefix: "Something went wrong:",
+  errorDehydrationClientFailed:
+    "We couldn’t prepare your CV safely in the browser, so we didn’t upload the original file. Try another browser or re-save your document as .docx and try again.",
   retryButton: "Retry",
   retryAria: "Retry",
   pipelineStatusTitle: "Processing steps",

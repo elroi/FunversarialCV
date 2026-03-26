@@ -135,10 +135,9 @@ test.describe("Errors", () => {
       buffer: Buffer.from("%PDF-1.4\n%\n"),
     });
 
-    // DropZone rejects .pdf by extension ("Only Word documents..."); if extension were .docx, magic-byte path would show "looks like a PDF"
-    await expect(
-      page.getByText(/looks like a PDF|support.*\.docx.*only|only.*word documents.*\.docx.*allowed/i)
-    ).toBeVisible({ timeout: 10_000 });
+    // DropZone rejects .pdf by extension — target #dropzone-error so we do not match Canary Wing copy ("v1 supports Word…").
+    await expect(page.locator("#dropzone-error")).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("#dropzone-error")).toContainText(/\.docx/i);
     await expect(page.getByText(securityUiRx.armedCvLabel)).not.toBeVisible();
   });
 });

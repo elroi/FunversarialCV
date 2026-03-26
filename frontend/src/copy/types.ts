@@ -74,6 +74,8 @@ export interface Copy {
   /** Shown when egg/options in the UI differ from the last successful output; download still serves that prior run. */
   downloadStaleConfigWarning: string;
   errorAlertPrefix: string;
+  /** Shown when client dehydration fails and we refuse to upload the original document. */
+  errorDehydrationClientFailed: string;
   retryButton: string;
   retryAria: string;
   pipelineStatusTitle: string;

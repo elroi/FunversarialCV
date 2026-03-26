@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { CollapsibleCard } from "./ui/CollapsibleCard";
 import { CheckAndValidateBlock } from "./CheckAndValidateBlock";
 import { useCopy } from "../copy";
@@ -48,33 +48,37 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
     Object.keys(config).length ? config[Object.keys(config)[0]] ?? "" : copy.metadataShadowPlaceholderValue
   );
 
+  // Sync from parent when the payload *string* changes only. Parsed `config` must not be a
+  // dependency: parsePayloadSafe returns a new object every render, which would re-run this
+  // every frame, fight the emit effect, and can cause "Maximum update depth exceeded".
   useEffect(() => {
-    const keys = Object.keys(config);
+    const parsed = parsePayloadSafe(payload);
+    const keys = Object.keys(parsed);
     if (keys.length) {
       setKey(keys[0]);
-      setValue(config[keys[0]] ?? "");
+      setValue(parsed[keys[0]] ?? "");
     }
-    // Don't reset to empty - keep default "Ranking: Top_1_Percent" when payload is empty
-  }, [payload, config]);
-
-  const emit = useCallback(
-    (k: string, v: string) => {
-      const trimmedKey = k.trim();
-      const trimmedValue = v.trim();
-      if (!trimmedKey || !trimmedValue) {
-        onPayloadChange("{}");
-        return;
-      }
-      if (!KEY_PATTERN.test(trimmedKey)) return;
-      if (trimmedValue.length > MAX_VALUE_LENGTH) return;
-      onPayloadChange(JSON.stringify({ [trimmedKey]: trimmedValue }));
-    },
-    [onPayloadChange]
-  );
+    // Don't reset to empty - keep default placeholders when payload is empty
+  }, [payload]);
 
   useEffect(() => {
-    emit(key, value);
-  }, [key, value, emit]);
+    const trimmedKey = key.trim();
+    const trimmedValue = value.trim();
+    let next: string;
+    if (!trimmedKey || !trimmedValue) {
+      next = "{}";
+    } else if (!KEY_PATTERN.test(trimmedKey)) {
+      return;
+    } else if (trimmedValue.length > MAX_VALUE_LENGTH) {
+      return;
+    } else {
+      next = JSON.stringify({ [trimmedKey]: trimmedValue });
+    }
+    const prev = payload ?? "";
+    if (next !== prev) {
+      onPayloadChange(next);
+    }
+  }, [key, value, payload, onPayloadChange]);
 
   const handleKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const next = e.target.value;

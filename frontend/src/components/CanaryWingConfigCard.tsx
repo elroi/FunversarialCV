@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { CollapsibleCard } from "./ui/CollapsibleCard";
 import { CheckAndValidateBlock } from "./CheckAndValidateBlock";
@@ -87,24 +87,43 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
   const [statusLoading, setStatusLoading] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
 
+  /** Skip redundant layout sync (avoids nested updates + Strict Mode double-invoke storms). */
+  const lastLayoutSyncedPayload = useRef<string | undefined>(undefined);
+  const payloadPropRef = useRef(payload);
+  payloadPropRef.current = payload;
+  const onPayloadChangeRef = useRef(onPayloadChange);
+  onPayloadChangeRef.current = onPayloadChange;
+
   // Sync from parent when the payload *string* changes. Parsed `config` must not be a
   // dependency: parsePayloadSafe returns a new object every render, which would re-run
   // this on every frame, fight the emit effect, and can loop (e.g. Maximum preset +
   // docxDisplayText). Layout effect runs before the emit useEffect so local state matches
   // payload before we stringify and call onPayloadChange.
   useLayoutEffect(() => {
+    const p = payload ?? "";
+    if (p === lastLayoutSyncedPayload.current) return;
+    lastLayoutSyncedPayload.current = p;
     const cfg = parsePayloadSafe(payload);
-    setUrl(cfg.url ?? "");
-    setBaseUrl(cfg.baseUrl ?? "");
-    setToken(cfg.token ?? "");
-    setDocxHiddenText(cfg.docxHiddenText ?? (cfg.docxLinkStyle === "hidden" || !cfg.docxLinkStyle));
-    setDocxClickableLink(
+    const nextUrl = cfg.url ?? "";
+    const nextBaseUrl = cfg.baseUrl ?? "";
+    const nextToken = cfg.token ?? "";
+    const nextDocxHidden =
+      cfg.docxHiddenText ?? (cfg.docxLinkStyle === "hidden" || !cfg.docxLinkStyle);
+    const nextDocxClick =
       cfg.docxClickableLink ??
-        (cfg.docxLinkStyle === "clickable" || cfg.docxLinkStyle === "clickable-with-text")
-    );
-    setDocxClickableVisible(cfg.docxClickableVisible ?? false);
-    setDocxPlacement(cfg.docxPlacement ?? "end");
-    setDocxDisplayText(cfg.docxDisplayText ?? "");
+      (cfg.docxLinkStyle === "clickable" || cfg.docxLinkStyle === "clickable-with-text");
+    const nextDocxVis = cfg.docxClickableVisible ?? false;
+    const nextPlacement = cfg.docxPlacement ?? "end";
+    const nextDisplay = cfg.docxDisplayText ?? "";
+
+    setUrl((prev) => (prev === nextUrl ? prev : nextUrl));
+    setBaseUrl((prev) => (prev === nextBaseUrl ? prev : nextBaseUrl));
+    setToken((prev) => (prev === nextToken ? prev : nextToken));
+    setDocxHiddenText((prev) => (prev === nextDocxHidden ? prev : nextDocxHidden));
+    setDocxClickableLink((prev) => (prev === nextDocxClick ? prev : nextDocxClick));
+    setDocxClickableVisible((prev) => (prev === nextDocxVis ? prev : nextDocxVis));
+    setDocxPlacement((prev) => (prev === nextPlacement ? prev : nextPlacement));
+    setDocxDisplayText((prev) => (prev === nextDisplay ? prev : nextDisplay));
   }, [payload]);
 
   // After mount, use current origin for default canary base so the preview matches what the server would use in dev.
@@ -127,10 +146,12 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
     next.pdfHiddenText = PINNED_PDF_CANARY_OPTS.pdfHiddenText;
     next.pdfClickableLink = PINNED_PDF_CANARY_OPTS.pdfClickableLink;
     const str = JSON.stringify(next);
-    const prev = payload ?? "";
+    const prev = payloadPropRef.current ?? "";
     if (str !== prev) {
-      onPayloadChange(str);
+      onPayloadChangeRef.current(str);
     }
+    // Intentionally omit payload/onPayloadChange: refs hold latest values. Listing them re-runs this
+    // effect on every parent render when the callback identity changes, which can fight layout sync.
   }, [
     url,
     baseUrl,
@@ -140,8 +161,6 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
     docxClickableVisible,
     docxPlacement,
     docxDisplayText,
-    payload,
-    onPayloadChange,
   ]);
 
   const resultingUrl =

@@ -15,9 +15,9 @@ import { InvisibleHandConfigCard } from "../src/components/InvisibleHandConfigCa
 import { MetadataShadowConfigCard } from "../src/components/MetadataShadowConfigCard";
 import { ValidationLab } from "../src/components/ValidationLab";
 import { ExperimentFlowPanelBody } from "../src/components/ExperimentFlowPanel";
-import { dehydrateInBrowser, rehydrateInBrowser } from "../src/lib/clientVault";
+import * as ClientVault from "../src/lib/clientVault";
 import { createDocumentWithTextInBrowser } from "../src/lib/clientDocumentCreate";
-import { replacePiiWithTokensInCopy } from "../src/lib/clientTokenReplaceInCopy";
+import * as ClientTokenReplace from "../src/lib/clientTokenReplaceInCopy";
 import {
   decodeBase64ToUint8Array,
   detectDocumentTypeFromUint8Array,
@@ -34,6 +34,33 @@ import { useAudience } from "../src/contexts/AudienceContext";
 
 /** Must match API route MAX_BODY_BYTES so client rejects before sending. */
 const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
+
+/** Stable JSON for comparing egg payloads (key order from JSON.stringify can differ). */
+function stableJsonStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map((v) => stableJsonStringify(v)).join(",")}]`;
+  }
+  const obj = value as Record<string, unknown>;
+  const keys = Object.keys(obj).sort();
+  return `{${keys.map((k) => `${JSON.stringify(k)}:${stableJsonStringify(obj[k])}`).join(",")}}`;
+}
+
+function eggPayloadsConfigurationEquivalent(a: string, b: string): boolean {
+  if (a === b) return true;
+  const ta = a.trim();
+  const tb = b.trim();
+  if (ta === "" && tb === "") return true;
+  try {
+    const pa = ta === "" ? {} : (JSON.parse(ta) as unknown);
+    const pb = tb === "" ? {} : (JSON.parse(tb) as unknown);
+    return stableJsonStringify(pa) === stableJsonStringify(pb);
+  } catch {
+    return false;
+  }
+}
 
 /** PII notice paragraph; security audience gets blueish accent + inline "How to verify" expandable. */
 function PiiNoticeBlock({
@@ -374,7 +401,14 @@ export default function Home() {
     )
       return true;
     for (const id of snapKeys) {
-      if (currentPayloads[id] !== snap.payloads[id]) return true;
+      if (
+        !eggPayloadsConfigurationEquivalent(
+          currentPayloads[id] ?? "",
+          snap.payloads[id] ?? ""
+        )
+      ) {
+        return true;
+      }
     }
     if (preserveStyles !== snap.preserveStyles) return true;
     return false;
@@ -493,12 +527,17 @@ export default function Home() {
             bytes[i] = binaryString.charCodeAt(i);
           }
 
-          if (piiMapForRehydrate && rehydrateMimeType) {
+          const needsClientRehydrate =
+            piiMapForRehydrate &&
+            rehydrateMimeType &&
+            Object.keys(piiMapForRehydrate.byToken).length > 0;
+
+          if (needsClientRehydrate) {
             const tokenizedBuffer = bytes.buffer.slice(
               bytes.byteOffset,
               bytes.byteOffset + bytes.byteLength
             );
-            const rehydratedBuffer = await rehydrateInBrowser(
+            const rehydratedBuffer = await ClientVault.rehydrateInBrowser(
               tokenizedBuffer,
               rehydrateMimeType,
               piiMapForRehydrate
@@ -547,7 +586,17 @@ export default function Home() {
         if (typeof canaryTokenUsed === "string" && canaryTokenUsed.trim() !== "") {
           try {
             const current = canaryWingPayload.trim() ? JSON.parse(canaryWingPayload) as Record<string, unknown> : {};
-            setCanaryWingPayload(JSON.stringify({ ...current, token: canaryTokenUsed }));
+            const nextCanary = JSON.stringify({ ...current, token: canaryTokenUsed });
+            setCanaryWingPayload(nextCanary);
+            // Snap was taken from pre-token payloads; align it so haveEggsChanged() does not
+            // treat the server-filled token as "user changed settings since last run".
+            const snap = lastHardenedConfigRef.current;
+            if (snap && Object.prototype.hasOwnProperty.call(snap.payloads, "canary-wing")) {
+              lastHardenedConfigRef.current = {
+                ...snap,
+                payloads: { ...snap.payloads, "canary-wing": nextCanary },
+              };
+            }
           } catch {
             // leave as-is
           }
@@ -697,11 +746,14 @@ export default function Home() {
     }
 
     try {
-      const result = await dehydrateInBrowser(file);
+      const result = await ClientVault.dehydrateInBrowser(file);
       rehydrateMimeType = result.mimeType;
       piiMapForRehydrate = result.piiMap;
       setClientPiiMap(result.piiMap);
-      const tokenizedCopy = await replacePiiWithTokensInCopy(file, result.piiMap);
+      const tokenizedCopy = await ClientTokenReplace.replacePiiWithTokensInCopy(
+        file,
+        result.piiMap
+      );
       if (tokenizedCopy) {
         fileToSend = tokenizedCopy.file;
         setLog((prev) => [
@@ -778,6 +830,23 @@ export default function Home() {
         });
         return;
       }
+
+      // Never POST the original document after dehydration failure (server PII guard would reject; avoids sending raw PII).
+      setError(copy.errorDehydrationClientFailed);
+      setProcessingState("error");
+      setActiveStage("dehydration");
+      setLog((prev) => [
+        ...prev,
+        {
+          id: "client-dehydrate-blocked",
+          stage: "dehydration",
+          level: "error",
+          message:
+            "[CLIENT] Dehydration failed; refusing to upload original file to the server.",
+        },
+      ]);
+      retryButtonRef.current?.focus();
+      return;
     }
 
     await runSubmitToServer({

@@ -2,10 +2,15 @@
  * Demo preset E2E: Load preset (Clean/Dirty · PDF/DOCX) → Armed → Inject Eggs → Download.
  * Mocks GET /api/demo-cv and POST /api/harden for speed and determinism.
  */
+import path from "path";
+import fs from "fs";
 import { test, expect } from "@playwright/test";
 import { expandEngineConfigurationSection } from "../helpers/engine-section";
 import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
 import { securityUiRx } from "../helpers/security-ui";
+
+const fixturesDir = path.join(process.cwd(), "e2e", "fixtures");
+const minimalDocxBuffer = fs.readFileSync(path.join(fixturesDir, "minimal.docx"));
 
 const demoPdfPayload = {
   bufferBase64: Buffer.from("%PDF-1.4\n%\n").toString("base64"),
@@ -14,7 +19,8 @@ const demoPdfPayload = {
 };
 
 const demoDocxPayload = {
-  bufferBase64: Buffer.from("PK\x03\x04").toString("base64"), // minimal ZIP/DOCX magic
+  // Real minimal.docx so in-browser dehydration succeeds (magic-only buffer fails).
+  bufferBase64: minimalDocxBuffer.toString("base64"),
   mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   originalName: "FunversarialCV Demo – Senior Security Architect (clean).docx",
 };

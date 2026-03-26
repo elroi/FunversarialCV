@@ -75,6 +75,19 @@ describe("Home page", () => {
         arrayBuffer: () => Promise.resolve(docxMagicBuffer),
       } as unknown as Blob;
     });
+    // Magic-byte-only "DOCX" fixtures are not real ZIPs; real dehydration throws. Production blocks POST on dehydrate
+    // failure — mock a successful path unless a test overrides these spies.
+    jest.spyOn(ClientVault, "dehydrateInBrowser").mockResolvedValue({
+      tokenizedBuffer: new TextEncoder().encode("test dehydrated body").buffer,
+      mimeType: MIME_DOCX,
+      piiMap: { byToken: {} },
+      tokenizedText: "test dehydrated body",
+    });
+    jest.spyOn(ClientTokenReplace, "replacePiiWithTokensInCopy").mockImplementation(async (file: File) => {
+      // Avoid file.arrayBuffer() in jsdom (can reject); slice is already mocked to return DOCX magic.
+      const buf = await file.slice(0, 4).arrayBuffer();
+      return { file, buffer: buf };
+    });
   });
 
   describe("intro and resources nav", () => {
@@ -376,6 +389,41 @@ describe("Home page", () => {
       expect(revokeObjectURL).toHaveBeenCalled();
     });
 
+    it("does not show stale download warning when the server fills canaryTokenUsed after inject", async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          bufferBase64: Buffer.from("fake-docx-bytes").toString("base64"),
+          mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          originalName: "my-cv.docx",
+          canaryTokenUsed: "server-assigned-token-abc",
+          scannerReport: { scan: { hasSuspiciousPatterns: false, matchedPatterns: [] } },
+        }),
+      });
+      renderWithAudience(<Home />);
+
+      const input = screen.getByTestId("dropzone-input");
+      fireEvent.change(input, {
+        target: { files: [createDocxFile("my-cv.docx")] },
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Armed CV:/i)).toBeInTheDocument();
+      });
+
+      ensureEngineConfigExpanded();
+
+      fireEvent.click(screen.getByRole("button", { name: /inject eggs/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(/my-cv_final\.docx/i)).toBeInTheDocument();
+      });
+
+      expect(
+        screen.queryByText(securityCopy.downloadStaleConfigWarning)
+      ).not.toBeInTheDocument();
+    });
+
     it("re-enables Inject Eggs after egg selection changes post-success", async () => {
       global.fetch = mockFetchSuccess("my-cv.docx");
       renderWithAudience(<Home />);
@@ -480,41 +528,42 @@ describe("Home page", () => {
 
   describe("retry on error", () => {
     it("shows Retry button when processing fails and calls egg injection again when clicked", async () => {
-      let injectCallCount = 0;
+      let hardenAttempt = 0;
       const fetchMock: jest.MockedFunction<typeof global.fetch> = jest.fn(
-        async (input: RequestInfo | URL) =>
-          // Minimal Response-like shape for tests; cast for TS compatibility.
-          ({
-            ok: true,
-            json: async () => ({ eggs: [] }),
-          } as unknown as Response)
+        async (input: RequestInfo | URL) => {
+          const url =
+            typeof input === "string"
+              ? input
+              : input instanceof URL
+                ? input.href
+                : (input as Request).url;
+          if (url.includes("/api/eggs")) {
+            return {
+              ok: true,
+              json: async () => ({ eggs: [] }),
+            } as unknown as Response;
+          }
+          if (url.includes("/api/harden")) {
+            hardenAttempt += 1;
+            if (hardenAttempt === 1) {
+              return {
+                ok: false,
+                json: async () => ({ error: "Server error" }),
+              } as unknown as Response;
+            }
+            return {
+              ok: true,
+              json: async () => ({
+                bufferBase64: Buffer.from("x").toString("base64"),
+                mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                originalName: "resume.docx",
+                scannerReport: { scan: { hasSuspiciousPatterns: false, matchedPatterns: [] } },
+              }),
+            } as unknown as Response;
+          }
+          return { ok: true, json: async () => ({}) } as unknown as Response;
+        }
       );
-
-      fetchMock.mockImplementationOnce(async (input: RequestInfo | URL) => {
-        const url = typeof input === "string" ? input : input instanceof URL ? input.href : (input as Request).url;
-        if (url.includes("/api/eggs")) {
-          return {
-            ok: true,
-            json: async () => ({ eggs: [] }),
-          } as unknown as Response;
-        }
-        injectCallCount++;
-        if (injectCallCount === 1) {
-          return {
-            ok: false,
-            json: async () => ({ error: "Server error" }),
-          } as unknown as Response;
-        }
-        return {
-          ok: true,
-          json: async () => ({
-            bufferBase64: Buffer.from("x").toString("base64"),
-            mimeType: "application/pdf",
-            originalName: "resume.pdf",
-            scannerReport: { scan: { hasSuspiciousPatterns: false, matchedPatterns: [] } },
-          }),
-        } as unknown as Response;
-      });
       global.fetch = fetchMock;
       renderWithAudience(<Home />);
 
@@ -540,7 +589,17 @@ describe("Home page", () => {
       fireEvent.click(retryBtn);
 
       await waitFor(() => {
-        expect(fetchMock).toHaveBeenCalledTimes(3); // /api/eggs + /api/harden (fail) + /api/harden (retry)
+        const hardenCalls = fetchMock.mock.calls.filter((c) => {
+          const input = c[0] as RequestInfo | URL;
+          const url =
+            typeof input === "string"
+              ? input
+              : input instanceof URL
+                ? input.href
+                : (input as Request).url;
+          return url.includes("/api/harden");
+        });
+        expect(hardenCalls.length).toBe(2); // fail + retry
       });
     });
   });
@@ -573,13 +632,31 @@ describe("Home page", () => {
 
   describe("Inject Eggs button accessibility", () => {
     it("Inject Eggs button has aria-label reflecting state (default vs injecting)", async () => {
-      let resolveFetch: (value: Response) => void;
-      const fetchPromise: Promise<Response> = new Promise((resolve) => {
-        resolveFetch = resolve;
+      let resolveHarden: (value: Response) => void;
+      const hardenPromise: Promise<Response> = new Promise((resolve) => {
+        resolveHarden = resolve;
       });
-      global.fetch = jest.fn().mockReturnValue(fetchPromise) as jest.MockedFunction<
-        typeof global.fetch
-      >;
+      const fetchMock: jest.MockedFunction<typeof global.fetch> = jest.fn(
+        async (input: RequestInfo | URL) => {
+          const url =
+            typeof input === "string"
+              ? input
+              : input instanceof URL
+                ? input.href
+                : (input as Request).url;
+          if (url.includes("/api/eggs")) {
+            return {
+              ok: true,
+              json: async () => ({ eggs: [] }),
+            } as unknown as Response;
+          }
+          if (url.includes("/api/harden")) {
+            return hardenPromise;
+          }
+          return { ok: true, json: async () => ({}) } as unknown as Response;
+        }
+      );
+      global.fetch = fetchMock;
       renderWithAudience(<Home />);
 
       const input = screen.getByTestId("dropzone-input");
@@ -603,12 +680,12 @@ describe("Home page", () => {
         expect(processingBtn).toHaveAttribute("aria-label", "Inject Eggs (injecting…)");
       });
 
-      resolveFetch!({
+      resolveHarden!({
         ok: true,
         json: async () => ({
           bufferBase64: Buffer.from("x").toString("base64"),
-          mimeType: "application/pdf",
-          originalName: "resume.pdf",
+          mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          originalName: "resume.docx",
           scannerReport: { scan: { hasSuspiciousPatterns: false, matchedPatterns: [] } },
         }),
       } as unknown as Response);

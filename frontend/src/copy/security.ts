@@ -76,6 +76,8 @@ export const securityCopy: Copy = {
   downloadStaleConfigWarning:
     "This file matches your last successful run, not the egg settings on screen now. Inject Eggs again to refresh the download.",
   errorAlertPrefix: "> Alert:",
+  errorDehydrationClientFailed:
+    "Client-side dehydration failed, so the original document was not sent to the server (only tokenized content may leave your device). Try another browser, hard-refresh, or re-export the .docx from Word.",
   retryButton: "Retry",
   retryAria: "Retry",
   pipelineStatusTitle: "Pipeline Status",

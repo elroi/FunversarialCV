@@ -9,9 +9,83 @@ import { MIME_DOCX, MIME_PDF } from "./clientDocumentExtract";
 import type { PiiMap } from "./clientVaultTypes";
 
 const DOCUMENT_XML_PATH = "word/document.xml";
-const DOCUMENT_RELS_PATH = "word/_rels/document.xml.rels";
 
 export type TokenizedCopyResult = { file: File; buffer: ArrayBuffer };
+
+type ValueTokenPair = { value: string; token: string };
+
+/** All word OOXML parts that may contain literal PII (body, rels, headers, etc.). */
+function listWordXmlAndRelsPaths(zip: JSZip): string[] {
+  return Object.keys(zip.files).filter(
+    (n) =>
+      !zip.files[n].dir &&
+      n.startsWith("word/") &&
+      (n.endsWith(".xml") || n.endsWith(".rels"))
+  );
+}
+
+/**
+ * Value→token pairs for XML replacement, longest values first.
+ * Includes URL-encoded email (mailto targets often use %40) and compact phone (tel: / no spaces).
+ */
+function collectXmlValueTokenPairs(piiMap: PiiMap): ValueTokenPair[] {
+  const pairs: ValueTokenPair[] = [];
+  const add = (value: string, token: string) => {
+    if (!value) return;
+    if (!pairs.some((p) => p.value === value && p.token === token)) {
+      pairs.push({ value, token });
+    }
+  };
+
+  for (const e of Object.values(piiMap.byToken)) {
+    add(e.value, e.token);
+
+    if (e.type === "EMAIL" && e.value.includes("@")) {
+      const atPct = e.value.replace(/@/g, "%40");
+      if (atPct !== e.value) add(atPct, e.token);
+      try {
+        const enc = encodeURIComponent(e.value);
+        if (enc !== e.value && enc !== atPct) add(enc, e.token);
+      } catch {
+        /* ignore */
+      }
+    }
+
+    if (e.type === "PHONE") {
+      const noSpaces = e.value.replace(/\s/g, "");
+      if (noSpaces !== e.value) add(noSpaces, e.token);
+    }
+  }
+
+  return pairs.sort((a, b) => b.value.length - a.value.length);
+}
+
+function replaceValuesWithTokens(xml: string, pairs: ValueTokenPair[]): string {
+  let out = xml;
+  for (const { value, token } of pairs) {
+    out = out.split(value).join(token);
+  }
+  return out;
+}
+
+/**
+ * Tokenize PII everywhere it may appear under word/ (document, rels, headers, footers, etc.).
+ * Hyperlink targets (e.g. mailto:, often %40-encoded) must match rehydration coverage.
+ */
+async function tokenizeDocxPackageXmlParts(
+  zip: JSZip,
+  piiMap: PiiMap
+): Promise<void> {
+  const pairs = collectXmlValueTokenPairs(piiMap);
+  if (pairs.length === 0) return;
+
+  for (const p of listWordXmlAndRelsPaths(zip)) {
+    const f = zip.file(p);
+    if (!f) continue;
+    const xml = await f.async("string");
+    zip.file(p, replaceValuesWithTokens(xml, pairs));
+  }
+}
 
 function findBytes(haystack: Uint8Array, needle: Uint8Array): number {
   if (needle.length === 0 || needle.length > haystack.length) return -1;
@@ -143,19 +217,7 @@ export async function replacePiiWithTokensInCopy(
     throw new Error("Invalid DOCX: missing word/document.xml");
   }
 
-  let xml = await docFile.async("string");
-
-  // Replace each PII value with its token. Longer values first to avoid
-  // partial replacements (e.g. "a@b.com" inside "x a@b.com y").
-  const entries = Object.values(piiMap.byToken);
-  const byValueLength = [...entries].sort(
-    (a, b) => b.value.length - a.value.length
-  );
-  for (const entry of byValueLength) {
-    xml = xml.split(entry.value).join(entry.token);
-  }
-
-  zip.file(DOCUMENT_XML_PATH, xml);
+  await tokenizeDocxPackageXmlParts(zip, piiMap);
 
   const outBuffer = await zip.generateAsync({
     type: "arraybuffer",
@@ -171,9 +233,8 @@ export async function replacePiiWithTokensInCopy(
 }
 
 /**
- * Rehydrates a tokenized DOCX buffer in-place: replaces tokens with PII in
- * word/document.xml and word/_rels/document.xml.rels (e.g. mailto:{{PII_EMAIL_0}}).
- * Preserves all styles and layout (no rebuild from text).
+ * Rehydrates a tokenized DOCX buffer in-place: replaces tokens with PII in every
+ * word XML and word rels part (same paths as client tokenization).
  */
 export async function rehydrateDocxBufferInPlace(
   tokenizedBuffer: ArrayBuffer,
@@ -191,13 +252,12 @@ export async function rehydrateDocxBufferInPlace(
     }
     return out;
   };
-  let xml = await docFile.async("string");
-  zip.file(DOCUMENT_XML_PATH, replaceTokens(xml));
 
-  const relsFile = zip.file(DOCUMENT_RELS_PATH);
-  if (relsFile) {
-    const relsXml = await relsFile.async("string");
-    zip.file(DOCUMENT_RELS_PATH, replaceTokens(relsXml));
+  for (const p of listWordXmlAndRelsPaths(zip)) {
+    const f = zip.file(p);
+    if (!f) continue;
+    const xml = await f.async("string");
+    zip.file(p, replaceTokens(xml));
   }
 
   const outBuffer = await zip.generateAsync({

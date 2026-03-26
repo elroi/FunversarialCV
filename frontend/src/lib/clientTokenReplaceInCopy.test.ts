@@ -151,6 +151,95 @@ describe("replacePiiWithTokensInCopy", () => {
     expect(result!.file.name).toBe("demo.pdf");
   });
 
+  it("for DOCX, replaces percent-encoded email in word/_rels/document.xml.rels (mailto %40)", async () => {
+    const zip = new JSZip();
+    zip.file(
+      "word/document.xml",
+      `<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>ok</w:t></w:r></w:p></w:body></w:document>`
+    );
+    zip.file(
+      "word/_rels/document.xml.rels",
+      `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="mailto:user%40example.com"/></Relationships>`
+    );
+    zip.file("[Content_Types].xml", minimalContentTypes);
+    zip.file("_rels/.rels", minimalRels);
+    zip.file("docProps/app.xml", minimalApp);
+    zip.file("docProps/core.xml", minimalCore);
+    const buf = await zip.generateAsync({
+      type: "arraybuffer",
+      compression: "DEFLATE",
+      compressionOptions: { level: 6 },
+    });
+    const file = {
+      name: "encoded.docx",
+      type: MIME_DOCX,
+      arrayBuffer: () => Promise.resolve(buf),
+    } as File;
+    const piiMap: PiiMap = {
+      byToken: {
+        "{{PII_EMAIL_0}}": {
+          token: "{{PII_EMAIL_0}}",
+          type: "EMAIL",
+          value: "user@example.com",
+        },
+      },
+    };
+    const result = await replacePiiWithTokensInCopy(file, piiMap);
+    expect(result).not.toBeNull();
+    const relsXml = await (
+      await JSZip.loadAsync(result!.buffer)
+    )
+      .file("word/_rels/document.xml.rels")!
+      .async("string");
+    expect(relsXml).toContain("mailto:{{PII_EMAIL_0}}");
+    expect(relsXml).not.toContain("user%40example.com");
+    expect(relsXml).not.toContain("user@example.com");
+  });
+
+  it("for DOCX, replaces PII in word/_rels/document.xml.rels (e.g. mailto hyperlink targets)", async () => {
+    const zip = new JSZip();
+    zip.file(
+      "word/document.xml",
+      `<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Contact user@example.com</w:t></w:r></w:p></w:body></w:document>`
+    );
+    zip.file(
+      "word/_rels/document.xml.rels",
+      `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="mailto:user@example.com?subject=Hi"/></Relationships>`
+    );
+    zip.file("[Content_Types].xml", minimalContentTypes);
+    zip.file("_rels/.rels", minimalRels);
+    zip.file("docProps/app.xml", minimalApp);
+    zip.file("docProps/core.xml", minimalCore);
+    const buf = await zip.generateAsync({
+      type: "arraybuffer",
+      compression: "DEFLATE",
+      compressionOptions: { level: 6 },
+    });
+    const file = {
+      name: "hyperlink.docx",
+      type: MIME_DOCX,
+      arrayBuffer: () => Promise.resolve(buf),
+    } as File;
+    const piiMap: PiiMap = {
+      byToken: {
+        "{{PII_EMAIL_0}}": {
+          token: "{{PII_EMAIL_0}}",
+          type: "EMAIL",
+          value: "user@example.com",
+        },
+      },
+    };
+    const result = await replacePiiWithTokensInCopy(file, piiMap);
+    expect(result).not.toBeNull();
+    const outZip = await JSZip.loadAsync(result!.buffer);
+    const relsXml = await outZip.file("word/_rels/document.xml.rels")!.async("string");
+    expect(relsXml).toContain("mailto:{{PII_EMAIL_0}}?subject=Hi");
+    expect(relsXml).not.toContain("user@example.com");
+    const docXml = await outZip.file("word/document.xml")!.async("string");
+    expect(docXml).toContain("{{PII_EMAIL_0}}");
+    expect(docXml).not.toContain("user@example.com");
+  });
+
   it("for DOCX, replaces PII values with tokens in word/document.xml", async () => {
     const bodyText = "Contact me at user@example.com for more info.";
     const buf = await createMinimalDocxBuffer(bodyText);

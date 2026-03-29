@@ -5,7 +5,7 @@
 import { process } from "./Processor";
 import { createDocumentWithText, MIME_DOCX, MIME_PDF } from "./documentExtract";
 import { DUALITY_ALERT_MESSAGE } from "../lib/Scanner";
-import { invisibleHand } from "../eggs/InvisibleHand";
+import { invisibleHand, DEFAULT_INVISIBLE_HAND_TRAP } from "../eggs/InvisibleHand";
 import { canaryWing } from "../eggs/CanaryWing";
 import { metadataShadow } from "../eggs/MetadataShadow";
 import { incidentMailto } from "../eggs/IncidentMailto";
@@ -94,7 +94,7 @@ describe("Processor", () => {
       expect(extracted).toContain("Line one");
       expect(extracted).toContain("Line two");
       expect(extracted).toContain("Line three");
-      expect(extracted).toContain("System Note");
+      expect(extracted).toContain(DEFAULT_INVISIBLE_HAND_TRAP);
     }, 15000);
 
     it.skip("when preserveStyles is true and only add-only eggs: PDF preserves page count (skipped: extractText uses pdf-parse which fails in Jest)", async () => {
@@ -121,7 +121,7 @@ describe("Processor", () => {
       });
       const extracted = await extractText(result.buffer, MIME_DOCX);
       expect(extracted).toContain("Line one");
-      expect(extracted).toContain("System Note");
+      expect(extracted).toContain(DEFAULT_INVISIBLE_HAND_TRAP);
     }, 15000);
 
     it("when preserveStyles is true but incident-mailto is selected: uses rebuild path", async () => {
@@ -134,7 +134,7 @@ describe("Processor", () => {
       });
       const extracted = await extractText(result.buffer, MIME_DOCX);
       expect(extracted).toContain("Contact me at john@example.com");
-      expect(extracted).toContain("System Note");
+      expect(extracted).toContain(DEFAULT_INVISIBLE_HAND_TRAP);
       // mailto: appears in rels (AST/append path) or in body text (rebuild path if style-preserving path fails)
       const zip = await JSZip.loadAsync(result.buffer);
       const relsXml = await zip.file("word/_rels/document.xml.rels")?.async("string") ?? "";
@@ -171,7 +171,7 @@ describe("Processor", () => {
       const extracted = await extractText(result.buffer, MIME_DOCX);
       expect(extracted).toContain("Intro");
       expect(extracted).toContain("Body");
-      expect(extracted).toContain("System Note");
+      expect(extracted).toContain(DEFAULT_INVISIBLE_HAND_TRAP);
       expect(extracted).toMatch(/\/api\/canary\//);
     }, 15000);
 

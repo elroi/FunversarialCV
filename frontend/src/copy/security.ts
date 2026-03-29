@@ -164,11 +164,11 @@ export const securityCopy: Copy = {
   canaryWingCopyButton: "Copy link",
 
   metadataShadowDescription:
-    "Add a custom document property (e.g. Ranking: Top_1%). Keys: letters, numbers, underscore only. No PII in values.",
+    "Add a custom document property (e.g. Company: Funversarial Research Lab). Keys: letters, numbers, underscore only. No PII in values.",
   metadataShadowPropertyName: "Property name",
   metadataShadowPropertyValue: "Property value",
-  metadataShadowPlaceholderKey: "Ranking",
-  metadataShadowPlaceholderValue: "Top_1_Percent",
+  metadataShadowPlaceholderKey: "Company",
+  metadataShadowPlaceholderValue: "Funversarial Research Lab",
   metadataShadowHowToTitle: "How to check & validate",
 
   resourcesUsageTitle: "Usage and responsibility",

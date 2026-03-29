@@ -13,3 +13,8 @@ export const EGG_OPTIONS = [
 ] as const;
 
 export const DEFAULT_ENABLED_EGG_IDS = new Set(EGG_OPTIONS.map((o) => o.id));
+
+/** Default Metadata Shadow JSON for initial UI state (must match egg validation: one key, string value). */
+export const DEFAULT_METADATA_SHADOW_PAYLOAD = JSON.stringify({
+  Company: "Funversarial Research Lab",
+});

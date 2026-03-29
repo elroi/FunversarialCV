@@ -166,11 +166,11 @@ export const hrCopy: Copy = {
   canaryWingCopyButton: "Copy link",
 
   metadataShadowDescription:
-    "Add a hidden property to the document (e.g. Ranking: Top_1%). Use letters, numbers, and underscores only. Don’t put personal contact details in the value.",
+    "Add a hidden property to the document (e.g. Company: Funversarial Research Lab). Use letters, numbers, and underscores only. Don’t put personal contact details in the value.",
   metadataShadowPropertyName: "Property name",
   metadataShadowPropertyValue: "Property value",
-  metadataShadowPlaceholderKey: "Ranking",
-  metadataShadowPlaceholderValue: "Top_1_Percent",
+  metadataShadowPlaceholderKey: "Company",
+  metadataShadowPlaceholderValue: "Funversarial Research Lab",
   metadataShadowHowToTitle: "How to check and validate",
 
   resourcesUsageTitle: "Usage and responsibility",

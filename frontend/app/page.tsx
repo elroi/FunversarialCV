@@ -24,7 +24,11 @@ import {
 } from "../src/lib/clientDocumentExtract";
 import type { PiiMap } from "../src/lib/clientVaultTypes";
 import type { DualityCheckResult } from "../src/engine/dualityCheck";
-import { EGG_OPTIONS, DEFAULT_ENABLED_EGG_IDS } from "../src/eggs/eggMetadata";
+import {
+  EGG_OPTIONS,
+  DEFAULT_ENABLED_EGG_IDS,
+  DEFAULT_METADATA_SHADOW_PAYLOAD,
+} from "../src/eggs/eggMetadata";
 import { Button } from "../src/components/ui/Button";
 import { Card } from "../src/components/ui/Card";
 import { CollapsibleCard } from "../src/components/ui/CollapsibleCard";
@@ -174,7 +178,9 @@ export default function Home() {
   const [invisibleHandPayload, setInvisibleHandPayload] = useState<string>("");
   const [incidentMailtoPayload, setIncidentMailtoPayload] = useState<string>("");
   const [canaryWingPayload, setCanaryWingPayload] = useState<string>("");
-  const [metadataShadowPayload, setMetadataShadowPayload] = useState<string>("");
+  const [metadataShadowPayload, setMetadataShadowPayload] = useState<string>(
+    DEFAULT_METADATA_SHADOW_PAYLOAD
+  );
   const [enabledEggIds, setEnabledEggIds] = useState<Set<string>>(() => new Set(DEFAULT_ENABLED_EGG_IDS));
   /** Eggs applied in the last successful harden; drives Validation Lab ENABLED badge (not live checkboxes). */
   const [armedEggIds, setArmedEggIds] = useState<Set<string>>(() => new Set());

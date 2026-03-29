@@ -36,9 +36,16 @@ import { CollapsibleCard } from "../src/components/ui/CollapsibleCard";
 import { SectionFold } from "../src/components/ui/SectionFold";
 import { useCopy } from "../src/copy";
 import { useAudience } from "../src/contexts/AudienceContext";
+import {
+  ATTENTION_PULSE_CLASS,
+  restartAttentionPulse,
+} from "../src/lib/attentionPulse";
 
 /** Must match API route MAX_BODY_BYTES so client rejects before sending. */
 const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
+
+/** Delay before arming upload-channel in-view pulse so tagline pulse does not stack on first paint. */
+const ATTENTION_PULSE_STAGGER_MS = 500;
 
 /** Stable JSON for comparing egg payloads (key order from JSON.stringify can differ). */
 function stableJsonStringify(value: unknown): string {
@@ -195,6 +202,11 @@ export default function Home() {
   const retryButtonRef = useRef<HTMLButtonElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const armedSectionRef = useRef<HTMLDivElement | null>(null);
+  const inputChannelSectionRef = useRef<HTMLDivElement | null>(null);
+  const inputChannelTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const engineSectionTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const validationLabTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const inputChannelPulsedRef = useRef(false);
   const lastHardenedBlobRef = useRef<Blob | null>(null);
   const lastHardenedPdfBlobRef = useRef<Blob | null>(null);
   const lastPdfExportFileNameRef = useRef<string | null>(null);
@@ -213,6 +225,10 @@ export default function Home() {
   const [isDemoLoading, setIsDemoLoading] = useState(false);
   /** Bumped when a CV is armed so Engine Configuration opens (it starts collapsed). */
   const [engineFoldExpandSignal, setEngineFoldExpandSignal] = useState(0);
+  /** One-shot tagline accent after first paint (see attention pulse in globals.css). */
+  const [taglineAttentionActive, setTaglineAttentionActive] = useState(false);
+  /** Bumped after DOCX download to re-run Validation Lab trigger pulse. */
+  const [validationLabPulseToken, setValidationLabPulseToken] = useState(0);
   const [clientPiiMap, setClientPiiMap] = useState<PiiMap | null>(null);
 
   /** Egg metadata from GET /api/eggs (id -> { name, manualCheckAndValidation }). */
@@ -245,6 +261,65 @@ export default function Home() {
       })
       .catch(() => { /* ignore; cards will hide section */ });
   }, []);
+
+  // Tagline attention pulse once after mount (rAF avoids Strict Mode double-invoke stacking issues).
+  useEffect(() => {
+    let cancelled = false;
+    const id = requestAnimationFrame(() => {
+      if (!cancelled) setTaglineAttentionActive(true);
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(id);
+    };
+  }, []);
+
+  // Upload channel: pulse fold trigger once when section scrolls into view (armed after stagger).
+  useEffect(() => {
+    let observer: IntersectionObserver | null = null;
+    let cancelled = false;
+    const armTimer = window.setTimeout(() => {
+      if (cancelled) return;
+      const root = inputChannelSectionRef.current;
+      if (!root || typeof IntersectionObserver === "undefined") return;
+      observer = new IntersectionObserver(
+        (entries) => {
+          const hit = entries.some(
+            (e) => e.isIntersecting && e.intersectionRatio >= 0.2
+          );
+          if (!hit || inputChannelPulsedRef.current) return;
+          inputChannelPulsedRef.current = true;
+          restartAttentionPulse(inputChannelTriggerRef.current);
+          observer?.disconnect();
+        },
+        { threshold: 0.2 }
+      );
+      observer.observe(root);
+    }, ATTENTION_PULSE_STAGGER_MS);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(armTimer);
+      observer?.disconnect();
+    };
+  }, []);
+
+  // Engine ("Add signals") fold: pulse trigger whenever a CV is armed (expand signal bumps).
+  useEffect(() => {
+    if (engineFoldExpandSignal === 0) return;
+    const t = window.setTimeout(() => {
+      restartAttentionPulse(engineSectionTriggerRef.current);
+    }, 250);
+    return () => window.clearTimeout(t);
+  }, [engineFoldExpandSignal]);
+
+  // Validation Lab: pulse trigger after each successful DOCX download click.
+  useEffect(() => {
+    if (validationLabPulseToken === 0) return;
+    const t = window.setTimeout(() => {
+      restartAttentionPulse(validationLabTriggerRef.current);
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [validationLabPulseToken]);
 
   // Scroll focused success/error targets into view after render (refs are set post-commit).
   useEffect(() => {
@@ -385,6 +460,7 @@ export default function Home() {
     a.download = successMessage;
     a.click();
     URL.revokeObjectURL(url);
+    setValidationLabPulseToken((n) => n + 1);
   }, [successMessage]);
 
   const triggerPdfDownload = useCallback(() => {
@@ -1153,6 +1229,11 @@ export default function Home() {
         <AudienceCopyFadeShell className="flex min-w-0 flex-1 flex-col">
         <SiteHeader
           secondaryNav={{ href: "/resources", label: copy.resourcesLink }}
+          taglineClassName={
+            taglineAttentionActive
+              ? `${ATTENTION_PULSE_CLASS} rounded-md inline-block`
+              : undefined
+          }
         />
 
         <section className="flex flex-1 flex-col gap-8 md:flex-row">
@@ -1174,7 +1255,9 @@ export default function Home() {
               </CollapsibleCard>
             </div>
 
+            <div ref={inputChannelSectionRef} className="min-w-0">
             <SectionFold
+              ref={inputChannelTriggerRef}
               className="functional-group"
               title={copy.inputChannel}
               titleId="input-channel-section-title"
@@ -1259,6 +1342,7 @@ export default function Home() {
                 </div>
               </CollapsibleCard>
             </SectionFold>
+            </div>
 
             {contentAudience === "security" && copy.introDetail.trim() ? (
               <div className="mb-6">{renderIntro(copy.introDetail)}</div>
@@ -1277,6 +1361,7 @@ export default function Home() {
             </CollapsibleCard>
 
             <SectionFold
+              ref={engineSectionTriggerRef}
               className="functional-group mt-6"
               title={copy.engineConfigTitle}
               titleId="engine-config-section-title"
@@ -1503,7 +1588,7 @@ export default function Home() {
                     onClick={triggerDownload}
                     className={
                       downloadSuccessHasInjectedEggs
-                        ? "w-full max-w-sm !min-h-[48px] px-6 py-3 text-base download-ready-pulse"
+                        ? `w-full max-w-sm !min-h-[48px] px-6 py-3 text-base ${ATTENTION_PULSE_CLASS}`
                         : "min-h-[44px] py-2"
                     }
                     data-testid="download-hardened-docx"
@@ -1586,6 +1671,7 @@ export default function Home() {
             </SectionFold>
 
             <SectionFold
+              ref={validationLabTriggerRef}
               sectionId="validation-lab"
               className="functional-group mt-6"
               title={copy.validationLabTitle}

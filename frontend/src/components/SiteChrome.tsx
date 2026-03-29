@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import clsx from "clsx";
 import { hrCopy, securityCopy, useCopy } from "../copy";
 import { useAudience } from "../contexts/AudienceContext";
 import { AudienceSwitcher } from "./AudienceSwitcher";
@@ -13,13 +14,15 @@ export type SiteHeaderNavLink = {
 export type SiteHeaderProps = {
   /** Secondary navigation (e.g. Resources on home, Back home on /resources). Plain link, not a pill. */
   secondaryNav?: SiteHeaderNavLink;
+  /** Optional classes on the tagline paragraph (e.g. motion accents). */
+  taglineClassName?: string;
 };
 
 /**
  * Shared marketing header (H1 + tagline) for home and resources.
  * Keeps layout and spacing consistent across routes (DRY, avoids mobile drift).
  */
-export function SiteHeader({ secondaryNav }: SiteHeaderProps) {
+export function SiteHeader({ secondaryNav, taglineClassName }: SiteHeaderProps) {
   const copy = useCopy();
   const { contentAudience } = useAudience();
   const headerFont = contentAudience === "hr" ? "font-sans" : "";
@@ -34,7 +37,14 @@ export function SiteHeader({ secondaryNav }: SiteHeaderProps) {
             FunversarialCV
           </span>
         </h1>
-        <p className="text-sm leading-relaxed text-foreground/70">{copy.tagline}</p>
+        <p
+          className={clsx(
+            "text-sm leading-relaxed text-foreground/70",
+            taglineClassName
+          )}
+        >
+          {copy.tagline}
+        </p>
       </div>
       {secondaryNav ? (
         <Link

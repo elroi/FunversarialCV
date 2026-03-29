@@ -21,6 +21,11 @@ export interface SectionFoldProps {
   className?: string;
   /** Optional DOM id for deep links / anchors. */
   sectionId?: string;
+  /**
+   * Merged onto the title trigger `<button>` (e.g. `attention-pulse` for motion accents).
+   * Prefer non-layout utilities so fold alignment stays stable.
+   */
+  titleTriggerClassName?: string;
   children: React.ReactNode;
 }
 
@@ -33,17 +38,22 @@ export interface SectionFoldProps {
  *
  * Trigger uses `items-center` so the title and chevron are vertically centered in the row.
  */
-export const SectionFold: React.FC<SectionFoldProps> = ({
-  title,
-  titleId,
-  contentId,
-  ariaLabel,
-  defaultExpanded = true,
-  expandRevision,
-  className,
-  sectionId,
-  children,
-}) => {
+export const SectionFold = React.forwardRef<HTMLButtonElement, SectionFoldProps>(
+  function SectionFold(
+    {
+      title,
+      titleId,
+      contentId,
+      ariaLabel,
+      defaultExpanded = true,
+      expandRevision,
+      className,
+      sectionId,
+      titleTriggerClassName,
+      children,
+    },
+    ref
+  ) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const lastExpandRevision = useRef(0);
 
@@ -58,13 +68,17 @@ export const SectionFold: React.FC<SectionFoldProps> = ({
   return (
     <div id={sectionId} className={clsx("flex w-full min-w-0 flex-col pb-3", className)}>
       <button
+        ref={ref}
         type="button"
         id={titleId}
         aria-expanded={expanded}
         aria-controls={contentId}
         aria-label={ariaLabel}
         onClick={() => setExpanded((e) => !e)}
-        className="mb-3 flex w-full min-h-10 flex-shrink-0 items-center justify-between gap-1.5 rounded-sm px-3 py-2 text-left text-caption uppercase tracking-[0.2em] text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+        className={clsx(
+          "mb-3 flex w-full min-h-10 flex-shrink-0 items-center justify-between gap-1.5 rounded-sm px-3 py-2 text-left text-caption uppercase tracking-[0.2em] text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
+          titleTriggerClassName
+        )}
       >
         <span className="min-w-0">{title}</span>
         <DisclosureChevron expanded={expanded} />
@@ -80,4 +94,5 @@ export const SectionFold: React.FC<SectionFoldProps> = ({
       </div>
     </div>
   );
-};
+  }
+);

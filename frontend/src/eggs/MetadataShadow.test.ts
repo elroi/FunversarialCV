@@ -110,6 +110,9 @@ describe("MetadataShadow", () => {
       const xml = await customFile!.async("string");
       expect(xml).toContain("Ranking");
       expect(xml).toContain("Top_1%");
+      const rels = await zip.file("_rels/.rels")!.async("string");
+      expect(rels).toContain("custom-properties");
+      expect(rels).toContain("docProps/custom.xml");
     }, 10000);
 
     it("leaves buffer unchanged when payload is empty", async () => {

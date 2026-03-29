@@ -40,6 +40,23 @@ export default function ResourcesPage() {
 
           <section>
             <h2 className="text-base font-semibold text-success mb-2">
+              {copy.resourcesAtsTitle}
+            </h2>
+            <p className="text-foreground/80 mb-2">
+              {copy.resourcesAtsBody1}
+            </p>
+            <p className="text-foreground/80 mb-2">
+              {copy.resourcesAtsBody2}
+            </p>
+            <ul className="list-disc space-y-2 pl-5 text-foreground/80">
+              <li>{copy.resourcesAtsBulletKeyword}</li>
+              <li>{copy.resourcesAtsBulletRanking}</li>
+              <li>{copy.resourcesAtsBulletFormatting}</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-base font-semibold text-success mb-2">
               {copy.resourcesPreserveStylesTitle}
             </h2>
             <p className="text-foreground/80 mb-2">
@@ -117,29 +134,11 @@ export default function ResourcesPage() {
                 </ul>
               </div>
               <section
-                aria-label="Stateless Vault data flow diagram"
+                aria-label={copy.resourcesDiagramAriaLabel}
                 className="min-w-0"
               >
-                <pre className="font-mono text-caption sm:text-xs whitespace-pre leading-relaxed text-foreground/80">
-{`+------------------------------------------------------------+
-|                      Browser client                        |
-|                                                            |
-|  [1] Load (in-memory only; CV uploaded from browser)       |
-|  [2] Dehydrate PII (Vault: raw PII -> short-lived tokens)  |
-|                                                            |
-|    +----------------------------------------------------+  |
-|    |         Transformation Engine (tokens only)        |  |
-|    |                                                    |  |
-|    |  [3] Analyze duality (scan tokenized CV            |  |
-|    |      for existing adversarial patterns)            |  |
-|    |  [4] Apply eggs (Funversarial layers added         |  |
-|    |      on tokens, no raw PII)                        |  |
-|    +----------------------------------------------------+  |
-|                                                            |
-|  [5] Rehydrate PII (tokens -> original PII in buffer)      |
-|  [6] Stream & purge (send CV with injected eggs back to    |
-|      server memory cleared, nothing persisted)             |
-+------------------------------------------------------------+`}
+                <pre className="font-mono w-full min-w-0 whitespace-pre leading-relaxed text-foreground/80 text-[length:clamp(0.45rem,1.65vw,0.625rem)] md:text-[length:clamp(0.45rem,1.35vw,0.625rem)]">
+                  {copy.resourcesDiagramAscii}
                 </pre>
               </section>
             </div>

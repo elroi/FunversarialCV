@@ -107,7 +107,13 @@ export const metadataShadow: IEgg = {
       }
       const customXml = buildCustomXml(mergedProps);
       zip.file("docProps/custom.xml", customXml);
-      await ensureContentType(zip, "/docProps/custom.xml", "application/vnd.openxmlformats-officedocument.custom-properties+xml");
+      await ensureContentType(
+        zip,
+        "/docProps/custom.xml",
+        "application/vnd.openxmlformats-officedocument.custom-properties+xml"
+      );
+      // Word (esp. Mac) ignores orphan parts: custom.xml must be linked from the package root.
+      await ensureCustomPropertiesRelationship(zip);
       const out = await zip.generateAsync({
         type: "nodebuffer",
         compression: "DEFLATE",
@@ -179,6 +185,32 @@ function escapeXml(s: string): string {
 }
 
 const CONTENT_TYPES_PATH = "[Content_Types].xml";
+
+/** OOXML package relationship so hosts load docProps/custom.xml (Custom tab in Word). */
+const CUSTOM_PROPERTIES_REL_TYPE =
+  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties";
+
+async function ensureCustomPropertiesRelationship(zip: JSZip): Promise<void> {
+  const relsPath = "_rels/.rels";
+  const relsFile = zip.file(relsPath);
+  if (!relsFile) return;
+  let xml = await relsFile.async("string");
+  if (xml.includes(CUSTOM_PROPERTIES_REL_TYPE)) return;
+  const nextId = nextPackageRelationshipId(xml);
+  const rel = `<Relationship Id="${nextId}" Type="${CUSTOM_PROPERTIES_REL_TYPE}" Target="docProps/custom.xml"/>`;
+  xml = xml.replace("</Relationships>", `  ${rel}\n</Relationships>`);
+  zip.file(relsPath, xml);
+}
+
+function nextPackageRelationshipId(relsXml: string): string {
+  const matches = relsXml.matchAll(/\bId="(rId\d+)"/gi);
+  let max = 0;
+  for (const m of matches) {
+    const n = parseInt(m[1].replace(/^rId/i, ""), 10);
+    if (!Number.isNaN(n) && n > max) max = n;
+  }
+  return `rId${max + 1}`;
+}
 
 async function ensureContentType(
   zip: JSZip,

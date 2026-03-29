@@ -26,6 +26,22 @@ describe("Resources page", () => {
     expect(educationalMentions.length).toBeGreaterThan(0);
   });
 
+  it("explains what an ATS is and how keyword, ranking, and formatting affect parsing", () => {
+    renderWithAudience(<ResourcesPage />);
+    expect(
+      screen.getByRole("heading", {
+        name: /what is an ats \(and why does it care about your cv\)\?/i,
+        level: 2,
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/applicant tracking system/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/keyword match/i)
+    ).toBeInTheDocument();
+  });
+
   it("includes an ethical use disclaimer making usage the user's responsibility", () => {
     renderWithAudience(<ResourcesPage />);
     expect(
@@ -115,6 +131,18 @@ describe("Resources page", () => {
     expect(asciiBlock?.textContent || "").toMatch(/\[1] Load/i);
     expect(asciiBlock?.textContent || "").toMatch(/\[4] Apply eggs/i);
     expect(asciiBlock?.textContent || "").toMatch(/\[6] Stream & purge/i);
+  });
+
+  it("shows an HR-aligned ASCII diagram when the audience is HR (matches step labels)", () => {
+    window.localStorage.setItem("funversarialcv-audience", "hr");
+    renderWithAudience(<ResourcesPage />);
+    const diagramRegion = screen.getByRole("region", {
+      name: /how your cv is processed — data flow diagram/i,
+    });
+    const asciiBlock = diagramRegion.querySelector("pre");
+    expect(asciiBlock?.textContent || "").toMatch(/Pre-check/i);
+    expect(asciiBlock?.textContent || "").toMatch(/Add options/i);
+    expect(asciiBlock?.textContent || "").not.toMatch(/Dehydrate PII/i);
   });
 
   it("explains what eggs are and references easter eggs", () => {

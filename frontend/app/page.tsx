@@ -441,6 +441,11 @@ export default function Home() {
     lastHardenedSnap !== null &&
     haveEggsChanged();
 
+  /** Prominent centered Download only after real egg injection; scan-only stays compact. */
+  const downloadSuccessHasInjectedEggs =
+    Boolean(successMessage) &&
+    (lastHardenedConfigRef.current?.eggIds?.length ?? 0) > 0;
+
   const runHarden = () => {
     if (!selectedFile) return;
     void startPipelineForFile(selectedFile);
@@ -1384,11 +1389,22 @@ export default function Home() {
                     {copy.downloadStaleConfigWarning}
                   </p>
                 ) : null}
-                <div className="mt-1 flex flex-wrap gap-2">
+                <div
+                  data-testid="download-hardened-actions"
+                  className={
+                    downloadSuccessHasInjectedEggs
+                      ? "mt-3 w-full flex flex-col items-center gap-2"
+                      : "mt-1 flex flex-wrap gap-2"
+                  }
+                >
                   <Button
                     variant="primary"
                     onClick={triggerDownload}
-                    className="min-h-[44px] py-2"
+                    className={
+                      downloadSuccessHasInjectedEggs
+                        ? "w-full max-w-sm !min-h-[48px] px-6 py-3 text-base download-ready-pulse"
+                        : "min-h-[44px] py-2"
+                    }
                     data-testid="download-hardened-docx"
                     aria-label={`${copy.downloadButton} ${successMessage}`}
                     aria-describedby={

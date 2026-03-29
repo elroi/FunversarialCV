@@ -168,6 +168,12 @@ export interface Copy {
   resourcesUsageBody3: string;
   resourcesWhyTitle: string;
   resourcesWhyBody: string;
+  resourcesAtsTitle: string;
+  resourcesAtsBody1: string;
+  resourcesAtsBody2: string;
+  resourcesAtsBulletKeyword: string;
+  resourcesAtsBulletRanking: string;
+  resourcesAtsBulletFormatting: string;
   resourcesPreserveStylesTitle: string;
   resourcesPreserveStylesBody: string;
   resourcesWhatAreEggsTitle: string;
@@ -194,6 +200,10 @@ export interface Copy {
   resourcesFlowStep4: string;
   resourcesFlowStep5: string;
   resourcesFlowStep6: string;
+  /** Monospace flow diagram beside the step list; wording matches audience (HR vs security). */
+  resourcesDiagramAscii: string;
+  /** Accessible name for the diagram region (screen readers). */
+  resourcesDiagramAriaLabel: string;
   resourcesOwaspTitle: string;
   resourcesOwaspBody1: string;
   resourcesOwaspBody2: string;

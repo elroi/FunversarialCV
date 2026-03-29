@@ -372,6 +372,13 @@ describe("Home page", () => {
 
       const downloadBtn = screen.getByRole("button", { name: /download/i });
       expect(downloadBtn).toBeInTheDocument();
+      expect(screen.getByTestId("download-hardened-docx")).toHaveClass(
+        "download-ready-pulse"
+      );
+      expect(screen.getByTestId("download-hardened-actions")).toHaveClass(
+        "items-center"
+      );
+      expect(downloadBtn).toHaveClass("max-w-sm", "!min-h-[48px]");
 
       const injectAfterSuccess = screen.getByRole("button", { name: /inject eggs/i });
       expect(injectAfterSuccess).toBeDisabled();
@@ -387,6 +394,53 @@ describe("Home page", () => {
       fireEvent.click(downloadBtn);
       expect(createObjectURL).toHaveBeenCalled();
       expect(revokeObjectURL).toHaveBeenCalled();
+    });
+
+    it("does not pulse Download when inject completes with no eggs selected (scan only)", async () => {
+      global.fetch = mockFetchSuccess("scan-only.docx");
+      renderWithAudience(<Home />);
+
+      const input = screen.getByTestId("dropzone-input");
+      fireEvent.change(input, {
+        target: { files: [createDocxFile("scan-only.docx")] },
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Armed CV:/i)).toBeInTheDocument();
+      });
+
+      ensureEngineConfigExpanded();
+
+      for (const rx of [
+        /Invisible Hand/i,
+        /Mailto Surprise/i,
+        /Canary Wing/i,
+        /Metadata Shadow/i,
+      ]) {
+        const box = screen.getByRole("checkbox", { name: rx });
+        if ((box as HTMLInputElement).checked) {
+          fireEvent.click(box);
+        }
+      }
+
+      fireEvent.click(screen.getByRole("button", { name: /inject eggs/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(/Scan complete/i)).toBeInTheDocument();
+      });
+
+      expect(screen.getByTestId("download-hardened-docx")).not.toHaveClass(
+        "download-ready-pulse"
+      );
+      expect(screen.getByTestId("download-hardened-actions")).toHaveClass(
+        "flex-wrap"
+      );
+      expect(screen.getByTestId("download-hardened-actions")).not.toHaveClass(
+        "items-center"
+      );
+      expect(screen.getByTestId("download-hardened-docx")).not.toHaveClass(
+        "max-w-sm"
+      );
     });
 
     it("does not show stale download warning when the server fills canaryTokenUsed after inject", async () => {
@@ -822,7 +876,7 @@ describe("Home page", () => {
       expect(changeFileBtn).toHaveClass("min-h-[44px]");
     });
 
-    it("Download and gated Inject Eggs have 44px minimum touch target after egg injection", async () => {
+    it("Download and gated Inject Eggs meet touch target after egg injection (48px download)", async () => {
       global.fetch = mockFetchSuccess("out.docx");
       renderWithAudience(<Home />);
       const input = screen.getByTestId("dropzone-input");
@@ -836,7 +890,7 @@ describe("Home page", () => {
       await waitFor(() => screen.getByRole("button", { name: /download/i }));
       const downloadBtn = screen.getByRole("button", { name: /download/i });
       const injectBtn = screen.getByRole("button", { name: /inject eggs/i });
-      expect(downloadBtn).toHaveClass("min-h-[44px]");
+      expect(downloadBtn).toHaveClass("!min-h-[48px]");
       expect(injectBtn).toHaveClass("min-h-[44px]");
     });
 

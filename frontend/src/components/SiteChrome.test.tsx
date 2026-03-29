@@ -20,6 +20,15 @@ describe("SiteHeader", () => {
       screen.getByText(/adversarial cv egg-injection console/i)
     ).toBeInTheDocument();
   });
+
+  it("merges taglineClassName onto the tagline paragraph", () => {
+    renderWithAudience(
+      <SiteHeader taglineClassName="tagline-accent-test" />
+    );
+    const tagline = screen.getByText(/adversarial cv egg-injection console/i);
+    expect(tagline).toHaveClass("tagline-accent-test");
+    expect(tagline).toHaveClass("text-foreground/70");
+  });
 });
 
 describe("SiteTopBar", () => {

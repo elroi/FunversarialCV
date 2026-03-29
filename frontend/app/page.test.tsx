@@ -373,7 +373,7 @@ describe("Home page", () => {
       const downloadBtn = screen.getByRole("button", { name: /download/i });
       expect(downloadBtn).toBeInTheDocument();
       expect(screen.getByTestId("download-hardened-docx")).toHaveClass(
-        "download-ready-pulse"
+        "attention-pulse"
       );
       expect(screen.getByTestId("download-hardened-actions")).toHaveClass(
         "items-center"
@@ -394,6 +394,48 @@ describe("Home page", () => {
       fireEvent.click(downloadBtn);
       expect(createObjectURL).toHaveBeenCalled();
       expect(revokeObjectURL).toHaveBeenCalled();
+    });
+
+    it("applies attention-pulse to Validation Lab trigger after DOCX download", async () => {
+      window.matchMedia = jest.fn().mockReturnValue({
+        matches: false,
+        media: "",
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+        addListener: jest.fn(),
+        removeListener: jest.fn(),
+        dispatchEvent: jest.fn(),
+        onchange: null,
+      });
+      global.fetch = mockFetchSuccess("pulse-lab.docx");
+      renderWithAudience(<Home />);
+
+      const input = screen.getByTestId("dropzone-input");
+      fireEvent.change(input, {
+        target: { files: [createDocxFile("pulse-lab.docx")] },
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/Armed CV:/i)).toBeInTheDocument();
+      });
+
+      ensureEngineConfigExpanded();
+      fireEvent.click(screen.getByRole("button", { name: /inject eggs/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(/pulse-lab_final\.docx/i)).toBeInTheDocument();
+      });
+
+      const validationTrigger = screen.getByRole("button", {
+        name: /validation lab: show or hide/i,
+      });
+      expect(validationTrigger).not.toHaveClass("attention-pulse");
+
+      fireEvent.click(screen.getByTestId("download-hardened-docx"));
+
+      await waitFor(() => {
+        expect(validationTrigger).toHaveClass("attention-pulse");
+      });
     });
 
     it("does not pulse Download when inject completes with no eggs selected (scan only)", async () => {
@@ -430,7 +472,7 @@ describe("Home page", () => {
       });
 
       expect(screen.getByTestId("download-hardened-docx")).not.toHaveClass(
-        "download-ready-pulse"
+        "attention-pulse"
       );
       expect(screen.getByTestId("download-hardened-actions")).toHaveClass(
         "flex-wrap"

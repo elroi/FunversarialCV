@@ -181,6 +181,17 @@ export const securityCopy: Copy = {
   resourcesWhyTitle: "Why Funversarial CVs?",
   resourcesWhyBody:
     "FunversarialCV exists as an educational tool to deliberately inject adversarial eggs into CVs and probe AI-driven screening systems. It layers OWASP-aligned adversarial patterns into documents so security teams, hiring organizations, and candidates can explore how large language models behave under prompt injection, invisible instructions, and noisy metadata – without sacrificing human readability.",
+  resourcesAtsTitle: "What is an ATS (and why does it care about your CV)?",
+  resourcesAtsBody1:
+    "ATS stands for Applicant Tracking System — the gatekeeper stack most large employers use to ingest, parse, and rank high volumes of résumés before human review.",
+  resourcesAtsBody2:
+    "Before a recruiter reads your CV, the ATS extracts text and scores it against the role. At a high level:",
+  resourcesAtsBulletKeyword:
+    "Keyword match — The parser compares your CV to the job description. Terminology mismatches (for example, the JD asks for “RAG architecture” while the CV says “database design”) can hurt ranking even when the underlying skills align.",
+  resourcesAtsBulletRanking:
+    "Ranking / shortlist — Many systems emit a match score; reviewers often focus on the top decile or quintile of candidates.",
+  resourcesAtsBulletFormatting:
+    "Parsing and layout — Heavy graphics, nested tables, or non-standard fonts can break text extraction, leaving gaps in what the ATS indexes.",
   resourcesPreserveStylesTitle: "Preserve styles and document structure (AST)",
   resourcesPreserveStylesBody:
     "When you enable Preserve styles, we try to keep your original layout and formatting by editing the document at the structure level instead of rebuilding it from plain text. That structure is often called an AST (abstract syntax tree): a tree representation of the document (e.g. for DOCX, the XML in word/document.xml). We modify specific nodes (e.g. wrapping the email run in a hyperlink) so styles and layout stay intact. When AST-level edits aren't possible – for example with some PDFs or when an egg changes body text – we fall back to a rebuild path; the UI and log indicate which path was used.",
@@ -224,6 +235,26 @@ export const securityCopy: Copy = {
     "> [5] Rehydrate PII — tokens are replaced with the original PII in the outgoing buffer.",
   resourcesFlowStep6:
     "> [6] Stream & purge — the CV with injected eggs is streamed back as a base64 buffer and in-memory data is discarded, with nothing persisted server-side.",
+  resourcesDiagramAscii: `+------------------------------------------------------------+
+|                      Browser client                        |
+|                                                            |
+|  [1] Load (in-memory only; CV uploaded from browser)       |
+|  [2] Dehydrate PII (Vault: raw PII -> short-lived tokens)  |
+|                                                            |
+|    +----------------------------------------------------+  |
+|    |         Transformation Engine (tokens only)        |  |
+|    |                                                    |  |
+|    |  [3] Analyze duality (scan tokenized CV            |  |
+|    |      for existing adversarial patterns)            |  |
+|    |  [4] Apply eggs (Funversarial layers added         |  |
+|    |      on tokens, no raw PII)                        |  |
+|    +----------------------------------------------------+  |
+|                                                            |
+|  [5] Rehydrate PII (tokens -> original PII in buffer)      |
+|  [6] Stream & purge (send CV with injected eggs back to    |
+|      server memory cleared, nothing persisted)             |
++------------------------------------------------------------+`,
+  resourcesDiagramAriaLabel: "Stateless Vault data flow diagram",
   resourcesOwaspTitle: "OWASP LLM alignment and eggs",
   resourcesOwaspBody1:
     "Each egg in FunversarialCV is designed with reference to the OWASP Top 10 for LLM Applications. For example, invisible prompt injections and \"LLM-trap\" style instructions are tied to risks around prompt injection and insecure output handling, while hallucination-oriented patterns are used to surface over-reliance on model-generated summaries.",

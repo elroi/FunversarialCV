@@ -183,6 +183,17 @@ export const hrCopy: Copy = {
   resourcesWhyTitle: "Why add signals to a CV?",
   resourcesWhyBody:
     "FunversarialCV is an educational tool that adds hidden, test-friendly signals to your CV so you can see how AI screening systems behave. The signals are based on common security and AI guidelines. They’re designed so humans can still read the CV normally, while you learn how automated tools interpret it.",
+  resourcesAtsTitle: "What is an ATS (and why does it care about your CV)?",
+  resourcesAtsBody1:
+    "ATS stands for Applicant Tracking System. It is the gatekeeper software that almost every major company uses to manage the thousands of resumes they receive.",
+  resourcesAtsBody2:
+    "Before a human recruiter ever sees your CV, the ATS parses (reads) it. Here is how it works:",
+  resourcesAtsBulletKeyword:
+    "The keyword match — The software scans your CV for specific keywords that match the job description. If the JD says “RAG architecture” and your CV only says “database design,” the ATS might rank you lower, even if you’re a strong fit.",
+  resourcesAtsBulletRanking:
+    "The ranking system — It creates a score for how well you match the role. Recruiters often only look at the top 10–20% of these scored candidates.",
+  resourcesAtsBulletFormatting:
+    "The formatting trap — If a CV has complex graphics, tables within tables, or unusual fonts, the ATS might fail to read the text correctly, so your experience might not show up the way you expect.",
   resourcesPreserveStylesTitle: "Preserve styles and layout",
   resourcesPreserveStylesBody:
     "When you turn on “Preserve styles”, we try to keep your existing layout and formatting by editing the document’s structure instead of rebuilding it from plain text. When that isn’t possible (for example with some PDFs or when an option changes the main text), we rebuild and the interface will show which approach was used.",
@@ -226,6 +237,26 @@ export const hrCopy: Copy = {
     "[5] Restore contact details — Placeholders are replaced with your real details in the final file.",
   resourcesFlowStep6:
     "[6] Send back and clear — The new CV is sent to your browser and we don’t keep anything on the server.",
+  resourcesDiagramAscii: `+------------------------------------------------------------+
+|                      Browser client                        |
+|                                                            |
+|  [1] Load (in-memory only; CV uploaded from browser)       |
+|  [2] Replace contact details (placeholders, not real PII)  |
+|                                                            |
+|    +----------------------------------------------------+  |
+|    |         Server processing (placeholders)           |  |
+|    |                                                    |  |
+|    |  [3] Pre-check (scan for hidden instructions /     |  |
+|    |      tracking links)                               |  |
+|    |  [4] Add options (signals on placeholder version;  |  |
+|    |      no code run)                                  |  |
+|    +----------------------------------------------------+  |
+|                                                            |
+|  [5] Restore contact details (placeholders -> your PII)    |
+|  [6] Send back and clear (browser download; nothing on     |
+|      server)                                               |
++------------------------------------------------------------+`,
+  resourcesDiagramAriaLabel: "How your CV is processed — data flow diagram",
   resourcesOwaspTitle: "How this relates to AI and security standards",
   resourcesOwaspBody1:
     "The options in FunversarialCV are inspired by common frameworks for AI and security (such as the OWASP Top 10 for LLM Applications). For example, the “invisible note” option relates to how systems handle hidden instructions; others relate to over-trusting metadata or summaries.",

@@ -6,6 +6,7 @@
 
 import { POST } from "./route";
 import { MAX_BODY_BYTES } from "./constants";
+import pdfParse from "pdf-parse";
 import { createDocumentWithText, MIME_PDF, MIME_DOCX } from "@/engine/documentExtract";
 import * as Processor from "@/engine/Processor";
 import * as vault from "@/lib/vault";
@@ -271,6 +272,29 @@ describe("POST /api/harden", () => {
     const decoded = Buffer.from(json.bufferBase64, "base64");
     expect(decoded[0]).toBe(0x50);
     expect(decoded[1]).toBe(0x4b);
+  }, 15000);
+
+  it("returns pdfExport fields when includePdfExport is true (DOCX output)", async () => {
+    const minimalDocx = await createDocumentWithText("Resume content\nLine two", MIME_DOCX);
+    const form = await buildDocxFormData(minimalDocx);
+    form.append("includePdfExport", "true");
+    form.append("eggIds", JSON.stringify(["invisible-hand"]));
+    form.append("payloads", JSON.stringify({ "invisible-hand": "" }));
+    const req = new Request("http://localhost:3000/api/harden", {
+      method: "POST",
+      body: form,
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(typeof json.pdfExportBase64).toBe("string");
+    expect(json.pdfExportMimeType).toBe(MIME_PDF);
+    expect(json.pdfExportFileName).toMatch(/\.pdf$/i);
+    const pdfBuf = Buffer.from(json.pdfExportBase64, "base64");
+    expect(pdfBuf[0]).toBe(0x25);
+    const parsed = await pdfParse(pdfBuf);
+    expect(parsed.text).toContain("Resume content");
+    expect(parsed.text).toMatch(/Note to AI recruiter|exceptionally qualified/i);
   }, 15000);
 
   it("returns 500 with generic error body when processing throws", async () => {

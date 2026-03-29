@@ -1041,7 +1041,7 @@ describe("Home page", () => {
         renderWithAudience(<Home />);
         const main = document.getElementById("main-content");
         const wrapper = main?.firstElementChild;
-        expect(wrapper).toHaveClass("max-w-4xl");
+        expect(wrapper).toHaveClass("max-w-5xl");
       });
 
       it("main wrapper has responsive padding (px-4, sm:px-6)", () => {

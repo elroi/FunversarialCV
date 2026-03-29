@@ -11,10 +11,20 @@ import { OwaspMapping } from "../types/egg";
 import { MIME_PDF, MIME_DOCX } from "../engine/documentExtract";
 import { containsPii } from "../lib/vault";
 import { toWinAnsiSafe } from "../lib/pdfWinAnsi";
+import {
+  hasStandardFields,
+  isExtendedShape,
+  MAX_CUSTOM_KEYS,
+  MAX_VALUE_LENGTH,
+  parseMetadataShadowPayload,
+  STANDARD_FIELD_KEYS,
+  type MetadataStandardFields,
+} from "./metadataShadowPayload";
+
+export type { MetadataStandardFields, ParsedMetadataShadow } from "./metadataShadowPayload";
+export { parseMetadataShadowPayload } from "./metadataShadowPayload";
 
 const KEY_PATTERN = /^[a-zA-Z0-9_]+$/;
-const MAX_VALUE_LENGTH = 200;
-const MAX_KEYS = 20;
 
 function isPdfBuffer(buffer: Buffer): boolean {
   return (
@@ -30,20 +40,28 @@ function isDocxBuffer(buffer: Buffer): boolean {
   return buffer.length >= 2 && buffer[0] === 0x50 && buffer[1] === 0x4b;
 }
 
-function parsePayload(payload: string): Record<string, string> {
-  const trimmed = payload.trim();
-  if (!trimmed) return {};
-  try {
-    const parsed = JSON.parse(trimmed) as Record<string, unknown>;
-    if (typeof parsed !== "object" || parsed === null) return {};
-    const out: Record<string, string> = {};
-    for (const [k, v] of Object.entries(parsed)) {
-      if (typeof v === "string" && KEY_PATTERN.test(k)) out[k] = v;
-    }
-    return out;
-  } catch {
-    return {};
+function validateCustomMap(obj: Record<string, unknown>): boolean {
+  const entries = Object.entries(obj);
+  if (entries.length > MAX_CUSTOM_KEYS) return false;
+  for (const [k, v] of entries) {
+    if (!KEY_PATTERN.test(k)) return false;
+    if (typeof v !== "string") return false;
+    if (v.length > MAX_VALUE_LENGTH) return false;
+    if (containsPii(v)) return false;
   }
+  return true;
+}
+
+function validateStandardObject(obj: Record<string, unknown>): boolean {
+  for (const [k, v] of Object.entries(obj)) {
+    if (!STANDARD_FIELD_KEYS.includes(k as (typeof STANDARD_FIELD_KEYS)[number])) {
+      return false;
+    }
+    if (typeof v !== "string") return false;
+    if (v.length > MAX_VALUE_LENGTH) return false;
+    if (containsPii(v)) return false;
+  }
+  return true;
 }
 
 export const metadataShadow: IEgg = {
@@ -54,7 +72,7 @@ export const metadataShadow: IEgg = {
   owaspMapping: OwaspMapping.LLM02_Insecure_Output,
 
   manualCheckAndValidation:
-    "Quick check: Open File → Properties (PDF) or File → Info → Properties → Advanced Properties → Custom (Word) and look for your custom key (e.g. Ranking) and value. Manual check: In a PDF open File → Properties → Keywords (or your viewer's metadata panel). In Word open File → Info → Properties → Advanced Properties → Custom and check for your key-value. Validation: Run the transform with a known key-value payload, then read the document properties and assert the keys and values match.",
+    "Quick check (Word / DOCX): File → Info → Properties → Advanced Properties → Custom for your custom keys; same path → Summary for Title, Subject, Author, Tags (keywords) when you set standard fields. Quick check (PDF): File → Properties → Keywords for custom Key: Value tokens. Standard Title/Subject/Author/Keywords apply to DOCX only in this release; PDF uses custom properties as Keywords only. Validation: Run the transform with a known payload, then inspect document properties and assert values match.",
 
   validatePayload(payload: string): boolean {
     const trimmed = payload.trim();
@@ -62,29 +80,51 @@ export const metadataShadow: IEgg = {
     try {
       const parsed = JSON.parse(trimmed) as Record<string, unknown>;
       if (typeof parsed !== "object" || parsed === null) return false;
-      const entries = Object.entries(parsed);
-      if (entries.length > MAX_KEYS) return false;
-      for (const [k, v] of entries) {
-        if (!KEY_PATTERN.test(k)) return false;
-        if (typeof v !== "string") return false;
-        if (v.length > MAX_VALUE_LENGTH) return false;
-        if (containsPii(v)) return false;
+      if (!isExtendedShape(parsed)) {
+        return validateCustomMap(parsed as Record<string, unknown>);
       }
-      return true;
+      for (const k of Object.keys(parsed)) {
+        if (k !== "custom" && k !== "standard") return false;
+      }
+      const customRaw = parsed.custom;
+      if (customRaw !== undefined) {
+        if (
+          customRaw === null ||
+          typeof customRaw !== "object" ||
+          Array.isArray(customRaw)
+        ) {
+          return false;
+        }
+        if (!validateCustomMap(customRaw as Record<string, unknown>)) {
+          return false;
+        }
+      }
+      const st = parsed.standard;
+      if (st === undefined) return true;
+      if (st === null || typeof st !== "object" || Array.isArray(st)) {
+        return false;
+      }
+      return validateStandardObject(st as Record<string, unknown>);
     } catch {
       return false;
     }
   },
 
   async transform(buffer: Buffer, payload: string): Promise<Buffer> {
-    const props = parsePayload(payload);
-    if (Object.keys(props).length === 0) return buffer;
+    const { custom, standard } = parseMetadataShadowPayload(payload);
+    const customKeys = Object.keys(custom);
+    const applyCore = hasStandardFields(standard);
+
+    if (customKeys.length === 0 && !applyCore) return buffer;
 
     if (isPdfBuffer(buffer)) {
+      // TECH DEBT: Also map `standard` (title, subject, author, keywords) via pdf-lib and merge
+      // with custom-derived keywords; optionally preserve existing PDF keywords from getKeywords().
+      if (customKeys.length === 0) return buffer;
       const doc = await PDFDocument.load(new Uint8Array(buffer), {
         ignoreEncryption: true,
       });
-      const keywords = Object.entries(props).map(([k, v]) =>
+      const keywords = Object.entries(custom).map(([k, v]) =>
         `${toWinAnsiSafe(k)}: ${toWinAnsiSafe(v)}`
       );
       doc.setKeywords(keywords);
@@ -94,26 +134,41 @@ export const metadataShadow: IEgg = {
 
     if (isDocxBuffer(buffer)) {
       const zip = await JSZip.loadAsync(buffer);
-      let mergedProps: Record<string, string> = { ...props };
-      const customFile = zip.file("docProps/custom.xml");
-      if (customFile) {
-        try {
-          const existingXml = await customFile.async("string");
-          const existing = parseCustomXml(existingXml);
-          mergedProps = { ...existing, ...props };
-        } catch {
-          // Corrupt or unexpected custom.xml; use only new props.
+      if (customKeys.length > 0) {
+        let mergedProps: Record<string, string> = { ...custom };
+        const customFile = zip.file("docProps/custom.xml");
+        if (customFile) {
+          try {
+            const existingXml = await customFile.async("string");
+            const existing = parseCustomXml(existingXml);
+            mergedProps = { ...existing, ...custom };
+          } catch {
+            // Corrupt or unexpected custom.xml; use only new props.
+          }
         }
+        const customXml = buildCustomXml(mergedProps);
+        zip.file("docProps/custom.xml", customXml);
+        await ensureContentType(
+          zip,
+          "/docProps/custom.xml",
+          "application/vnd.openxmlformats-officedocument.custom-properties+xml"
+        );
+        await ensureCustomPropertiesRelationship(zip);
       }
-      const customXml = buildCustomXml(mergedProps);
-      zip.file("docProps/custom.xml", customXml);
-      await ensureContentType(
-        zip,
-        "/docProps/custom.xml",
-        "application/vnd.openxmlformats-officedocument.custom-properties+xml"
-      );
-      // Word (esp. Mac) ignores orphan parts: custom.xml must be linked from the package root.
-      await ensureCustomPropertiesRelationship(zip);
+      if (applyCore) {
+        const coreFile = zip.file("docProps/core.xml");
+        const existingCore = coreFile
+          ? await coreFile.async("string")
+          : undefined;
+        const coreXml = mergeCorePropertiesXml(existingCore, standard);
+        zip.file("docProps/core.xml", coreXml);
+        await ensureContentType(
+          zip,
+          "/docProps/core.xml",
+          "application/vnd.openxmlformats-package.core-properties+xml"
+        );
+        await ensureCoreMetadataRelationship(zip);
+      }
       const out = await zip.generateAsync({
         type: "nodebuffer",
         compression: "DEFLATE",
@@ -184,11 +239,71 @@ function escapeXml(s: string): string {
     .replace(/'/g, "&apos;");
 }
 
+const DEFAULT_CORE_PROPERTIES_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+</cp:coreProperties>`;
+
+/** Insert or replace a single element inside cp:coreProperties (dc:* / cp:*). */
+function setOrReplaceCoreXmlElement(
+  xml: string,
+  fullTag: string,
+  innerText: string
+): string {
+  const escapedInner = escapeXml(innerText);
+  const tagEsc = fullTag.replace(/:/g, "\\:");
+  const re = new RegExp(
+    `<${tagEsc}(?:\\s[^>]*)?>[\\s\\S]*?<\\/${tagEsc}>`,
+    "i"
+  );
+  const fresh = `<${fullTag}>${escapedInner}</${fullTag}>`;
+  if (re.test(xml)) {
+    return xml.replace(re, fresh);
+  }
+  return xml.replace(/<\/cp:coreProperties>/i, `  ${fresh}</cp:coreProperties>`);
+}
+
+/**
+ * Merges standard metadata into docProps/core.xml. Maps author → dc:creator per OOXML.
+ */
+function mergeCorePropertiesXml(
+  existingXml: string | undefined,
+  standard: MetadataStandardFields
+): string {
+  let xml =
+    existingXml && existingXml.trim().length > 0
+      ? existingXml
+      : DEFAULT_CORE_PROPERTIES_XML;
+
+  if (!xml.includes("xmlns:dc=")) {
+    xml = xml.replace(
+      /<cp:coreProperties([^>]*)>/i,
+      `<cp:coreProperties$1 xmlns:dc="http://purl.org/dc/elements/1.1/">`
+    );
+  }
+
+  const fields: { field: keyof MetadataStandardFields; tag: string }[] = [
+    { field: "title", tag: "dc:title" },
+    { field: "subject", tag: "dc:subject" },
+    { field: "author", tag: "dc:creator" },
+    { field: "keywords", tag: "cp:keywords" },
+  ];
+  for (const { field, tag } of fields) {
+    const val = standard[field];
+    if (val === undefined || val === "") continue;
+    xml = setOrReplaceCoreXmlElement(xml, tag, val);
+  }
+  return xml;
+}
+
 const CONTENT_TYPES_PATH = "[Content_Types].xml";
 
 /** OOXML package relationship so hosts load docProps/custom.xml (Custom tab in Word). */
 const CUSTOM_PROPERTIES_REL_TYPE =
   "http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties";
+
+/** Package relationship for docProps/core.xml (Title, Subject, Author, Tags). */
+const CORE_METADATA_REL_TYPE =
+  "http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties";
 
 async function ensureCustomPropertiesRelationship(zip: JSZip): Promise<void> {
   const relsPath = "_rels/.rels";
@@ -198,6 +313,18 @@ async function ensureCustomPropertiesRelationship(zip: JSZip): Promise<void> {
   if (xml.includes(CUSTOM_PROPERTIES_REL_TYPE)) return;
   const nextId = nextPackageRelationshipId(xml);
   const rel = `<Relationship Id="${nextId}" Type="${CUSTOM_PROPERTIES_REL_TYPE}" Target="docProps/custom.xml"/>`;
+  xml = xml.replace("</Relationships>", `  ${rel}\n</Relationships>`);
+  zip.file(relsPath, xml);
+}
+
+async function ensureCoreMetadataRelationship(zip: JSZip): Promise<void> {
+  const relsPath = "_rels/.rels";
+  const relsFile = zip.file(relsPath);
+  if (!relsFile) return;
+  let xml = await relsFile.async("string");
+  if (xml.includes(CORE_METADATA_REL_TYPE)) return;
+  const nextId = nextPackageRelationshipId(xml);
+  const rel = `<Relationship Id="${nextId}" Type="${CORE_METADATA_REL_TYPE}" Target="docProps/core.xml"/>`;
   xml = xml.replace("</Relationships>", `  ${rel}\n</Relationships>`);
   zip.file(relsPath, xml);
 }

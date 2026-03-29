@@ -71,6 +71,12 @@ export interface Copy {
   successScanComplete: string;
   successHardenedReady: string;
   downloadButton: string;
+  /** Secondary download when server also returns a PDF export (eggs embedded for parsers). */
+  downloadPdfButton: string;
+  /** Checkbox: request bundled PDF export alongside Word output. */
+  includePdfExportLabel: string;
+  /** Short note under the PDF export checkbox (layout vs Word; optional token caveat). */
+  includePdfExportHint: string;
   /** Shown when egg/options in the UI differ from the last successful output; download still serves that prior run. */
   downloadStaleConfigWarning: string;
   errorAlertPrefix: string;
@@ -155,11 +161,35 @@ export interface Copy {
 
   // —— MetadataShadowConfigCard ——
   metadataShadowDescription: string;
+  metadataShadowCustomLegend: string;
+  metadataShadowPropertyKeyFormatHint: string;
   metadataShadowPropertyName: string;
   metadataShadowPropertyValue: string;
   metadataShadowPlaceholderKey: string;
   metadataShadowPlaceholderValue: string;
+  metadataShadowAddProperty: string;
+  metadataShadowRemoveRow: string;
+  metadataShadowCustomKeyCap: string;
+  metadataShadowStandardSectionTitle: string;
+  metadataShadowStandardScope: string;
+  metadataShadowStandardTitle: string;
+  metadataShadowStandardSubject: string;
+  metadataShadowStandardAuthor: string;
+  metadataShadowStandardKeywords: string;
+  metadataShadowAuthorLabNote: string;
   metadataShadowHowToTitle: string;
+  /** Shown when serialize is blocked until the user fixes validation errors. */
+  metadataShadowPayloadStaleHint: string;
+  metadataShadowErrKeyRequired: string;
+  metadataShadowErrValueRequired: string;
+  metadataShadowErrInvalidKey: string;
+  metadataShadowErrValueTooLong: string;
+  metadataShadowErrPiiValue: string;
+  /** Use "{key}" placeholder for the duplicate property name. */
+  metadataShadowErrDuplicateKey: string;
+  metadataShadowErrTooManyKeys: string;
+  metadataShadowErrStandardTooLong: string;
+  metadataShadowErrPiiStandard: string;
 
   // —— Resources page ——
   resourcesUsageTitle: string;

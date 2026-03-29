@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCopy } from "../copy";
+import { hrCopy, securityCopy, useCopy } from "../copy";
 import { useAudience } from "../contexts/AudienceContext";
 import { AudienceSwitcher } from "./AudienceSwitcher";
 
@@ -21,8 +21,8 @@ export type SiteHeaderProps = {
  */
 export function SiteHeader({ secondaryNav }: SiteHeaderProps) {
   const copy = useCopy();
-  const { audience } = useAudience();
-  const headerFont = audience === "hr" ? "font-sans" : "";
+  const { contentAudience } = useAudience();
+  const headerFont = contentAudience === "hr" ? "font-sans" : "";
 
   return (
     <header
@@ -49,20 +49,47 @@ export function SiteHeader({ secondaryNav }: SiteHeaderProps) {
 }
 
 /**
+ * Stacked opacity crossfade between security vs HR privacy lines (same layout cell; inactive copy is aria-hidden).
+ */
+function PrivacyModeBadge() {
+  const { contentAudience } = useAudience();
+  const lineClass =
+    "col-start-1 row-start-1 min-w-0 text-caption font-mono uppercase leading-snug tracking-[0.15em] text-accent/80 sm:text-xs sm:tracking-[0.2em]";
+
+  return (
+    <p
+      className="theme-toolbar-badge-crossfade grid min-w-0 sm:shrink-0"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <span
+        className={`${lineClass} ${contentAudience === "security" ? "z-[1] opacity-100" : "z-0 opacity-0"}`}
+        aria-hidden={contentAudience !== "security"}
+      >
+        {securityCopy.piiModeBadge}
+      </span>
+      <span
+        className={`${lineClass} ${contentAudience === "hr" ? "z-[1] opacity-100" : "z-0 opacity-0"}`}
+        aria-hidden={contentAudience !== "hr"}
+      >
+        {hrCopy.piiModeBadge}
+      </span>
+    </p>
+  );
+}
+
+/**
  * Trust line + audience switcher. Navigation lives in SiteHeader as a text link.
  */
 export function SiteTopBar() {
-  const copy = useCopy();
-
   return (
     <div
-      className="mb-4 flex w-full min-w-0 flex-col gap-3 sm:mb-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2"
+      className="theme-crossfade-skip mb-4 flex w-full min-w-0 flex-col gap-3 sm:mb-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2"
       role="toolbar"
       aria-label="Privacy note and audience"
     >
-      <p className="min-w-0 text-caption font-mono uppercase leading-snug tracking-[0.15em] text-accent/80 sm:shrink-0 sm:text-xs sm:tracking-[0.2em]">
-        {copy.piiModeBadge}
-      </p>
+      <PrivacyModeBadge />
       <div className="flex w-full min-w-0 sm:w-auto sm:justify-end">
         <AudienceSwitcher />
       </div>

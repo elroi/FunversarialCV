@@ -79,6 +79,10 @@ export async function POST(request: NextRequest) {
   const preserveStyles =
     preserveStylesRaw === "true" || preserveStylesRaw === "1";
 
+  const includePdfExportRaw = formData.get("includePdfExport");
+  const includePdfExport =
+    includePdfExportRaw === "true" || includePdfExportRaw === "1";
+
   const { process } = await import("@/engine/Processor");
   const { AVAILABLE_EGGS } = await import("@/eggs/registry");
   const {
@@ -251,12 +255,44 @@ export async function POST(request: NextRequest) {
       preserveStyles,
     });
     logInfo("/api/harden", "success", { mimeType });
+
+    let pdfExportBase64: string | undefined;
+    let pdfExportFileName: string | undefined;
+    if (includePdfExport && mimeType === MIME_DOCX) {
+      try {
+        const { exportHardenedDocxToPdf } = await import(
+          "@/engine/docxToPdfExport"
+        );
+        const pdfBuf = await exportHardenedDocxToPdf(
+          result.buffer,
+          eggs,
+          payloadsForEggs
+        );
+        pdfExportBase64 = pdfBuf.toString("base64");
+        pdfExportFileName = /\.docx$/i.test(originalName)
+          ? `${originalName.slice(0, -5)}.pdf`
+          : `${originalName.replace(/\.[^/.]+$/, "") || "document"}.pdf`;
+      } catch (pdfErr) {
+        const pdfMsg =
+          pdfErr instanceof Error ? pdfErr.message : "PDF export failed.";
+        logError("/api/harden", "pdf_export_error", pdfMsg);
+        // Main DOCX response still succeeds; client keeps Word download.
+      }
+    }
+
     return Response.json({
       bufferBase64: result.buffer.toString("base64"),
       mimeType,
       scannerReport: result.scannerReport,
       originalName,
       ...(canaryTokenUsed !== undefined ? { canaryTokenUsed } : {}),
+      ...(pdfExportBase64 !== undefined
+        ? {
+            pdfExportBase64,
+            pdfExportMimeType: MIME_PDF,
+            pdfExportFileName,
+          }
+        : {}),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Processing failed.";

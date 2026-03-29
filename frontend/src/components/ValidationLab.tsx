@@ -76,8 +76,8 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
   onPromptCopy,
 }) => {
   const copy = useCopy();
-  const { audience } = useAudience();
-  const isHr = audience === "hr";
+  const { contentAudience } = useAudience();
+  const isHr = contentAudience === "hr";
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

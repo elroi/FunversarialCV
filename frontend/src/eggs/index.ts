@@ -2,7 +2,11 @@
  * Egg library barrel export.
  */
 
-export { invisibleHand, DEFAULT_INVISIBLE_HAND_TRAP } from "./InvisibleHand";
+export {
+  invisibleHand,
+  DEFAULT_INVISIBLE_HAND_TRAP,
+  getInvisibleHandTrapText,
+} from "./InvisibleHand";
 export { incidentMailto } from "./IncidentMailto";
 export {
   INCIDENT_MAILTO_TEMPLATES,

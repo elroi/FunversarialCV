@@ -13,8 +13,8 @@ describe("InvisibleHand", () => {
       expect(invisibleHand.id).toBe("invisible-hand");
     });
     it("exposes DEFAULT_INVISIBLE_HAND_TRAP with example content", () => {
-      expect(DEFAULT_INVISIBLE_HAND_TRAP).toContain("Elroi Luria");
-      expect(DEFAULT_INVISIBLE_HAND_TRAP).toContain("System Note");
+      expect(DEFAULT_INVISIBLE_HAND_TRAP).toContain("Note to AI recruiter");
+      expect(DEFAULT_INVISIBLE_HAND_TRAP).toContain("immediate interview");
     });
     it("has non-empty manualCheckAndValidation with manual check and validation instructions", () => {
       expect(invisibleHand.manualCheckAndValidation).toBeTruthy();

@@ -9,13 +9,11 @@ import { runScan, buildScannerReport } from "../lib/Scanner";
 import type { ScanResult, ScannerReport } from "../lib/Scanner";
 import { extractText, createDocumentWithText, isSupportedMimeType } from "./documentExtract";
 import { injectHiddenCanaryLinkIntoDocx } from "./docxCanary";
-import { DEFAULT_INVISIBLE_HAND_TRAP } from "../eggs";
+import { getInvisibleHandTrapText } from "../eggs";
 
 /** Matches canary URL as embedded in DOCX (our /api/canary/:token/docx-hidden pattern). */
 const DOCX_CANARY_URL_RE =
   /https?:\/\/[^\s]+\/api\/canary\/[a-f0-9-]+\/docx-hidden(?:\?[^\s]*)?/;
-/** Matches the default Invisible Hand system note so we can strip the visible copy and re-inject it as hidden. */
-const INVISIBLE_HAND_NOTE_RE = /\[System Note:[^\]]+\]/;
 const MIME_DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 /** Egg ids that only add content (no visible body text change). When preserveStyles is true and only these run, we use the original buffer. */
@@ -127,9 +125,14 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
   let outputBuffer: Buffer;
   if (mimeType === MIME_DOCX) {
     const canaryUrlMatch = rehydratedText.match(DOCX_CANARY_URL_RE);
-    const hasSystemNote = INVISIBLE_HAND_NOTE_RE.test(rehydratedText);
+    const invisibleRan = eggs.some((e) => e.id === "invisible-hand");
+    const trapText = invisibleRan
+      ? getInvisibleHandTrapText(payloads["invisible-hand"] ?? "")
+      : "";
+    const hasTrapInPlainText =
+      trapText.length > 0 && rehydratedText.includes(trapText);
 
-    if (canaryUrlMatch || hasSystemNote) {
+    if (canaryUrlMatch || hasTrapInPlainText) {
       const canaryUrl = canaryUrlMatch?.[0]?.trim();
 
       let cleaned = rehydratedText;
@@ -137,8 +140,8 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
         cleaned = cleaned.replace(canaryUrl, "");
       }
       cleaned = cleaned.replace(/\s*Verify document integrity\s*/gi, "");
-      if (hasSystemNote) {
-        cleaned = cleaned.replace(INVISIBLE_HAND_NOTE_RE, "");
+      if (hasTrapInPlainText) {
+        cleaned = cleaned.split(trapText).join("");
       }
       cleaned = cleaned.replace(/\n\n+/g, "\n").trim();
 
@@ -147,13 +150,10 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
       if (canaryUrl) {
         outputBuffer = await injectHiddenCanaryLinkIntoDocx(outputBuffer, canaryUrl);
       }
-      if (hasSystemNote) {
-        // Re-inject the Invisible Hand trap text as a hidden 1pt white paragraph.
+      if (hasTrapInPlainText) {
+        // Re-inject the Invisible Hand trap as hidden white text (rebuild path loses styling).
         const { injectHiddenParagraphIntoDocx } = await import("./docxInject");
-        outputBuffer = await injectHiddenParagraphIntoDocx(
-          outputBuffer,
-          DEFAULT_INVISIBLE_HAND_TRAP
-        );
+        outputBuffer = await injectHiddenParagraphIntoDocx(outputBuffer, trapText);
       }
     } else {
       outputBuffer = await createDocumentWithText(rehydratedText, mimeType);

@@ -8,6 +8,7 @@ import {
   type ProcessingStageId,
   type ProcessingState,
 } from "../src/components/DualityMonitor";
+import { AudienceCopyFadeShell } from "../src/components/AudienceCopyFadeShell";
 import { SiteHeader, SiteTopBar } from "../src/components/SiteChrome";
 import { IncidentMailtoConfigCard } from "../src/components/IncidentMailtoConfigCard";
 import { CanaryWingConfigCard } from "../src/components/CanaryWingConfigCard";
@@ -187,16 +188,21 @@ export default function Home() {
   const [preserveStyles, setPreserveStyles] = useState(true);
   const [preserveStylesDetailExpanded, setPreserveStylesDetailExpanded] =
     useState(false);
+  /** Request server-built PDF (plain layout) with the same egg injections as the Word file. */
+  const [includePdfExport, setIncludePdfExport] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const successMessageRef = useRef<HTMLParagraphElement>(null);
   const retryButtonRef = useRef<HTMLButtonElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const armedSectionRef = useRef<HTMLDivElement | null>(null);
   const lastHardenedBlobRef = useRef<Blob | null>(null);
+  const lastHardenedPdfBlobRef = useRef<Blob | null>(null);
+  const lastPdfExportFileNameRef = useRef<string | null>(null);
   const lastHardenedConfigRef = useRef<{
     payloads: Record<string, string>;
     eggIds: string[];
     preserveStyles: boolean;
+    includePdfExport: boolean;
   } | null>(null);
   const openFilePickerRef = useRef<(() => void) | null>(null);
   /** True once the user has toggled an egg or preserve-styles; we only persist after that so we never overwrite saved state on load. */
@@ -213,7 +219,7 @@ export default function Home() {
   const [eggMetadataById, setEggMetadataById] = useState<Record<string, { name: string; manualCheckAndValidation: string }>>({});
 
   const copy = useCopy();
-  const { audience } = useAudience();
+  const { contentAudience } = useAudience();
 
   /** When set, show confirmation dialog: PDF and eggs can only be processed by the server. */
   const [serverPdfConfirm, setServerPdfConfirm] = useState<{
@@ -315,6 +321,8 @@ export default function Home() {
     setSelectedFile(file);
     setSelectedFileName(file.name);
     lastHardenedBlobRef.current = null;
+    lastHardenedPdfBlobRef.current = null;
+    lastPdfExportFileNameRef.current = null;
     lastHardenedConfigRef.current = null;
     setArmedEggIds(new Set());
     setDualityResult(null);
@@ -358,6 +366,8 @@ export default function Home() {
     setError(null);
     setSuccessMessage(null);
     lastHardenedBlobRef.current = null;
+    lastHardenedPdfBlobRef.current = null;
+    lastPdfExportFileNameRef.current = null;
     lastHardenedConfigRef.current = null;
     setArmedEggIds(new Set());
     setDualityResult(null);
@@ -373,6 +383,18 @@ export default function Home() {
     const a = document.createElement("a");
     a.href = url;
     a.download = successMessage;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [successMessage]);
+
+  const triggerPdfDownload = useCallback(() => {
+    const blob = lastHardenedPdfBlobRef.current;
+    const fname = lastPdfExportFileNameRef.current;
+    if (!blob || !fname || !successMessage) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fname;
     a.click();
     URL.revokeObjectURL(url);
   }, [successMessage]);
@@ -417,10 +439,12 @@ export default function Home() {
       }
     }
     if (preserveStyles !== snap.preserveStyles) return true;
+    if (includePdfExport !== (snap.includePdfExport ?? false)) return true;
     return false;
   }, [
     enabledEggIds,
     preserveStyles,
+    includePdfExport,
     invisibleHandPayload,
     incidentMailtoPayload,
     canaryWingPayload,
@@ -465,6 +489,7 @@ export default function Home() {
       eggIdsToUse: string[];
       payloadsForEnabled: Record<string, string>;
       preserveStyles: boolean;
+      includePdfExport: boolean;
       piiMapForRehydrate: PiiMap | null;
       rehydrateMimeType: string | null;
     }) => {
@@ -474,6 +499,7 @@ export default function Home() {
         eggIdsToUse,
         payloadsForEnabled,
         preserveStyles,
+        includePdfExport: includePdfExportParam,
         piiMapForRehydrate,
         rehydrateMimeType,
       } = params;
@@ -483,6 +509,9 @@ export default function Home() {
       formData.append("eggIds", JSON.stringify(eggIdsToUse));
       if (preserveStyles) {
         formData.append("preserveStyles", "true");
+      }
+      if (includePdfExportParam) {
+        formData.append("includePdfExport", "true");
       }
 
       try {
@@ -586,10 +615,40 @@ export default function Home() {
         }
 
         lastHardenedBlobRef.current = blob;
+        lastHardenedPdfBlobRef.current = null;
+        lastPdfExportFileNameRef.current = null;
+        const pdfB64 = data.pdfExportBase64;
+        const pdfFn = data.pdfExportFileName;
+        if (
+          typeof pdfB64 === "string" &&
+          typeof pdfFn === "string" &&
+          pdfFn.trim() !== ""
+        ) {
+          try {
+            const pdfBinary = atob(pdfB64);
+            const pdfBytes = new Uint8Array(pdfBinary.length);
+            for (let i = 0; i < pdfBinary.length; i++) {
+              pdfBytes[i] = pdfBinary.charCodeAt(i);
+            }
+            const pdfMime =
+              typeof data.pdfExportMimeType === "string"
+                ? data.pdfExportMimeType
+                : "application/pdf";
+            lastHardenedPdfBlobRef.current = new Blob([pdfBytes], {
+              type: pdfMime,
+            });
+            lastPdfExportFileNameRef.current = pdfFn;
+          } catch {
+            lastHardenedPdfBlobRef.current = null;
+            lastPdfExportFileNameRef.current = null;
+          }
+        }
+
         lastHardenedConfigRef.current = {
           payloads: { ...payloadsForEnabled },
           eggIds: [...eggIdsToUse],
           preserveStyles,
+          includePdfExport: includePdfExportParam,
         };
         setArmedEggIds(new Set(eggIdsToUse));
 
@@ -676,7 +735,7 @@ export default function Home() {
         ]);
       }
     },
-    [canaryWingPayload]
+    [canaryWingPayload, includePdfExport]
   );
 
   const startPipelineForFile = async (file: File) => {
@@ -698,6 +757,8 @@ export default function Home() {
     setError(null);
     setSuccessMessage(null);
     lastHardenedBlobRef.current = null;
+    lastHardenedPdfBlobRef.current = null;
+    lastPdfExportFileNameRef.current = null;
     lastHardenedConfigRef.current = null;
     setArmedEggIds(new Set());
     setClientPiiMap(null);
@@ -866,6 +927,7 @@ export default function Home() {
       eggIdsToUse: [...enabledEggIds],
       payloadsForEnabled,
       preserveStyles,
+      includePdfExport,
       piiMapForRehydrate,
       rehydrateMimeType,
     });
@@ -1039,6 +1101,7 @@ export default function Home() {
                     eggIdsToUse: conf.enabledEggIds,
                     payloadsForEnabled: conf.payloadsForEnabled,
                     preserveStyles: conf.preserveStyles,
+                    includePdfExport,
                     piiMapForRehydrate: null,
                     rehydrateMimeType: null,
                   });
@@ -1060,6 +1123,7 @@ export default function Home() {
                     eggIdsToUse: [],
                     payloadsForEnabled: {},
                     preserveStyles: conf.preserveStyles,
+                    includePdfExport,
                     piiMapForRehydrate: null,
                     rehydrateMimeType: null,
                   });
@@ -1083,11 +1147,13 @@ export default function Home() {
       )}
 
       <main id="main-content" className="min-h-dvh-screen bg-bg text-foreground">
-        <div className="mx-auto flex min-h-dvh-screen min-w-0 max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
+        <div className="mx-auto flex min-h-dvh-screen min-w-0 max-w-5xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
+        <SiteTopBar />
+
+        <AudienceCopyFadeShell className="flex min-w-0 flex-1 flex-col">
         <SiteHeader
           secondaryNav={{ href: "/resources", label: copy.resourcesLink }}
         />
-        <SiteTopBar />
 
         <section className="flex flex-1 flex-col gap-8 md:flex-row">
           <div className="flex-1">
@@ -1194,7 +1260,7 @@ export default function Home() {
               </CollapsibleCard>
             </SectionFold>
 
-            {audience === "security" && copy.introDetail.trim() ? (
+            {contentAudience === "security" && copy.introDetail.trim() ? (
               <div className="mb-6">{renderIntro(copy.introDetail)}</div>
             ) : null}
 
@@ -1207,7 +1273,7 @@ export default function Home() {
               ariaLabel={`${copy.privacyDetailsSummary}: show or hide details`}
               defaultExpanded={false}
             >
-              <PiiNoticeBlock copy={copy} audience={audience} />
+              <PiiNoticeBlock copy={copy} audience={contentAudience} />
             </CollapsibleCard>
 
             <SectionFold
@@ -1317,6 +1383,35 @@ export default function Home() {
                       </div>
                   </div>
                 </div>
+                <div className="mt-2 rounded-md border border-border/50 bg-panel/40 px-3 py-2.5">
+                  <div className="flex min-h-[44px] items-start gap-3">
+                    <input
+                      id="include-pdf-export-checkbox"
+                      type="checkbox"
+                      checked={includePdfExport}
+                      onChange={() => {
+                        userHasChangedCheckboxesRef.current = true;
+                        setIncludePdfExport((p) => !p);
+                      }}
+                      className="mt-1 h-4 w-4 shrink-0 rounded border-border text-accent focus:ring-accent/50"
+                      aria-describedby="include-pdf-export-hint"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <label
+                        htmlFor="include-pdf-export-checkbox"
+                        className="cursor-pointer text-sm font-medium leading-snug text-foreground/90"
+                      >
+                        {copy.includePdfExportLabel}
+                      </label>
+                      <p
+                        id="include-pdf-export-hint"
+                        className="mt-1 text-caption leading-relaxed text-foreground/65 sm:text-xs"
+                      >
+                        {copy.includePdfExportHint}
+                      </p>
+                    </div>
+                  </div>
+                </div>
                 <div className="mt-3">
                   <Card className="px-4 py-3">
                     <p className="border-b border-border/60 pb-2 text-caption font-medium uppercase tracking-[0.2em] text-foreground/70 mb-3">
@@ -1419,6 +1514,24 @@ export default function Home() {
                   >
                     {copy.downloadButton}
                   </Button>
+                  {successMessage && lastHardenedPdfBlobRef.current ? (
+                    <Button
+                      variant="secondary"
+                      onClick={triggerPdfDownload}
+                      className={
+                        downloadSuccessHasInjectedEggs
+                          ? "w-full max-w-sm min-h-[44px] py-2"
+                          : "min-h-[44px] py-2"
+                      }
+                      data-testid="download-pdf-export"
+                      aria-label={`${copy.downloadPdfButton} ${lastPdfExportFileNameRef.current ?? ""}`}
+                      aria-describedby={
+                        downloadReflectsStaleConfig ? "download-stale-hint" : undefined
+                      }
+                    >
+                      {copy.downloadPdfButton}
+                    </Button>
+                  ) : null}
                 </div>
               </div>
             )}
@@ -1518,6 +1631,7 @@ export default function Home() {
             </SectionFold>
           </aside>
         </section>
+        </AudienceCopyFadeShell>
       </div>
       </main>
     </>

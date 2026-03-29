@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useCopy } from "../../src/copy";
+import { AudienceCopyFadeShell } from "../../src/components/AudienceCopyFadeShell";
 import { SiteHeader, SiteTopBar } from "../../src/components/SiteChrome";
 
 export default function ResourcesPage() {
@@ -11,10 +12,12 @@ export default function ResourcesPage() {
   return (
     <main className="min-h-dvh-screen bg-bg text-foreground">
       <div className="mx-auto flex min-h-dvh-screen min-w-0 max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:py-10">
-        <SiteHeader secondaryNav={{ href: "/", label: copy.backHome }} />
         <SiteTopBar />
 
-        <section className="space-y-8 text-sm text-foreground/90">
+        <AudienceCopyFadeShell className="flex flex-1 flex-col space-y-8 text-sm text-foreground/90">
+        <SiteHeader secondaryNav={{ href: "/", label: copy.backHome }} />
+
+        <section className="space-y-8">
           <section>
             <h2 className="text-base font-semibold text-success mb-2">
               {copy.resourcesUsageTitle}
@@ -192,6 +195,7 @@ export default function ResourcesPage() {
             </p>
           </section>
         </section>
+        </AudienceCopyFadeShell>
       </div>
     </main>
   );

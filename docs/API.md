@@ -16,6 +16,30 @@ Contract for the egg-injection endpoint (`/api/harden`). Use this to test parser
 | `payloads`| No       | JSON string `Record<eggId, string>`. Keys are egg ids (`invisible-hand`, `incident-mailto`, `canary-wing`, `metadata-shadow`). If omitted, `{}` is used. Unknown keys are ignored. |
 | `eggIds`  | No       | JSON string array of egg ids. If present and non-empty, only these eggs run. Omit or leave empty to run all eggs. |
 
+#### `metadata-shadow` payload
+
+JSON string. **Legacy:** flat object whose keys are custom property names (letters, digits, underscore only) and values are strings (max length 200, no PII per server validation), e.g. `{"Company":"Funversarial Research Lab"}`. Up to 20 custom keys.
+
+**Extended:** optional buckets:
+
+```json
+{
+  "custom": { "Ranking": "Top_1%", "Tier": "A" },
+  "standard": {
+    "title": "Optional",
+    "subject": "Optional",
+    "author": "Optional",
+    "keywords": "Optional"
+  }
+}
+```
+
+If the top level includes a `custom` object or a `standard` object, only those two top-level keys are allowed. `custom` values follow the same rules as legacy keys. `standard` may only use `title`, `subject`, `author`, and `keywords`.
+
+**DOCX:** `custom` is written to `docProps/custom.xml`; `standard` maps to `docProps/core.xml` (`dc:title`, `dc:subject`, `dc:creator`, `cp:keywords`).
+
+**PDF:** Only the `custom` map is applied (as PDF Keywords, `Key: Value` tokens). `standard` is validated but **not** written to PDF in the current release.
+
 ## Success (200)
 
 JSON body:

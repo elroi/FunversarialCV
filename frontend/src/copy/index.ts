@@ -12,8 +12,8 @@ export function getCopy(audience: Audience): Copy {
 }
 
 export function useCopy(): Copy {
-  const { audience } = useAudience();
-  return getCopy(audience);
+  const { contentAudience } = useAudience();
+  return getCopy(contentAudience);
 }
 
 /**

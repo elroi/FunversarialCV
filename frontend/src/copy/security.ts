@@ -73,6 +73,10 @@ export const securityCopy: Copy = {
   successScanComplete: "Scan complete (no eggs applied — document unchanged):",
   successHardenedReady: "CV ready (eggs injected):",
   downloadButton: "Download",
+  downloadPdfButton: "Download PDF (parser-safe eggs)",
+  includePdfExportLabel: "Also build a PDF export (plain layout; eggs kept for parsers)",
+  includePdfExportHint:
+    "PDF is generated here so injections survive—unlike Word “Save as PDF.” Layout is simple text. If your Word file was rehydrated in the browser, the PDF may still show vault tokens while the .docx download has real contact details.",
   downloadStaleConfigWarning:
     "This file matches your last successful run, not the egg settings on screen now. Inject Eggs again to refresh the download.",
   errorAlertPrefix: "> Alert:",
@@ -164,12 +168,41 @@ export const securityCopy: Copy = {
   canaryWingCopyButton: "Copy link",
 
   metadataShadowDescription:
-    "Add a custom document property (e.g. Company: Funversarial Research Lab). Keys: letters, numbers, underscore only. No PII in values.",
+    "Add multiple custom document properties and optional standard Word metadata (Title, Subject, Author, Keywords). Keys: letters, numbers, underscore only. No PII in values.",
+  metadataShadowCustomLegend: "Custom properties",
+  metadataShadowPropertyKeyFormatHint:
+    "Letters, numbers, and underscores only for property names.",
   metadataShadowPropertyName: "Property name",
   metadataShadowPropertyValue: "Property value",
   metadataShadowPlaceholderKey: "Company",
   metadataShadowPlaceholderValue: "Funversarial Research Lab",
+  metadataShadowAddProperty: "Add property",
+  metadataShadowRemoveRow: "Remove row",
+  metadataShadowCustomKeyCap: "Up to 20 custom properties.",
+  metadataShadowStandardSectionTitle: "Standard file properties (Word / DOCX)",
+  metadataShadowStandardScope:
+    "DOCX: custom + standard fields below. PDF: custom properties map to Keywords only; standard fields are not applied to PDF in this release.",
+  metadataShadowStandardTitle: "Title",
+  metadataShadowStandardSubject: "Subject",
+  metadataShadowStandardAuthor: "Author",
+  metadataShadowStandardKeywords: "Keywords",
+  metadataShadowAuthorLabNote: "Synthetic / lab use only.",
   metadataShadowHowToTitle: "How to check & validate",
+  metadataShadowPayloadStaleHint:
+    "Resolve validation errors below or the payload will not update (harden uses the last valid JSON).",
+  metadataShadowErrKeyRequired: "Property name required when a value is set.",
+  metadataShadowErrValueRequired: "Value required when a property name is set, or clear the name.",
+  metadataShadowErrInvalidKey:
+    "Property names may contain only letters, numbers, and underscores.",
+  metadataShadowErrValueTooLong: "Exceeds 200 characters.",
+  metadataShadowErrPiiValue:
+    "PII patterns (email, phone, heuristic street) are rejected; use synthetic lab data.",
+  metadataShadowErrDuplicateKey:
+    'Duplicate key "{key}". Each custom property name must be unique.',
+  metadataShadowErrTooManyKeys: "Maximum 20 custom properties.",
+  metadataShadowErrStandardTooLong: "Exceeds 200 characters.",
+  metadataShadowErrPiiStandard:
+    "PII patterns are rejected in standard fields; use synthetic values.",
 
   resourcesUsageTitle: "Usage and responsibility",
   resourcesUsageBody1:

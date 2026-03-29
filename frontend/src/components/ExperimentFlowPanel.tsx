@@ -13,8 +13,8 @@ export function ExperimentFlowPanelBody({
   /** When false, skip the positioning line (e.g. home page shows it once above the upload area). */
   showPositioningLine?: boolean;
 }) {
-  const { audience } = useAudience();
-  const isHr = audience === "hr";
+  const { contentAudience } = useAudience();
+  const isHr = contentAudience === "hr";
   const panelFont = isHr ? "font-sans" : "font-mono";
 
   return (

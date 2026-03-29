@@ -13,3 +13,7 @@ export {
   MIME_DOCX,
   type SupportedMimeType,
 } from "./documentExtract";
+export {
+  exportHardenedDocxToPdf,
+  sanitizeExtractedDocxPlainTextForPdfSeed,
+} from "./docxToPdfExport";

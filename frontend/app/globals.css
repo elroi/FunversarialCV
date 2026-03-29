@@ -21,6 +21,16 @@
   --scrollbar-thumb: rgba(71, 85, 105, 0.55);
   --scrollbar-thumb-hover: rgba(0, 212, 255, 0.38);
   --scrollbar-corner: var(--color-bg);
+  /* Security ↔ HR audience crossfade (html data-audience); JS copy fade reads this via getThemeTransitionMs() */
+  --theme-transition-duration: 1.5s;
+  --theme-transition-timing: ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --theme-transition-duration: 1ms;
+    --theme-transition-timing: linear;
+  }
 }
 
 /* HR theme: warm white, strong contrast (section headings and borders readable) */
@@ -70,23 +80,31 @@
   background: var(--scrollbar-corner);
 }
 
-body {
-  background-color: var(--color-bg);
-  color: var(--color-foreground);
-  transition: background-color 1.2s ease, color 1.2s ease;
-  @apply antialiased;
-  padding-left: env(safe-area-inset-left, 0);
-  padding-right: env(safe-area-inset-right, 0);
-  padding-top: env(safe-area-inset-top, 0);
-  padding-bottom: env(safe-area-inset-bottom, 0);
-}
+@layer base {
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-foreground);
+    transition:
+      background-color var(--theme-transition-duration) var(--theme-transition-timing),
+      color var(--theme-transition-duration) var(--theme-transition-timing);
+    @apply antialiased;
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
+    padding-top: env(safe-area-inset-top, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
 
-body * {
-  transition: background-color 1.2s ease, color 1.2s ease, border-color 1.2s ease;
-}
+  /* Default crossfade for theme tokens; Tailwind utilities layer overrides duration/property for hovers. */
+  body * {
+    transition:
+      background-color var(--theme-transition-duration) var(--theme-transition-timing),
+      color var(--theme-transition-duration) var(--theme-transition-timing),
+      border-color var(--theme-transition-duration) var(--theme-transition-timing);
+  }
 
-[data-audience="hr"] body {
-  font-family: var(--font-sans);
+  [data-audience="hr"] body {
+    font-family: var(--font-sans);
+  }
 }
 
 /* Security theme only: grid and scanlines */
@@ -253,5 +271,35 @@ body * {
   border-color: rgba(120, 113, 108, 0.44);
   background-color: rgba(245, 245, 244, 0.78);
   box-shadow: 0 0 0 1px rgba(28, 25, 23, 0.06);
+}
+
+/*
+ * Top toolbar (privacy badge line + audience segmented control): no transitions. These use
+ * accent/foreground tokens that change with audience; the page-wide `body *` crossfade otherwise
+ * interpolates them for seconds and reads as flicker. Unlayered beats @layer base/utilities.
+ */
+.theme-crossfade-skip,
+.theme-crossfade-skip * {
+  transition: none;
+}
+
+/* Copy shell: same tempo + easing as theme token crossfade (`body *`). */
+.audience-copy-fade-shell-transition {
+  transition-property: opacity;
+  transition-duration: var(--theme-transition-duration);
+  transition-timing-function: var(--theme-transition-timing);
+}
+
+/* Privacy badge: opacity only; same duration/easing as theme crossfade. */
+.theme-crossfade-skip .theme-toolbar-badge-crossfade > span {
+  transition-property: opacity;
+  transition-duration: var(--theme-transition-duration);
+  transition-timing-function: var(--theme-transition-timing);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-crossfade-skip .theme-toolbar-badge-crossfade > span {
+    transition: none;
+  }
 }
 

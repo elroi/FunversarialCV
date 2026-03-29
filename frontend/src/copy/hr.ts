@@ -75,6 +75,10 @@ export const hrCopy: Copy = {
   successScanComplete: "Scan complete (no options applied — document unchanged):",
   successHardenedReady: "Your new CV is ready:",
   downloadButton: "Download",
+  downloadPdfButton: "Download PDF (signals for parsers)",
+  includePdfExportLabel: "Also export PDF (plain layout; parser signals preserved)",
+  includePdfExportHint:
+    "We generate the PDF here so your signals stay in the file. Layout is plain text. If tokens were restored only in the Word download, the PDF may still show placeholders.",
   downloadStaleConfigWarning:
     "This file matches your last successful run, not the options on screen now. Add signals again to refresh the download.",
   errorAlertPrefix: "Something went wrong:",
@@ -166,12 +170,41 @@ export const hrCopy: Copy = {
   canaryWingCopyButton: "Copy link",
 
   metadataShadowDescription:
-    "Add a hidden property to the document (e.g. Company: Funversarial Research Lab). Use letters, numbers, and underscores only. Don’t put personal contact details in the value.",
+    "Add one or more custom document properties, and optionally standard Word fields (Title, Subject, Author, Keywords). Use letters, numbers, and underscores for property names. Don’t put personal contact details in values.",
+  metadataShadowCustomLegend: "Custom properties",
+  metadataShadowPropertyKeyFormatHint:
+    "Letters, numbers, and underscores only for property names.",
   metadataShadowPropertyName: "Property name",
   metadataShadowPropertyValue: "Property value",
   metadataShadowPlaceholderKey: "Company",
   metadataShadowPlaceholderValue: "Funversarial Research Lab",
+  metadataShadowAddProperty: "Add property",
+  metadataShadowRemoveRow: "Remove row",
+  metadataShadowCustomKeyCap: "Up to 20 custom properties.",
+  metadataShadowStandardSectionTitle: "Standard file properties (Word / DOCX)",
+  metadataShadowStandardScope:
+    "These fields apply to Word (DOCX). PDF output still only receives custom properties as PDF Keywords; standard fields here are not written to PDF yet.",
+  metadataShadowStandardTitle: "Title",
+  metadataShadowStandardSubject: "Subject",
+  metadataShadowStandardAuthor: "Author",
+  metadataShadowStandardKeywords: "Keywords",
+  metadataShadowAuthorLabNote: "Synthetic / lab use only.",
   metadataShadowHowToTitle: "How to check and validate",
+  metadataShadowPayloadStaleHint:
+    "Fix the errors below so this egg’s settings stay in sync with the pipeline.",
+  metadataShadowErrKeyRequired: "Add a property name for this value.",
+  metadataShadowErrValueRequired: "Add a value, or clear the property name.",
+  metadataShadowErrInvalidKey:
+    "Use only letters, numbers, and underscores in the property name.",
+  metadataShadowErrValueTooLong: "Value is too long (200 characters max).",
+  metadataShadowErrPiiValue:
+    "No email, phone, or street-style addresses in values. Use synthetic text.",
+  metadataShadowErrDuplicateKey:
+    'Duplicate property name "{key}". Remove or rename one row.',
+  metadataShadowErrTooManyKeys: "At most 20 custom properties.",
+  metadataShadowErrStandardTooLong: "This field is too long (200 characters max).",
+  metadataShadowErrPiiStandard:
+    "No email, phone, or street-style addresses in this field.",
 
   resourcesUsageTitle: "Usage and responsibility",
   resourcesUsageBody1:

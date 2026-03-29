@@ -78,6 +78,66 @@ describe("MetadataShadow", () => {
         )
       ).toBe(false);
     });
+
+    it("accepts extended payload with custom and standard objects", () => {
+      expect(
+        metadataShadow.validatePayload(
+          JSON.stringify({
+            custom: { Ranking: "Top_1%", Tier: "A" },
+            standard: { title: "T", subject: "S", author: "A", keywords: "K" },
+          })
+        )
+      ).toBe(true);
+    });
+
+    it("accepts extended payload with only standard (custom defaults empty)", () => {
+      expect(
+        metadataShadow.validatePayload(
+          JSON.stringify({ standard: { title: "Lab doc" } })
+        )
+      ).toBe(true);
+    });
+
+    it("rejects extended payload with extra top-level keys", () => {
+      expect(
+        metadataShadow.validatePayload(
+          JSON.stringify({
+            custom: {},
+            standard: {},
+            extra: "nope",
+          })
+        )
+      ).toBe(false);
+    });
+
+    it("rejects extended payload when custom is not an object", () => {
+      expect(
+        metadataShadow.validatePayload(
+          JSON.stringify({ custom: "not-object", standard: {} })
+        )
+      ).toBe(false);
+    });
+
+    it("rejects extended payload when standard has unknown keys", () => {
+      expect(
+        metadataShadow.validatePayload(
+          JSON.stringify({
+            custom: {},
+            standard: { title: "ok", unknown: "x" },
+          })
+        )
+      ).toBe(false);
+    });
+
+    it("rejects PII in standard.author", () => {
+      expect(
+        metadataShadow.validatePayload(
+          JSON.stringify({
+            standard: { author: "reach me@evil.com" },
+          })
+        )
+      ).toBe(false);
+    });
   });
 
   describe("transform", () => {
@@ -126,5 +186,70 @@ describe("MetadataShadow", () => {
       const result = await metadataShadow.transform(buf, "{}");
       expect(result.equals(buf)).toBe(true);
     });
+
+    it("DOCX: extended payload writes custom.xml and core.xml standard fields", async () => {
+      const buf = await createDocumentWithText("Resume", MIME_DOCX);
+      const payload = JSON.stringify({
+        custom: { Ranking: "High" },
+        standard: {
+          title: "MetaTitle",
+          subject: "MetaSubject",
+          author: "MetaAuthor",
+          keywords: "kw1, kw2",
+        },
+      });
+      const result = await metadataShadow.transform(buf, payload);
+      const JSZip = (await import("jszip")).default;
+      const zip = await JSZip.loadAsync(result);
+      const customXml = await zip.file("docProps/custom.xml")!.async("string");
+      expect(customXml).toContain("Ranking");
+      expect(customXml).toContain("High");
+      const coreXml = await zip.file("docProps/core.xml")!.async("string");
+      expect(coreXml).toContain("MetaTitle");
+      expect(coreXml).toContain("MetaSubject");
+      expect(coreXml).toContain("MetaAuthor");
+      expect(coreXml).toContain("kw1, kw2");
+    }, 10000);
+
+    it("DOCX: standard-only payload updates core.xml and leaves custom.xml unchanged", async () => {
+      const buf = await createDocumentWithText("Resume", MIME_DOCX);
+      const JSZip = (await import("jszip")).default;
+      const zipBefore = await JSZip.loadAsync(buf);
+      const customBefore = await zipBefore.file("docProps/custom.xml")!.async("string");
+      const payload = JSON.stringify({
+        standard: { title: "OnlyTitle" },
+      });
+      const result = await metadataShadow.transform(buf, payload);
+      const zip = await JSZip.loadAsync(result);
+      const coreXml = await zip.file("docProps/core.xml")!.async("string");
+      expect(coreXml).toContain("OnlyTitle");
+      const customAfter = await zip.file("docProps/custom.xml")!.async("string");
+      expect(customAfter).toBe(customBefore);
+    }, 10000);
+
+    it("PDF: extended payload applies custom keywords but does not apply standard title", async () => {
+      const buf = await createDocumentWithText("Resume", MIME_PDF);
+      const payload = JSON.stringify({
+        custom: { Ranking: "PdfRank" },
+        standard: { title: "ShouldNotAppearOnPdf" },
+      });
+      const result = await metadataShadow.transform(buf, payload);
+      const { PDFDocument } = await import("pdf-lib");
+      const doc = await PDFDocument.load(new Uint8Array(result));
+      const kw = doc.getKeywords();
+      const kwStr = Array.isArray(kw) ? (kw as string[]).join(" ") : String(kw ?? "");
+      expect(kwStr).toContain("PdfRank");
+      const title = doc.getTitle();
+      expect(title).not.toBe("ShouldNotAppearOnPdf");
+    }, 10000);
+
+    it("PDF: standard-only payload leaves buffer unchanged", async () => {
+      const buf = await createDocumentWithText("Resume", MIME_PDF);
+      const payload = JSON.stringify({
+        standard: { title: "IgnoredOnPdf" },
+      });
+      const result = await metadataShadow.transform(buf, payload);
+      expect(result.equals(buf)).toBe(true);
+    }, 10000);
   });
 });

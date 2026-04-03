@@ -207,7 +207,7 @@ Tracks the phased rollout aligned with the Validation Lab implementation plan (V
 | **A** | VL-01 — Fair-test `flowSteps` aligned with BASE-00 → JD protocol | **Done** ([`security.ts`](../frontend/src/copy/security.ts) / [`hr.ts`](../frontend/src/copy/hr.ts) steps 4–5; [`page.test.tsx`](../frontend/app/page.test.tsx); [`UX_UI_REVIEW.md`](UX_UI_REVIEW.md)) |
 | **B** | VL-04 doc + VL-02 narrative dedupe + inline copy comments | **Done** — CONTRIBUTING protocol section; shortened protocol `description` (removed duplicate JD/CV/BASE-01 paragraph); `sampleJobDescriptionIntro` carries fit-gap + pointer; [`validationLabProtocol.test.ts`](../frontend/src/lib/validationLabProtocol.test.ts) expectations updated |
 | **C** | VL-04 — Unify badge-hint UI when parse fallback | **Done** — shared `ValidationLabMatchBadgeHintDetails`; `manualMirrorProtocolOverride` for tests ([`ValidationLab.tsx`](../frontend/src/components/ValidationLab.tsx)) |
-| **D** | VL-03 — Audience-localized `VALIDATION_PROMPTS` | Pending |
+| **D** | VL-03 — Audience-localized validation prompts (`Copy.validationPrompts`) | **Done** — [`types.ts`](../frontend/src/copy/types.ts) `ValidationLabPromptEntry`; security vs HR strings in [`security.ts`](../frontend/src/copy/security.ts) / [`hr.ts`](../frontend/src/copy/hr.ts); [`ValidationLab.tsx`](../frontend/src/components/ValidationLab.tsx) reads `copy.validationPrompts` |
 | **E** | VL-05 — Shorten fair test to pointer + `#validation-lab` | Pending |
 | **F** | VL-06 — HR section rename / credibility copy | Pending |
 | **G** | VL-07 — E2E smoke for Validation Lab | Pending |

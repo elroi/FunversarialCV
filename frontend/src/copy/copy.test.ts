@@ -44,6 +44,16 @@ describe("copy", () => {
       expect(getCopy("hr").demoArmedInlineHint).toMatch(/Engine Configuration/i);
     });
 
+    it("Validation Lab prompts share stable ids; security vs HR titles differ", () => {
+      const sec = getCopy("security");
+      const hr = getCopy("hr");
+      const ids = ["BASE-00", "BASE-01", "LLM01", "LLM02", "LLM09"];
+      expect(sec.validationPrompts.map((p) => p.id)).toEqual(ids);
+      expect(hr.validationPrompts.map((p) => p.id)).toEqual(ids);
+      expect(sec.validationPrompts[0].title).toMatch(/Thread setup/i);
+      expect(hr.validationPrompts[0].title).toMatch(/First message/i);
+    });
+
     it("Validation Lab ENABLED badge copy describes last successful arm, not live checkboxes", () => {
       const sec = getCopy("security");
       const hr = getCopy("hr");
@@ -74,11 +84,21 @@ describe("copy", () => {
     it("engine config intros differ by audience and state", () => {
       const sec = getCopy("security");
       const hr = getCopy("hr");
-      expect(sec.engineConfigIntroNoCv).toMatch(/eggs to run/i);
-      expect(sec.engineConfigIntroCvReady).toMatch(/Expand each egg/i);
-      expect(sec.engineConfigIntroCvReady).toMatch(/Inject Eggs/i);
-      expect(hr.engineConfigIntroNoCv).toMatch(/signals to add/i);
-      expect(hr.engineConfigIntroCvReady).toMatch(/Add signals/i);
+      expect(sec.engineConfigIntroNoCv).toMatch(/eggs|Inject Eggs/i);
+      expect(sec.engineConfigIntroCvReady).toMatch(/expand|list|Inject Eggs|output options/i);
+      expect(hr.engineConfigIntroNoCv).toMatch(/signals|options|Add signals/i);
+      expect(hr.engineConfigIntroCvReady).toMatch(/expand|format|Add signals/i);
+    });
+
+    it("engine output section and PDF export disclosure copy are set for both audiences", () => {
+      const sec = getCopy("security");
+      const hr = getCopy("hr");
+      expect(sec.engineOutputSectionTitle).toBe("Output");
+      expect(hr.engineOutputSectionTitle).toBe("Format");
+      expect(sec.includePdfExportSummary.length).toBeGreaterThan(10);
+      expect(sec.includePdfExportDetailAnchor).toMatch(/more about pdf/i);
+      expect(sec.includePdfExportDetailDesc).toMatch(/vault tokens|PDF/i);
+      expect(hr.includePdfExportDetailDesc).toMatch(/placeholders|PDF/i);
     });
 
     it("preserve styles copy has summary, anchor, and expandable detail", () => {

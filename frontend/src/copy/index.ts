@@ -4,7 +4,7 @@ import { securityCopy } from "./security";
 import { hrCopy } from "./hr";
 import { useAudience } from "../contexts/AudienceContext";
 
-export type { Copy } from "./types";
+export type { Copy, ValidationLabPromptEntry } from "./types";
 export { securityCopy, hrCopy };
 
 export function getCopy(audience: Audience): Copy {

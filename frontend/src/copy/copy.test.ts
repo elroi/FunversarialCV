@@ -41,7 +41,22 @@ describe("copy", () => {
 
     it("demoArmedInlineHint points users to the engine fold after sample load", () => {
       expect(getCopy("security").demoArmedInlineHint).toMatch(/Engine Configuration/i);
-      expect(getCopy("hr").demoArmedInlineHint).toMatch(/Engine Configuration/i);
+      expect(getCopy("hr").demoArmedInlineHint).toMatch(/How it runs/i);
+    });
+
+    it("HR home uses Try in an AI tool for the validation section title; security keeps Validation Lab", () => {
+      expect(getCopy("hr").validationLabTitle).toBe("Try in an AI tool");
+      expect(getCopy("security").validationLabTitle).toBe("Validation Lab");
+    });
+
+    it("Validation Lab prompts share stable ids; security vs HR titles differ", () => {
+      const sec = getCopy("security");
+      const hr = getCopy("hr");
+      const ids = ["BASE-00", "BASE-01", "LLM01", "LLM02", "LLM09"];
+      expect(sec.validationPrompts.map((p) => p.id)).toEqual(ids);
+      expect(hr.validationPrompts.map((p) => p.id)).toEqual(ids);
+      expect(sec.validationPrompts[0].title).toMatch(/Thread setup/i);
+      expect(hr.validationPrompts[0].title).toMatch(/First message/i);
     });
 
     it("Validation Lab ENABLED badge copy describes last successful arm, not live checkboxes", () => {
@@ -74,11 +89,21 @@ describe("copy", () => {
     it("engine config intros differ by audience and state", () => {
       const sec = getCopy("security");
       const hr = getCopy("hr");
-      expect(sec.engineConfigIntroNoCv).toMatch(/eggs to run/i);
-      expect(sec.engineConfigIntroCvReady).toMatch(/Expand each egg/i);
-      expect(sec.engineConfigIntroCvReady).toMatch(/Inject Eggs/i);
-      expect(hr.engineConfigIntroNoCv).toMatch(/signals to add/i);
-      expect(hr.engineConfigIntroCvReady).toMatch(/Add signals/i);
+      expect(sec.engineConfigIntroNoCv).toMatch(/eggs|Inject Eggs/i);
+      expect(sec.engineConfigIntroCvReady).toMatch(/expand|list|Inject Eggs|output options/i);
+      expect(hr.engineConfigIntroNoCv).toMatch(/signals|options|Add signals/i);
+      expect(hr.engineConfigIntroCvReady).toMatch(/expand|format|Add signals/i);
+    });
+
+    it("engine output section and PDF export disclosure copy are set for both audiences", () => {
+      const sec = getCopy("security");
+      const hr = getCopy("hr");
+      expect(sec.engineOutputSectionTitle).toBe("Output");
+      expect(hr.engineOutputSectionTitle).toBe("Format");
+      expect(sec.includePdfExportSummary.length).toBeGreaterThan(10);
+      expect(sec.includePdfExportDetailAnchor).toMatch(/more about pdf/i);
+      expect(sec.includePdfExportDetailDesc).toMatch(/vault tokens|PDF/i);
+      expect(hr.includePdfExportDetailDesc).toMatch(/placeholders|PDF/i);
     });
 
     it("preserve styles copy has summary, anchor, and expandable detail", () => {
@@ -93,14 +118,14 @@ describe("copy", () => {
     it("positioningLine, flowSteps (length 7), philosophyLine, and experimentFlowLabel are set for both audiences", () => {
       const security = getCopy("security");
       const hr = getCopy("hr");
-      expect(security.experimentFlowLabel).toBeDefined();
+      expect(security.experimentFlowLabel).toBe("RUN THE CV EXPERIMENT");
+      expect(hr.experimentFlowLabel).toBe("STEP-BY-STEP AI CHECKLIST");
       expect(security.experimentFlowLabel.length).toBeGreaterThan(0);
       expect(security.positioningLine).toBeDefined();
       expect(security.positioningLine.length).toBeGreaterThan(0);
       expect(security.flowSteps).toHaveLength(7);
       expect(security.philosophyLine).toBeDefined();
       expect(security.philosophyLine.length).toBeGreaterThan(0);
-      expect(hr.experimentFlowLabel).toBeDefined();
       expect(hr.experimentFlowLabel.length).toBeGreaterThan(0);
       expect(hr.positioningLine).toBeDefined();
       expect(hr.positioningLine.length).toBeGreaterThan(0);

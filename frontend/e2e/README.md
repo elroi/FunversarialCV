@@ -4,8 +4,10 @@
 
 - **Audience:** The home page defaults to **HR**. Specs that assert security-only copy (PII badge, “Armed CV”, sample-CV row) must call `ensureSecurityAudienceForE2e(page)` immediately after `page.goto("/")` (or `"/?…"`). See `helpers/security-audience.ts`.
 - **Engine section:** The armed-CV line and **Inject Eggs** (security) or **Add signals** (HR) live inside **Engine Configuration** / **How it runs**. The fold starts **collapsed**; after a file arms it **auto-expands**. `expandEngineConfigurationSection` waits for the armed line to become visible and only clicks the fold when `aria-expanded="false"` (a blind toggle would collapse an already-open section).
+- **Fair-test steps:** The **How to run a fair test** card uses `expandOnWide`, so on **md+** viewports it is **already expanded** after load. Use `ensureFairTestPanelExpanded` (only clicks when `aria-expanded="false"`) before asserting flow-step links such as `#validation-lab`.
 - **Security copy in one place:** Matchers for security-audience strings are built from `src/copy/security.ts` in `helpers/security-ui.ts`. When you change those fields in product copy, E2E usually needs no regex edits—only run the suite. If you add **new** security-only UI, add a derived regex there (or a `data-testid` on the component and assert that).
 - **HR-only or shared copy:** If a test should reflect HR wording, do not call `ensureSecurityAudienceForE2e`; assert against `src/copy/hr.ts` or stable roles/test ids instead.
+- **Validation section:** `specs/validation-lab.spec.ts` expands the section fold (`validationLabTitle` + `validationLabCollapsibleAriaLabel` prefix) for **security** (`ensureSecurityAudienceForE2e`) and **HR** (default home), then asserts **BASE-00** is visible. It also checks the fair-test step’s `a[href="#validation-lab"]` deep link: the home page should **open** the Validation Lab fold, apply the **`attention-pulse`** class on the section trigger, and keep `aria-expanded="true"`. If the link step times out while `npm run dev` is running, **restart the dev server** so the browser loads a bundle that includes markdown links in `flowSteps` (`renderFlowStepLine`).
 
 ## Commands
 

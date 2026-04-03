@@ -351,6 +351,42 @@ describe("POST /api/harden", () => {
     expect(decoded[1]).toBe(0x4b);
   }, 15000);
 
+  it("passes divergenceProfile machine to process when form includes divergenceProfile=machine", async () => {
+    const minimalDocx = await createDocumentWithText("Resume content", MIME_DOCX);
+    const form = await buildDocxFormData(minimalDocx);
+    form.append("eggIds", JSON.stringify(["invisible-hand"]));
+    form.append("divergenceProfile", "machine");
+    const req = new Request("http://localhost:3000/api/harden", {
+      method: "POST",
+      body: form,
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(200);
+    expect(Processor.process).toHaveBeenCalledWith(
+      expect.objectContaining({
+        divergenceProfile: "machine",
+      })
+    );
+  }, 15000);
+
+  it("omits divergenceProfile from process args when absent (balanced / backward compatible)", async () => {
+    (Processor.process as jest.Mock).mockClear();
+    const minimalDocx = await createDocumentWithText("Resume content", MIME_DOCX);
+    const form = await buildDocxFormData(minimalDocx);
+    form.append("eggIds", JSON.stringify(["invisible-hand"]));
+    const req = new Request("http://localhost:3000/api/harden", {
+      method: "POST",
+      body: form,
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(200);
+    const call = (Processor.process as jest.Mock).mock.calls[0]![0] as Record<
+      string,
+      unknown
+    >;
+    expect(call.divergenceProfile).toBeUndefined();
+  }, 15000);
+
   it("passes preserveStyles to process when form has preserveStyles=true", async () => {
     const minimalDocx = await createDocumentWithText("Resume content", MIME_DOCX);
     const form = await buildDocxFormData(minimalDocx);

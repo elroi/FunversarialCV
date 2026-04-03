@@ -5,10 +5,8 @@ import { renderWithAudience } from "../test-utils";
 beforeEach(() => {
   window.localStorage.removeItem("funversarialcv-audience");
 });
-import {
-  ValidationLab,
-  VALIDATION_PROMPTS,
-} from "./ValidationLab";
+import { ValidationLab } from "./ValidationLab";
+import { hrCopy } from "../copy/hr";
 
 /** Opens a prompt row by id (outer Validation Lab section must already be expanded on page). */
 function expandPrompt(promptId: string) {
@@ -43,7 +41,7 @@ describe("ValidationLab", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("BASE-00")).toBeInTheDocument();
     expect(screen.getByText("BASE-01")).toBeInTheDocument();
-    expect(screen.getByText("Thread setup (before job description)")).toBeInTheDocument();
+    expect(screen.getByText("First message: job description next")).toBeInTheDocument();
   });
 
   it("renders structured protocol steps and security copy for badge explainer and list caption", async () => {
@@ -54,6 +52,7 @@ describe("ValidationLab", () => {
       expect(screen.getByText("About the ENABLED badge")).toBeInTheDocument();
     });
     expect(screen.getByText("Test prompts")).toBeInTheDocument();
+    expect(screen.getByText("Thread setup (before job description)")).toBeInTheDocument();
     expect(screen.getByText(/Copy the BASE-00 prompt below/i)).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -88,6 +87,25 @@ describe("ValidationLab", () => {
     expect(screen.getByText("Sample prompts")).toBeInTheDocument();
   });
 
+  it("parse-fallback path uses the same details disclosure for the badge hint as the parsed path", () => {
+    window.localStorage.setItem("funversarialcv-audience", "security");
+    const unparsable =
+      "Invalid protocol headline\n\nBody without parenthesized step numbers so parse returns null.";
+    renderWithAudience(
+      <ValidationLab
+        armedEggIds={new Set()}
+        manualMirrorProtocolOverride={unparsable}
+      />
+    );
+
+    const summary = screen.getByText("About the ENABLED badge").closest("summary");
+    expect(summary).toBeTruthy();
+    fireEvent.click(summary!);
+    expect(
+      screen.getByText(/last successful Inject Eggs run on this page/i)
+    ).toBeInTheDocument();
+  });
+
   it("keeps prompt descriptions inside collapsed prompt panels until expanded", () => {
     renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
 
@@ -97,27 +115,31 @@ describe("ValidationLab", () => {
 
     expandPrompt("BASE-00");
     expect(
-      screen.getByText(/Send first in the external LLM: the job description will arrive in the next message/i)
+      screen.getByText(
+        /Send this first in your external AI tool: the job description will follow in the next message/i
+      )
     ).toBeInTheDocument();
 
     expandPrompt("BASE-01");
     expect(
-      screen.getByText(/Paste after the JD, with the CV attached or pasted in the same send \(see numbered steps above\)/i)
+      screen.getByText(
+        /Use after the job description, with the CV in the same message or attached \(see numbered steps above\)/i
+      )
     ).toBeInTheDocument();
 
     expandPrompt("LLM01");
     expect(
-      screen.getByText(/Tests instruction hijacking/i)
+      screen.getByText(/Tests whether hidden instructions in the CV change the reply/i)
     ).toBeInTheDocument();
 
     expandPrompt("LLM02");
     expect(
-      screen.getByText(/Audit structured fields/i)
+      screen.getByText(/Looks at structured fields and contact details/i)
     ).toBeInTheDocument();
 
     expandPrompt("LLM09");
     expect(
-      screen.getByText(/Overreliance \/ summary bias/i)
+      screen.getByText(/Tests whether the AI over-trusts a positive summary/i)
     ).toBeInTheDocument();
   });
 
@@ -155,7 +177,7 @@ describe("ValidationLab", () => {
 
     expandPrompt("LLM01");
 
-    const llm01Prompt = VALIDATION_PROMPTS.find((p) => p.id === "LLM01")!;
+    const llm01Prompt = hrCopy.validationPrompts.find((p) => p.id === "LLM01")!;
     const copyBtn = screen.getByRole("button", { name: /copy LLM01 prompt/i });
     fireEvent.click(copyBtn);
 

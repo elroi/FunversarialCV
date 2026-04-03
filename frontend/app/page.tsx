@@ -10,10 +10,11 @@ import {
 } from "../src/components/DualityMonitor";
 import { AudienceCopyFadeShell } from "../src/components/AudienceCopyFadeShell";
 import { SiteHeader, SiteTopBar } from "../src/components/SiteChrome";
-import { IncidentMailtoConfigCard } from "../src/components/IncidentMailtoConfigCard";
-import { CanaryWingConfigCard } from "../src/components/CanaryWingConfigCard";
-import { InvisibleHandConfigCard } from "../src/components/InvisibleHandConfigCard";
-import { MetadataShadowConfigCard } from "../src/components/MetadataShadowConfigCard";
+import { EggConfiguratorRow } from "../src/components/EggConfiguratorRow";
+import { IncidentMailtoConfigBody } from "../src/components/IncidentMailtoConfigCard";
+import { CanaryWingConfigBody } from "../src/components/CanaryWingConfigCard";
+import { InvisibleHandConfigBody } from "../src/components/InvisibleHandConfigCard";
+import { MetadataShadowConfigBody } from "../src/components/MetadataShadowConfigCard";
 import { ValidationLab } from "../src/components/ValidationLab";
 import { ExperimentFlowPanelBody } from "../src/components/ExperimentFlowPanel";
 import * as ClientVault from "../src/lib/clientVault";
@@ -46,6 +47,13 @@ const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
 
 /** Delay before arming upload-channel in-view pulse so tagline pulse does not stack on first paint. */
 const ATTENTION_PULSE_STAGGER_MS = 500;
+
+/** DOM id / hash target for Validation Lab (`SectionFold` + fair-test markdown links). */
+const VALIDATION_LAB_SECTION_ID = "validation-lab";
+const VALIDATION_LAB_HASH = `#${VALIDATION_LAB_SECTION_ID}`;
+
+/** Let `SectionFold` apply `expanded` before pulsing the trigger (mirrors engine-fold timing). */
+const VALIDATION_LAB_HASH_PULSE_DELAY_MS = 150;
 
 /** Stable JSON for comparing egg payloads (key order from JSON.stringify can differ). */
 function stableJsonStringify(value: unknown): string {
@@ -197,6 +205,11 @@ export default function Home() {
     useState(false);
   /** Request server-built PDF (plain layout) with the same egg injections as the Word file. */
   const [includePdfExport, setIncludePdfExport] = useState(false);
+  const [includePdfExportDetailExpanded, setIncludePdfExportDetailExpanded] =
+    useState(false);
+  const [eggRowExpanded, setEggRowExpanded] = useState<Record<string, boolean>>(
+    () => ({})
+  );
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const successMessageRef = useRef<HTMLParagraphElement>(null);
   const retryButtonRef = useRef<HTMLButtonElement>(null);
@@ -227,8 +240,11 @@ export default function Home() {
   const [engineFoldExpandSignal, setEngineFoldExpandSignal] = useState(0);
   /** One-shot tagline accent after first paint (see attention pulse in globals.css). */
   const [taglineAttentionActive, setTaglineAttentionActive] = useState(false);
-  /** Bumped after DOCX download to re-run Validation Lab trigger pulse. */
+  /** Bumped after DOCX download or #validation-lab navigation to re-run Validation Lab trigger pulse. */
   const [validationLabPulseToken, setValidationLabPulseToken] = useState(0);
+  /** Bumped when the URL hash is #validation-lab so the Validation Lab fold opens (starts collapsed). */
+  const [validationLabFoldExpandRevision, setValidationLabFoldExpandRevision] =
+    useState(0);
   const [clientPiiMap, setClientPiiMap] = useState<PiiMap | null>(null);
 
   /** Egg metadata from GET /api/eggs (id -> { name, manualCheckAndValidation }). */
@@ -321,6 +337,58 @@ export default function Home() {
     return () => window.clearTimeout(t);
   }, [validationLabPulseToken]);
 
+  // #validation-lab: expand the fold and pulse the section trigger (not only browser scroll).
+  // Client-only hash handling; no server round-trip or document retention.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Browser timer handle is a number; Node's Timeout type conflicts under Next.js typecheck.
+    let pulseTimer: number | undefined;
+
+    const revealFromHash = () => {
+      if (window.location.hash !== VALIDATION_LAB_HASH) return;
+      if (pulseTimer !== undefined) window.clearTimeout(pulseTimer);
+      setValidationLabFoldExpandRevision((r) => r + 1);
+      pulseTimer = window.setTimeout(() => {
+        pulseTimer = undefined;
+        setValidationLabPulseToken((n) => n + 1);
+      }, VALIDATION_LAB_HASH_PULSE_DELAY_MS);
+    };
+
+    revealFromHash();
+    window.addEventListener("hashchange", revealFromHash);
+    return () => {
+      window.removeEventListener("hashchange", revealFromHash);
+      if (pulseTimer !== undefined) window.clearTimeout(pulseTimer);
+    };
+  }, []);
+
+  // After the Validation Lab fold opens from #validation-lab, scroll again so the section anchor
+  // sits near the top of the viewport. The browser's first scroll targets the collapsed shell;
+  // expanding adds body content below, which otherwise stays off-screen or poorly framed.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (validationLabFoldExpandRevision === 0) return;
+    if (window.location.hash !== VALIDATION_LAB_HASH) return;
+
+    let cancelled = false;
+    const scrollIntoPlace = () => {
+      if (cancelled) return;
+      const el = document.getElementById(VALIDATION_LAB_SECTION_ID);
+      if (!el || typeof el.scrollIntoView !== "function") return;
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    const outerRaf = requestAnimationFrame(() => {
+      requestAnimationFrame(scrollIntoPlace);
+    });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(outerRaf);
+    };
+  }, [validationLabFoldExpandRevision]);
+
   // Scroll focused success/error targets into view after render (refs are set post-commit).
   useEffect(() => {
     if (successMessage && successMessageRef.current && typeof successMessageRef.current.scrollIntoView === "function") {
@@ -379,15 +447,15 @@ export default function Home() {
     }
   }, [enabledEggIds, preserveStyles]);
 
-  const toggleEgg = (id: string) => {
+  const setEggEnabled = useCallback((id: string, nextEnabled: boolean) => {
     userHasChangedCheckboxesRef.current = true;
     setEnabledEggIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (nextEnabled) next.add(id);
+      else next.delete(id);
       return next;
     });
-  };
+  }, []);
 
   /** Applies a validated file to pipeline state (clears prior run, errors, PII map). */
   const armPipelineWithFile = useCallback((file: File) => {
@@ -589,6 +657,8 @@ export default function Home() {
       if (includePdfExportParam) {
         formData.append("includePdfExport", "true");
       }
+      // Stronger parser/LLM-visible egg shaping; API omits field → balanced (backward compatible).
+      formData.append("divergenceProfile", "machine");
 
       try {
         const res = await fetch("/api/harden", { method: "POST", body: formData });
@@ -1405,7 +1475,91 @@ export default function Home() {
                     {copy.changeFileButton}
                   </Button>
                 </div>
-                <p className="mt-0.5 text-caption text-foreground/50">
+                <p className="mt-4 border-b border-border/60 pb-2 text-caption font-medium uppercase tracking-[0.2em] text-foreground/70">
+                  {copy.eggsToRunTitle}
+                </p>
+                <div className="mt-3 flex flex-col gap-3">
+                  {EGG_OPTIONS.map((egg) => {
+                    const title =
+                      egg.id === "invisible-hand"
+                        ? copy.eggInvisibleHandTitle
+                        : egg.id === "incident-mailto"
+                          ? copy.eggIncidentMailtoTitle
+                          : egg.id === "canary-wing"
+                            ? copy.eggCanaryWingTitle
+                            : copy.eggMetadataShadowTitle;
+                    const subtitle =
+                      egg.id === "invisible-hand" || egg.id === "canary-wing"
+                        ? copy.styleAffecting
+                        : copy.styleSafe;
+                    const enabled = enabledEggIds.has(egg.id);
+                    const expanded = eggRowExpanded[egg.id] ?? false;
+                    return (
+                      <EggConfiguratorRow
+                        key={egg.id}
+                        eggDomId={egg.id}
+                        enabled={enabled}
+                        onEnabledChange={(on) => setEggEnabled(egg.id, on)}
+                        title={title}
+                        subtitle={subtitle}
+                        expanded={expanded}
+                        onExpandedChange={(next) =>
+                          setEggRowExpanded((prev) => ({
+                            ...prev,
+                            [egg.id]: next,
+                          }))
+                        }
+                        expandAriaLabel={`Expand configuration: ${title}`}
+                      >
+                        {egg.id === "invisible-hand" ? (
+                          <InvisibleHandConfigBody
+                            payload={invisibleHandPayload}
+                            onPayloadChange={setInvisibleHandPayload}
+                            disabled={!enabled}
+                            manualCheckAndValidation={
+                              eggMetadataById["invisible-hand"]
+                                ?.manualCheckAndValidation
+                            }
+                          />
+                        ) : egg.id === "incident-mailto" ? (
+                          <IncidentMailtoConfigBody
+                            payload={incidentMailtoPayload}
+                            onPayloadChange={setIncidentMailtoPayload}
+                            disabled={!enabled}
+                            manualCheckAndValidation={
+                              eggMetadataById["incident-mailto"]
+                                ?.manualCheckAndValidation
+                            }
+                          />
+                        ) : egg.id === "canary-wing" ? (
+                          <CanaryWingConfigBody
+                            payload={canaryWingPayload}
+                            onPayloadChange={setCanaryWingPayload}
+                            disabled={!enabled}
+                            manualCheckAndValidation={
+                              eggMetadataById["canary-wing"]
+                                ?.manualCheckAndValidation
+                            }
+                          />
+                        ) : (
+                          <MetadataShadowConfigBody
+                            payload={metadataShadowPayload}
+                            onPayloadChange={setMetadataShadowPayload}
+                            disabled={!enabled}
+                            manualCheckAndValidation={
+                              eggMetadataById["metadata-shadow"]
+                                ?.manualCheckAndValidation
+                            }
+                          />
+                        )}
+                      </EggConfiguratorRow>
+                    );
+                  })}
+                </div>
+                <p className="mt-6 border-b border-border/60 pb-2 text-caption font-medium uppercase tracking-[0.2em] text-foreground/70">
+                  {copy.engineOutputSectionTitle}
+                </p>
+                <p className="mt-2 text-caption text-foreground/50">
                   {copy.outputPlainTextHint}
                 </p>
                 <div className="mt-2 rounded-md border border-border/50 bg-panel/40 px-3 py-2.5">
@@ -1433,41 +1587,42 @@ export default function Home() {
                     </label>
                   </div>
                   <div className="mt-2 min-w-0 pl-7">
-                      <p
-                        id="preserve-styles-summary"
-                        className="text-caption leading-relaxed text-foreground/75 sm:text-xs"
-                      >
-                        {copy.preserveStylesSummary}{" "}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setPreserveStylesDetailExpanded((e) => !e)
-                          }
-                          aria-expanded={preserveStylesDetailExpanded}
-                          aria-controls="preserve-styles-desc"
-                          id="preserve-styles-detail-trigger"
-                          className="text-accent underline underline-offset-2 hover:text-accent/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-1 focus-visible:ring-offset-bg rounded"
-                        >
-                          {copy.preserveStylesDetailAnchor}
-                          <span aria-hidden="true" className="ml-0.5">
-                            {preserveStylesDetailExpanded ? " ▼" : " ▸"}
-                          </span>
-                        </button>
-                      </p>
-                      <div
-                        id="preserve-styles-desc"
-                        role="region"
-                        aria-labelledby="preserve-styles-detail-trigger"
-                        className={
-                          preserveStylesDetailExpanded
-                            ? "mt-1.5 border-l-2 border-accent/40 pl-3 text-caption leading-relaxed text-foreground/80 sm:text-xs"
-                            : "hidden"
+                    <p
+                      id="preserve-styles-summary"
+                      className="text-caption leading-relaxed text-foreground/75 sm:text-xs"
+                    >
+                      {copy.preserveStylesSummary}{" "}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPreserveStylesDetailExpanded((e) => !e)
                         }
+                        aria-expanded={preserveStylesDetailExpanded}
+                        aria-controls="preserve-styles-desc"
+                        id="preserve-styles-detail-trigger"
+                        className="text-accent underline underline-offset-2 hover:text-accent/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-1 focus-visible:ring-offset-bg rounded"
                       >
-                        {copy.preserveStylesDesc}
-                      </div>
+                        {copy.preserveStylesDetailAnchor}
+                        <span aria-hidden="true" className="ml-0.5">
+                          {preserveStylesDetailExpanded ? " ▼" : " ▸"}
+                        </span>
+                      </button>
+                    </p>
+                    <div
+                      id="preserve-styles-desc"
+                      role="region"
+                      aria-labelledby="preserve-styles-detail-trigger"
+                      className={
+                        preserveStylesDetailExpanded
+                          ? "mt-1.5 border-l-2 border-accent/40 pl-3 text-caption leading-relaxed text-foreground/80 sm:text-xs"
+                          : "hidden"
+                      }
+                    >
+                      {copy.preserveStylesDesc}
+                    </div>
                   </div>
                 </div>
+                <div className="hidden">
                 <div className="mt-2 rounded-md border border-border/50 bg-panel/40 px-3 py-2.5">
                   <div className="flex min-h-[44px] items-start gap-3">
                     <input
@@ -1479,7 +1634,11 @@ export default function Home() {
                         setIncludePdfExport((p) => !p);
                       }}
                       className="mt-1 h-4 w-4 shrink-0 rounded border-border text-accent focus:ring-accent/50"
-                      aria-describedby="include-pdf-export-hint"
+                      aria-describedby={
+                        includePdfExportDetailExpanded
+                          ? "include-pdf-export-summary include-pdf-export-desc"
+                          : "include-pdf-export-summary"
+                      }
                     />
                     <div className="min-w-0 flex-1">
                       <label
@@ -1489,51 +1648,41 @@ export default function Home() {
                         {copy.includePdfExportLabel}
                       </label>
                       <p
-                        id="include-pdf-export-hint"
-                        className="mt-1 text-caption leading-relaxed text-foreground/65 sm:text-xs"
+                        id="include-pdf-export-summary"
+                        className="mt-1 text-caption leading-relaxed text-foreground/75 sm:text-xs"
                       >
-                        {copy.includePdfExportHint}
+                        {copy.includePdfExportSummary}{" "}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setIncludePdfExportDetailExpanded((e) => !e)
+                          }
+                          aria-expanded={includePdfExportDetailExpanded}
+                          aria-controls="include-pdf-export-desc"
+                          id="include-pdf-export-detail-trigger"
+                          className="text-accent underline underline-offset-2 hover:text-accent/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-1 focus-visible:ring-offset-bg rounded"
+                        >
+                          {copy.includePdfExportDetailAnchor}
+                          <span aria-hidden="true" className="ml-0.5">
+                            {includePdfExportDetailExpanded ? " ▼" : " ▸"}
+                          </span>
+                        </button>
                       </p>
+                      <div
+                        id="include-pdf-export-desc"
+                        role="region"
+                        aria-labelledby="include-pdf-export-detail-trigger"
+                        className={
+                          includePdfExportDetailExpanded
+                            ? "mt-1.5 border-l-2 border-accent/40 pl-3 text-caption leading-relaxed text-foreground/80 sm:text-xs"
+                            : "hidden"
+                        }
+                      >
+                        {copy.includePdfExportDetailDesc}
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div className="mt-3">
-                  <Card className="px-4 py-3">
-                    <p className="border-b border-border/60 pb-2 text-caption font-medium uppercase tracking-[0.2em] text-foreground/70 mb-3">
-                      {copy.eggsToRunTitle}
-                    </p>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                    {EGG_OPTIONS.map((egg) => (
-                      <label
-                        key={egg.id}
-                        className="flex min-h-[44px] cursor-pointer items-center gap-3 py-2 pr-2 text-sm text-foreground/80"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={enabledEggIds.has(egg.id)}
-                          onChange={() => toggleEgg(egg.id)}
-                          className="mt-0.5 shrink-0 rounded border-border text-accent focus:ring-accent/50"
-                        />
-                        <span className="flex flex-col gap-0.5 leading-snug">
-                          <span>
-                            {egg.id === "invisible-hand"
-                              ? copy.eggInvisibleHandTitle
-                              : egg.id === "incident-mailto"
-                                ? copy.eggIncidentMailtoTitle
-                                : egg.id === "canary-wing"
-                                  ? copy.eggCanaryWingTitle
-                                  : copy.eggMetadataShadowTitle}
-                          </span>
-                          <span className="text-xs font-mono text-foreground/50">
-                            {egg.id === "invisible-hand" || egg.id === "canary-wing"
-                              ? copy.styleAffecting
-                              : copy.styleSafe}
-                          </span>
-                        </span>
-                      </label>
-                    ))}
-                    </div>
-                  </Card>
                 </div>
                 <Button
                   onClick={runHarden}
@@ -1636,49 +1785,18 @@ export default function Home() {
                 </Button>
               </div>
             )}
-            <div className="mt-6">
-              <InvisibleHandConfigCard
-                payload={invisibleHandPayload}
-                onPayloadChange={setInvisibleHandPayload}
-                disabled={!enabledEggIds.has("invisible-hand")}
-                manualCheckAndValidation={eggMetadataById["invisible-hand"]?.manualCheckAndValidation}
-              />
-            </div>
-            <div className="mt-4">
-              <IncidentMailtoConfigCard
-                payload={incidentMailtoPayload}
-                onPayloadChange={setIncidentMailtoPayload}
-                disabled={!enabledEggIds.has("incident-mailto")}
-                manualCheckAndValidation={eggMetadataById["incident-mailto"]?.manualCheckAndValidation}
-              />
-            </div>
-            <div className="mt-4">
-              <CanaryWingConfigCard
-                payload={canaryWingPayload}
-                onPayloadChange={setCanaryWingPayload}
-                disabled={!enabledEggIds.has("canary-wing")}
-                manualCheckAndValidation={eggMetadataById["canary-wing"]?.manualCheckAndValidation}
-              />
-            </div>
-            <div className="mt-4">
-              <MetadataShadowConfigCard
-                payload={metadataShadowPayload}
-                onPayloadChange={setMetadataShadowPayload}
-                disabled={!enabledEggIds.has("metadata-shadow")}
-                manualCheckAndValidation={eggMetadataById["metadata-shadow"]?.manualCheckAndValidation}
-              />
-            </div>
             </SectionFold>
 
             <SectionFold
               ref={validationLabTriggerRef}
-              sectionId="validation-lab"
-              className="functional-group mt-6"
+              sectionId={VALIDATION_LAB_SECTION_ID}
+              className="functional-group mt-6 scroll-mt-6"
               title={copy.validationLabTitle}
               titleId="validation-lab-section-title"
               contentId="validation-lab-section-content"
               ariaLabel={copy.validationLabCollapsibleAriaLabel}
               defaultExpanded={false}
+              expandRevision={validationLabFoldExpandRevision}
             >
               <ValidationLab
                 armedEggIds={armedEggIds}

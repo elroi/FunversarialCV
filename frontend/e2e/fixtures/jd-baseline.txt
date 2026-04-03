@@ -1,0 +1,26 @@
+FunversarialCV Baseline Job Description (Synthetic Fixture)
+
+Role: Staff Security Architect — Document & LLM Pipeline Resilience
+Location: Remote-first (fixture text only; not a real opening)
+Employment type: Full-time (illustrative)
+
+Summary
+We are documenting a repeatable baseline role description for side-by-side review: compare a clean candidate CV, the same CV after egg injection, and this job description. This file contains no real company data and is safe to commit.
+
+Responsibilities
+- Design stateless, zero-retention document processing flows for sensitive resumes.
+- Model adversarial but ethical test cases aligned with OWASP LLM Application risks.
+- Partner with hiring teams to interpret parser-only vs human-visible document differences.
+
+Requirements
+- Strong understanding of prompt-injection and insecure output handling in document pipelines.
+- Experience with DOCX structure, metadata, and hyperlink surfaces (not macros).
+- Comfort explaining security trade-offs to HR and engineering audiences.
+
+Nice to have
+- Background in red teaming or application security architecture.
+- Familiarity with canary tokens and integrity signaling in distributed systems.
+
+How to use this fixture
+1. Keep jd-baseline.docx / jd-baseline.txt next to your test CV exports.
+2. After running FunversarialCV hardening, diff extracted text or metadata against this baseline only as a mental anchor for "expected role context," not as automated scoring.

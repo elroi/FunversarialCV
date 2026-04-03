@@ -13,6 +13,7 @@ cd frontend && npm install && npm run dev
 - **Run E2E tests (full suite):** `npm run test:e2e` (starts dev server if needed; requires Playwright: `npx playwright install chromium`). For faster local runs, start the dev server in another terminal and E2E will reuse it.
 - **Run E2E smoke tests only:** `npx playwright test e2e/specs/smoke.spec.ts e2e/specs/happy-path.spec.ts`
 - **Generate E2E fixtures:** `npm run gen:e2e-fixtures` (writes `e2e/fixtures/minimal.pdf` and `minimal.docx`; v1 E2E use DOCX only)
+- **Generate JD baseline fixtures:** `npm run gen:jd-baseline` (writes committed `e2e/fixtures/jd-baseline.docx` and `jd-baseline.txt`, and copies the same files to `frontend/demo-output/` for local side-by-side review; `demo-output/` is gitignored)
 - **Homepage / copy changes:** Many E2E flows assume the **security** audience (home defaults to HR). After `page.goto("/")`, call `ensureSecurityAudienceForE2e` when asserting security copy. Security-audience matchers are centralized in `e2e/helpers/security-ui.ts` (derived from `src/copy/security.ts`). See `frontend/e2e/README.md`.
 
 ### Recommended local workflow
@@ -29,6 +30,18 @@ cd frontend && npm install && npm run dev
 - **TDD:** Write tests first, then implement until tests pass. Apply to every feature and fix (eggs, API route, helpers, UI behavior where testable).
 - **Feature branches:** All work happens on a feature branch (e.g. `feature/...`, `fix/...`). Never commit directly to `main`; merge via PR or after review.
 - **UI / progressive disclosure:** See `docs/UI_STYLE_GUIDE.md` (fold tiers, defaults, safe state on change); machine-readable tier IDs: `ui.disclosureTiers` in `docs/brand-guide.json`.
+
+### Validation Lab protocol copy (`validationLabManualMirrorProtocol`)
+
+`validationLabManualMirrorProtocol` in `frontend/src/copy/security.ts` and `frontend/src/copy/hr.ts` is parsed for the home page Validation Lab (`frontend/src/lib/validationLabProtocol.ts`). If the shape breaks, the UI falls back to plain paragraphs (different layout for the badge hint).
+
+**Contract:**
+
+1. Split the full string on **blank lines** (`\n\n`).
+2. The **first block** is the headline: first line = title; if the second line starts with an em dash (—) or en dash (–), it becomes the subtitle; any further lines in that block form the description paragraph.
+3. The **remaining text** (after the first block) is the step body: each step starts with a line matching `(1)`, `(2)`, … `(10)` (parenthesized number + space). Lines that do not match are **continuations** of the previous step.
+
+**Verification:** From `frontend/`, run `npm test -- src/lib/validationLabProtocol.test.ts`.
 
 ## Git workflow
 
@@ -144,6 +157,16 @@ When deploying to Vercel (or another platform), configure the following environm
 - `RATE_LIMIT_CANARY_MAX` / `RATE_LIMIT_CANARY_WINDOW_MS` (optional): Override defaults for `/api/canary` rate limiting. Defaults are roughly “120 requests per 60 seconds per IP” when unset.
 
 These variables are read at runtime; if they are not set, the application falls back to conservative, in-memory defaults suitable for a low-volume Vercel deployment.
+
+## Manual inspection: clean CV, injected CV, baseline JD
+
+Use this flow when reviewing parser-visible egg behavior or demonstrating FunversarialCV to stakeholders:
+
+1. Start from a **clean** CV (dehydrated tokens on the wire to `/api/harden`, never raw PII).
+2. Run hardening and save the **injected** DOCX output from the app or API.
+3. Open the committed synthetic job description **`frontend/e2e/fixtures/jd-baseline.txt`** (or `jd-baseline.docx`) as a **stable third document**. It is not a real opening; it anchors role context when you compare extracted text, metadata, and hyperlinks across artifacts.
+4. Interpret diffs in two layers: **human-visible** body text and layout versus **machine-visible** signals (hidden paragraphs, custom properties, mailto/query parameters, canary URLs).
+5. **API:** Omit `divergenceProfile` or send `balanced` for legacy behavior. Send `machine` for stronger parser-facing divergence with bounded visible change (the web UI defaults to `machine`). Send `visible` for demo-style visible canary styling. See [docs/API.md](docs/API.md).
 
 ## Where to look
 

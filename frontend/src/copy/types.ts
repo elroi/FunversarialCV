@@ -2,6 +2,17 @@
  * Centralized UI copy type. Every user-facing string is keyed here so we can
  * switch between security (technical) and HR (plain English) audiences.
  */
+
+/** One copyable prompt row in the home Validation Lab; `id` values are stable across audiences (badge mapping). */
+export interface ValidationLabPromptEntry {
+  id: string;
+  title: string;
+  description: string;
+  prompt: string;
+  owaspLink?: string;
+  eggIds: readonly string[];
+}
+
 export interface Copy {
   // —— Home: header & badges ——
   tagline: string;
@@ -59,6 +70,8 @@ export interface Copy {
   /** Full explanation shown when the anchor is expanded. */
   preserveStylesDesc: string;
   eggsToRunTitle: string;
+  /** Caption for the Output / format block (preserve styles, PDF) inside engine config. */
+  engineOutputSectionTitle: string;
   engineConfigTitle: string;
   styleAffecting: string;
   styleSafe: string;
@@ -75,8 +88,12 @@ export interface Copy {
   downloadPdfButton: string;
   /** Checkbox: request bundled PDF export alongside Word output. */
   includePdfExportLabel: string;
-  /** Short note under the PDF export checkbox (layout vs Word; optional token caveat). */
-  includePdfExportHint: string;
+  /** One-line summary under the PDF checkbox (details in expandable region). */
+  includePdfExportSummary: string;
+  /** Inline control to expand full PDF export explanation. */
+  includePdfExportDetailAnchor: string;
+  /** Full PDF export caveats when detail anchor is expanded. */
+  includePdfExportDetailDesc: string;
   /** Shown when egg/options in the UI differ from the last successful output; download still serves that prior run. */
   downloadStaleConfigWarning: string;
   errorAlertPrefix: string;
@@ -275,6 +292,8 @@ export interface Copy {
   validationCopyButton: string;
   validationCopyButtonSuccess: string;
   validationMatchLabel: string;
+  /** Validation Lab copyable prompts (order preserved). */
+  validationPrompts: readonly ValidationLabPromptEntry[];
 
   // —— Audience switcher ——
   audienceSecurity: string;

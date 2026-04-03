@@ -224,7 +224,19 @@ describe("Home page", () => {
       expect(screen.getByText(/RUN THE CV EXPERIMENT/i)).toBeInTheDocument();
     });
 
-    it("renders flow as numbered list with sample CV, inject, download, JD copy, distinct JD message, test, confirm", () => {
+    it("HR fair test panel uses softer checklist label and links Try in an AI tool to #validation-lab", () => {
+      window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "hr");
+      renderWithAudience(<Home />);
+      fireEvent.click(
+        screen.getByRole("button", { name: /how to run a fair test/i })
+      );
+      expect(screen.getByText(/STEP-BY-STEP AI CHECKLIST/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", { name: /Try in an AI tool/i })
+      ).toHaveAttribute("href", "#validation-lab");
+    });
+
+    it("renders flow as numbered list with sample CV, inject, download, VL protocol pointer, external mirror, compare, confirm", () => {
       renderWithAudience(<Home />);
       fireEvent.click(
         screen.getByRole("button", { name: /how to run a fair test/i })
@@ -232,11 +244,22 @@ describe("Home page", () => {
       expect(screen.getByText(/Start with our sample CV/i)).toBeInTheDocument();
       expect(screen.getByText(/Inject adversarial layers/i)).toBeInTheDocument();
       expect(screen.getByText(/Download your .armed. CV/i)).toBeInTheDocument();
-      expect(screen.getByText(/Open Validation Lab and copy the sample job description/i)).toBeInTheDocument();
       expect(
-        screen.getByText(/send the job description alone as the first message/i)
+        screen.getByRole("link", { name: "Validation Lab" })
+      ).toHaveAttribute("href", "#validation-lab");
+      expect(
+        screen.getByText(
+          /section on this page and follow its numbered External comparative evaluation steps/i
+        )
       ).toBeInTheDocument();
-      expect(screen.getByText(/Paste each downloaded CV and the Validation Lab prompts/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/In your external LLM, mirror that sequence in your chat threads/i)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Compare the model's replies using the goals under each Validation Lab test prompt/i
+        )
+      ).toBeInTheDocument();
       expect(screen.getByText(/Confirm or reject the observed influence/i)).toBeInTheDocument();
       const list = document.querySelector("ol");
       expect(list).toBeInTheDocument();
@@ -266,7 +289,7 @@ describe("Home page", () => {
       expect(screen.getByText("Engine Configuration")).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Choose which eggs to run, expand each to set payloads, then arm a CV and Inject Eggs/i
+          /Arm a CV first, then use the list below to enable eggs and expand rows to set payloads/i
         )
       ).toBeInTheDocument();
       expect(screen.getAllByText(/The Invisible Hand/i).length).toBeGreaterThanOrEqual(1);
@@ -280,7 +303,7 @@ describe("Home page", () => {
       );
       expect(
         await screen.findByText(
-          /Choose which signals to add, open each section to adjust details, then upload a CV and run Add signals/i
+          /Upload a CV first, then turn on options below and expand a row to adjust details/i
         )
       ).toBeInTheDocument();
     });
@@ -296,6 +319,67 @@ describe("Home page", () => {
       expect(screen.getByText("BASE-00")).toBeInTheDocument();
       expect(screen.getByText("BASE-01")).toBeInTheDocument();
       expect(screen.getByTestId("validation-prompt-LLM01")).toBeInTheDocument();
+    });
+
+    describe("Validation Lab #validation-lab hash", () => {
+      afterEach(() => {
+        window.history.replaceState(null, "", "/");
+      });
+
+      it("opens the fold and applies attention-pulse when URL hash is #validation-lab on load", async () => {
+        window.history.replaceState(null, "", "/#validation-lab");
+        renderWithAudience(<Home />);
+        const btn = screen.getByRole("button", {
+          name: /validation lab: show or hide/i,
+        });
+        await waitFor(() => {
+          expect(btn).toHaveAttribute("aria-expanded", "true");
+        });
+        await waitFor(() => {
+          expect(btn).toHaveClass("attention-pulse");
+        });
+      });
+
+      it("opens the fold and pulses when hash changes to #validation-lab after mount", async () => {
+        renderWithAudience(<Home />);
+        const btn = screen.getByRole("button", {
+          name: /validation lab: show or hide/i,
+        });
+        expect(btn).toHaveAttribute("aria-expanded", "false");
+        window.history.replaceState(null, "", "/#validation-lab");
+        fireEvent(window, new HashChangeEvent("hashchange"));
+        await waitFor(() => {
+          expect(btn).toHaveAttribute("aria-expanded", "true");
+        });
+        await waitFor(() => {
+          expect(btn).toHaveClass("attention-pulse");
+        });
+      });
+
+      it("opens HR Try in an AI tool fold when hash is #validation-lab on load", async () => {
+        window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "hr");
+        window.history.replaceState(null, "", "/#validation-lab");
+        renderWithAudience(<Home />);
+        const btn = screen.getByRole("button", {
+          name: /try in an ai tool: show or hide/i,
+        });
+        await waitFor(() => {
+          expect(btn).toHaveAttribute("aria-expanded", "true");
+        });
+        await waitFor(() => {
+          expect(btn).toHaveClass("attention-pulse");
+        });
+      });
+    });
+
+    it("renders Try in an AI tool fold for HR audience (validation section rename)", () => {
+      window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "hr");
+      renderWithAudience(<Home />);
+      expect(
+        screen.getByRole("button", {
+          name: /try in an ai tool: show or hide/i,
+        })
+      ).toBeInTheDocument();
     });
 
     it("does not emit duplicate-key warnings when copying the same validation prompt twice", async () => {
@@ -364,7 +448,9 @@ describe("Home page", () => {
       ensureEngineConfigExpanded();
 
       expect(
-        screen.getByText(/Expand each egg to set payloads, then click Inject Eggs/i)
+        screen.getByText(
+          /Enable eggs in the list, expand a row to configure payloads, set output options below, then click Inject Eggs/i
+        )
       ).toBeInTheDocument();
 
       const injectBtn = screen.getByRole("button", { name: /inject eggs/i });
@@ -964,7 +1050,7 @@ describe("Home page", () => {
       expect(toggle).toHaveClass("min-h-10");
     });
 
-    it("egg checkbox labels have touch-friendly row padding", async () => {
+    it("egg rows have touch-friendly minimum height on the expand control", async () => {
       renderWithAudience(<Home />);
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
@@ -973,8 +1059,10 @@ describe("Home page", () => {
       await waitFor(() => screen.getByText(/Armed CV:/i));
       ensureEngineConfigExpanded();
       await waitFor(() => screen.getByText(/Eggs to run/i));
-      const label = screen.getByRole("checkbox", { name: /Invisible Hand/i }).closest("label");
-      expect(label).toHaveClass("py-2");
+      const expandBtn = screen.getByRole("button", {
+        name: /expand configuration:.*invisible hand/i,
+      });
+      expect(expandBtn).toHaveClass("min-h-[44px]");
     });
 
     it("scrolls focused element into view when egg injection succeeds", async () => {

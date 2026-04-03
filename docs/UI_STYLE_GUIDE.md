@@ -31,7 +31,7 @@ Use **one shared primitive** for full-width card-style disclosure: [frontend/src
 | Tier | ID (`brand-guide.json`) | Intent | Status | Typical implementation |
 |------|-------------------------|--------|--------|-------------------------|
 | **Section** | `section` | Collapse an **entire** major region to shorten the page; **must not** hide the only path to the primary action without a clear alternative. | **Target** — not uniformly implemented; today sections use static captions + `functional-group`. | Future: section-level wrapper; today: [frontend/app/page.tsx](../frontend/app/page.tsx) regions. |
-| **In-section** | `inSection` | Optional detail **inside** a section, **after** the primary control (upload, main CTA). | **Shipped** | `CollapsibleCard` with default title style (uppercase caption). Examples: Sample CV under `DropZone`; egg config cards (e.g. [InvisibleHandConfigCard.tsx](../frontend/src/components/InvisibleHandConfigCard.tsx)); **Validation Lab** (outer panel + nested per-prompt cards, default collapsed) in [ValidationLab.tsx](../frontend/src/components/ValidationLab.tsx). |
+| **In-section** | `inSection` | Optional detail **inside** a section, **after** the primary control (upload, main CTA). | **Shipped** | `CollapsibleCard` with default title style (uppercase caption). Examples: Sample CV under `DropZone`; **engine egg rows** on home ([EggConfiguratorRow.tsx](../frontend/src/components/EggConfiguratorRow.tsx) + `*ConfigBody` from e.g. [InvisibleHandConfigCard.tsx](../frontend/src/components/InvisibleHandConfigCard.tsx)); standalone egg cards still use `CollapsibleCard` when embedded outside that list; **Validation Lab** (outer panel + nested per-prompt cards, default collapsed) in [ValidationLab.tsx](../frontend/src/components/ValidationLab.tsx). |
 | **Out-of-section** | `outOfSection` | Standalone trust or mechanism copy **between** major blocks (not nested under one section caption). | **Shipped** | `CollapsibleCard` + `titleClassName` for sentence-case + panel `className` (e.g. lighter border/background). Example: privacy / PII details on home ([frontend/app/page.tsx](../frontend/app/page.tsx)). |
 | **Inline / micro** | `inlineMicro` | Small expansion **inside** running text (verification hints, glossary). | **Shipped** | Local `button` + `aria-expanded` + `aria-controls` + `role="region"` on the revealed block. Example: Security-only “How to verify” in `PiiNoticeBlock` ([frontend/app/page.tsx](../frontend/app/page.tsx)). |
 
@@ -53,7 +53,7 @@ Use only when **long instructional** content should default **open** from the `m
 | Long instructional flows | May use **`expandOnWide`** as above. |
 | Out-of-section trust depth | Default **collapsed**; opening is an explicit choice to read long copy. |
 | Inline / micro | Default **collapsed**. |
-| Egg / engine config cards | Default **collapsed** (dense configuration). |
+| Egg / engine config (per-egg disclosure) | Default **collapsed** (dense configuration): each [EggConfiguratorRow](../frontend/src/components/EggConfiguratorRow.tsx) starts with payload panel hidden. |
 | Exceptions | Default **expanded** only with a one-line rationale in PR + update to this guide (accessibility + scan length). |
 
 ---

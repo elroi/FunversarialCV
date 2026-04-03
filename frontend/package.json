@@ -13,6 +13,7 @@
         "test:e2e": "playwright test",
         "test:e2e:ui": "playwright test --ui",
         "gen:e2e-fixtures": "node scripts/gen-e2e-fixtures.mjs",
+        "gen:jd-baseline": "node scripts/gen-jd-baseline.mjs",
         "gen:research-fixtures": "tsx scripts/gen-research-docx-fixtures.ts",
         "check:research-pdf": "node scripts/check-research-pdf-eggs.mjs",
         "gen:demo-cv": "node scripts/gen-demo-cv-once.mjs",

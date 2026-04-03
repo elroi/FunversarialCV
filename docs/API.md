@@ -15,6 +15,9 @@ Contract for the egg-injection endpoint (`/api/harden`). Use this to test parser
 | `file`    | Yes      | Single Word document (.docx). Max 4 MB. Document type is determined by magic bytes (not filename or Content-Type). Extension must match content (`.docx`). |
 | `payloads`| No       | JSON string `Record<eggId, string>`. Keys are egg ids (`invisible-hand`, `incident-mailto`, `canary-wing`, `metadata-shadow`). If omitted, `{}` is used. Unknown keys are ignored. |
 | `eggIds`  | No       | JSON string array of egg ids. If present and non-empty, only these eggs run. Omit or leave empty to run all eggs. |
+| `divergenceProfile` | No | One of `balanced`, `machine`, `visible`. If omitted or invalid, behavior matches **`balanced`** (no server-side payload shaping; backward compatible). **`machine`** strengthens parser/LLM-visible signals (e.g. longer hidden trap text, extra metadata decoys, dual canary embeddings) while keeping human-visible changes bounded (e.g. canary link stays non-prominent). **`visible`** is demo-oriented (e.g. visible-styled canary hyperlink) on top of similar parser boosts. The web UI sends `machine` by default. |
+| `preserveStyles` | No | `true` / `1` to prefer the add-only style-preserving path when all selected eggs are add-only. |
+| `includePdfExport` | No | `true` / `1` to request an optional PDF export in the JSON response (DOCX pipeline only). |
 
 #### `metadata-shadow` payload
 

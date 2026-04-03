@@ -306,6 +306,16 @@ describe("Home page", () => {
       expect(screen.getByTestId("validation-prompt-LLM01")).toBeInTheDocument();
     });
 
+    it("renders Try in an AI tool fold for HR audience (validation section rename)", () => {
+      window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "hr");
+      renderWithAudience(<Home />);
+      expect(
+        screen.getByRole("button", {
+          name: /try in an ai tool: show or hide/i,
+        })
+      ).toBeInTheDocument();
+    });
+
     it("does not emit duplicate-key warnings when copying the same validation prompt twice", async () => {
       const writeText = jest.fn().mockResolvedValue(undefined);
       Object.defineProperty(navigator, "clipboard", {

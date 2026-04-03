@@ -15,7 +15,7 @@ export const hrCopy: Copy = {
     "Start with our sample CV (recommended) or upload your own CV",
     "Add subtle AI-visible signals to your CV",
     "Download your modified CV",
-    "Open the Validation Lab section on this page and follow its numbered External comparative evaluation steps end-to-end (BASE-00, job description, BASE-01, both CV files, and test prompts).",
+    "Open Try in an AI tool on this page and follow its numbered External comparative evaluation steps end-to-end (BASE-00, job description, BASE-01, both CV files, and test prompts).",
     "In your external AI tool, mirror that sequence in your chats—use two tabs for a side-by-side comparison if you like\n(e.g. Claude, Gemini, Copilot).",
     "Compare the AI's outputs using the goals under each test prompt once both CV variants are in place, as the protocol describes.",
     "Confirm whether the signals changed the AI's response",
@@ -312,9 +312,9 @@ export const hrCopy: Copy = {
   resourcesGetStartedBody3:
     "If you’re in hiring or HR, run this in a test environment. Compare how normal and “signaled” CVs move through your pipeline and use that to improve prompts and guardrails.",
 
-  validationLabTitle: "Validation Lab",
+  validationLabTitle: "Try in an AI tool",
   validationLabCollapsibleAriaLabel:
-    "Validation Lab: show or hide sample job description, external comparative evaluation steps, and test prompts",
+    "Try in an AI tool: show or hide sample job description, external comparative evaluation steps, and sample prompts",
   sampleJobDescriptionTitle: "Sample job description (synthetic)",
   sampleJobDescriptionIntro:
     "Sample logistics and AI-solutions job description (made up company). The built-in sample CV is security leadership on purpose; on BASE-01, a careful AI should show moderate or low fit. Full steps and follow-ups are in External comparative evaluation below.",

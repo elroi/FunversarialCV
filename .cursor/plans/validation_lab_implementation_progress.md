@@ -9,5 +9,5 @@ Phased rollout from [docs/VALIDATION_LAB_CONTENT_AUDIT.md](../../docs/VALIDATION
 | C — VL-04 badge-hint fallback UI | Done |
 | D — VL-03 localized prompts | Done |
 | E — VL-05 fair-test pointer | Done |
-| F — VL-06 HR rename | Pending |
+| F — VL-06 HR rename | Done |
 | G — VL-07 E2E | Pending |

@@ -44,6 +44,11 @@ describe("copy", () => {
       expect(getCopy("hr").demoArmedInlineHint).toMatch(/Engine Configuration/i);
     });
 
+    it("HR home uses Try in an AI tool for the validation section title; security keeps Validation Lab", () => {
+      expect(getCopy("hr").validationLabTitle).toBe("Try in an AI tool");
+      expect(getCopy("security").validationLabTitle).toBe("Validation Lab");
+    });
+
     it("Validation Lab prompts share stable ids; security vs HR titles differ", () => {
       const sec = getCopy("security");
       const hr = getCopy("hr");

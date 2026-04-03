@@ -209,5 +209,5 @@ Tracks the phased rollout aligned with the Validation Lab implementation plan (V
 | **C** | VL-04 — Unify badge-hint UI when parse fallback | **Done** — shared `ValidationLabMatchBadgeHintDetails`; `manualMirrorProtocolOverride` for tests ([`ValidationLab.tsx`](../frontend/src/components/ValidationLab.tsx)) |
 | **D** | VL-03 — Audience-localized validation prompts (`Copy.validationPrompts`) | **Done** — [`types.ts`](../frontend/src/copy/types.ts) `ValidationLabPromptEntry`; security vs HR strings in [`security.ts`](../frontend/src/copy/security.ts) / [`hr.ts`](../frontend/src/copy/hr.ts); [`ValidationLab.tsx`](../frontend/src/components/ValidationLab.tsx) reads `copy.validationPrompts` |
 | **E** | VL-05 — Fair test points to Validation Lab protocol (less duplication) | **Done** — `flowSteps` 4–6 in [`security.ts`](../frontend/src/copy/security.ts) / [`hr.ts`](../frontend/src/copy/hr.ts); [`UX_UI_REVIEW.md`](UX_UI_REVIEW.md) |
-| **F** | VL-06 — HR section rename / credibility copy | Pending |
+| **F** | VL-06 — HR section rename / credibility copy | **Done** — HR `validationLabTitle` **Try in an AI tool**; `validationLabCollapsibleAriaLabel` + `flowSteps[3]` updated in [`hr.ts`](../frontend/src/copy/hr.ts); [`CREDIBILITY_IA_RESEARCH_BRIEF.md`](CREDIBILITY_IA_RESEARCH_BRIEF.md) table row updated |
 | **G** | VL-07 — E2E smoke for Validation Lab | Pending |

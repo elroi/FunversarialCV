@@ -81,7 +81,7 @@ Legend: **HR-OK** = appropriate for recruiter-facing mode; **Lab** = fine for Se
 | “Eggs” / egg names | HR uses “options” in several places; Resources still “easter eggs” | “Eggs” everywhere | HR **partially** de-jargonized; engine section title HR: “Options to add”. |
 | Primary pipeline CTA | Add signals | Inject Eggs | Good split (HR plain / security precise). |
 | “Duality Monitor” vs “Processing steps” | Processing steps | Duality Monitor | Good split. |
-| “Validation Lab” | Same | Same | Sounds like a **classroom**; HR might use “Try in an AI tool” or similar. |
+| “Validation Lab” | **Try in an AI tool** (home section title + fair-test pointer) | “Validation Lab” | HR rename shipped for the collapsible section and related `flowSteps` text; protocol headline remains *External comparative evaluation*. |
 | “Pipeline / Engine / Terminal log” | Processing steps / log | Pipeline / Terminal | HR reduced; still **terminal** metaphor in `terminalLogTitle`. |
 | “Armed CV” (security) | “CV loaded” | Armed CV | Good split. |
 | Uppercase micro-labels (`tracking-[0.2em]`) | Present on input + engine rails | Present | Contributes to **instrument panel** feel in HR mode. |

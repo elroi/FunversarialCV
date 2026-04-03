@@ -3,6 +3,7 @@
 import React from "react";
 import type { Copy } from "../copy/types";
 import { useAudience } from "../contexts/AudienceContext";
+import { renderFlowStepLine } from "../lib/flowStepRichText";
 
 /** Inner content for experiment steps (used inside CollapsibleCard on home or inside the standalone panel). */
 export function ExperimentFlowPanelBody({
@@ -37,9 +38,11 @@ export function ExperimentFlowPanelBody({
               <React.Fragment key={j}>
                 {j > 0 && <br />}
                 {j === 0 ? (
-                  line
+                  renderFlowStepLine(line)
                 ) : (
-                  <span className="text-foreground/55 text-xs">{line}</span>
+                  <span className="text-foreground/55 text-xs">
+                    {renderFlowStepLine(line)}
+                  </span>
                 )}
               </React.Fragment>
             ))}

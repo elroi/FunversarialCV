@@ -48,6 +48,13 @@ const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
 /** Delay before arming upload-channel in-view pulse so tagline pulse does not stack on first paint. */
 const ATTENTION_PULSE_STAGGER_MS = 500;
 
+/** DOM id / hash target for Validation Lab (`SectionFold` + fair-test markdown links). */
+const VALIDATION_LAB_SECTION_ID = "validation-lab";
+const VALIDATION_LAB_HASH = `#${VALIDATION_LAB_SECTION_ID}`;
+
+/** Let `SectionFold` apply `expanded` before pulsing the trigger (mirrors engine-fold timing). */
+const VALIDATION_LAB_HASH_PULSE_DELAY_MS = 150;
+
 /** Stable JSON for comparing egg payloads (key order from JSON.stringify can differ). */
 function stableJsonStringify(value: unknown): string {
   if (value === null || typeof value !== "object") {
@@ -233,8 +240,11 @@ export default function Home() {
   const [engineFoldExpandSignal, setEngineFoldExpandSignal] = useState(0);
   /** One-shot tagline accent after first paint (see attention pulse in globals.css). */
   const [taglineAttentionActive, setTaglineAttentionActive] = useState(false);
-  /** Bumped after DOCX download to re-run Validation Lab trigger pulse. */
+  /** Bumped after DOCX download or #validation-lab navigation to re-run Validation Lab trigger pulse. */
   const [validationLabPulseToken, setValidationLabPulseToken] = useState(0);
+  /** Bumped when the URL hash is #validation-lab so the Validation Lab fold opens (starts collapsed). */
+  const [validationLabFoldExpandRevision, setValidationLabFoldExpandRevision] =
+    useState(0);
   const [clientPiiMap, setClientPiiMap] = useState<PiiMap | null>(null);
 
   /** Egg metadata from GET /api/eggs (id -> { name, manualCheckAndValidation }). */
@@ -326,6 +336,57 @@ export default function Home() {
     }, 0);
     return () => window.clearTimeout(t);
   }, [validationLabPulseToken]);
+
+  // #validation-lab: expand the fold and pulse the section trigger (not only browser scroll).
+  // Client-only hash handling; no server round-trip or document retention.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let pulseTimer: ReturnType<typeof window.setTimeout> | undefined;
+
+    const revealFromHash = () => {
+      if (window.location.hash !== VALIDATION_LAB_HASH) return;
+      if (pulseTimer !== undefined) window.clearTimeout(pulseTimer);
+      setValidationLabFoldExpandRevision((r) => r + 1);
+      pulseTimer = window.setTimeout(() => {
+        pulseTimer = undefined;
+        setValidationLabPulseToken((n) => n + 1);
+      }, VALIDATION_LAB_HASH_PULSE_DELAY_MS);
+    };
+
+    revealFromHash();
+    window.addEventListener("hashchange", revealFromHash);
+    return () => {
+      window.removeEventListener("hashchange", revealFromHash);
+      if (pulseTimer !== undefined) window.clearTimeout(pulseTimer);
+    };
+  }, []);
+
+  // After the Validation Lab fold opens from #validation-lab, scroll again so the section anchor
+  // sits near the top of the viewport. The browser's first scroll targets the collapsed shell;
+  // expanding adds body content below, which otherwise stays off-screen or poorly framed.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (validationLabFoldExpandRevision === 0) return;
+    if (window.location.hash !== VALIDATION_LAB_HASH) return;
+
+    let cancelled = false;
+    const scrollIntoPlace = () => {
+      if (cancelled) return;
+      const el = document.getElementById(VALIDATION_LAB_SECTION_ID);
+      if (!el || typeof el.scrollIntoView !== "function") return;
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    const outerRaf = requestAnimationFrame(() => {
+      requestAnimationFrame(scrollIntoPlace);
+    });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(outerRaf);
+    };
+  }, [validationLabFoldExpandRevision]);
 
   // Scroll focused success/error targets into view after render (refs are set post-commit).
   useEffect(() => {
@@ -595,6 +656,8 @@ export default function Home() {
       if (includePdfExportParam) {
         formData.append("includePdfExport", "true");
       }
+      // Stronger parser/LLM-visible egg shaping; API omits field → balanced (backward compatible).
+      formData.append("divergenceProfile", "machine");
 
       try {
         const res = await fetch("/api/harden", { method: "POST", body: formData });
@@ -1725,13 +1788,14 @@ export default function Home() {
 
             <SectionFold
               ref={validationLabTriggerRef}
-              sectionId="validation-lab"
-              className="functional-group mt-6"
+              sectionId={VALIDATION_LAB_SECTION_ID}
+              className="functional-group mt-6 scroll-mt-6"
               title={copy.validationLabTitle}
               titleId="validation-lab-section-title"
               contentId="validation-lab-section-content"
               ariaLabel={copy.validationLabCollapsibleAriaLabel}
               defaultExpanded={false}
+              expandRevision={validationLabFoldExpandRevision}
             >
               <ValidationLab
                 armedEggIds={armedEggIds}

@@ -224,6 +224,18 @@ describe("Home page", () => {
       expect(screen.getByText(/RUN THE CV EXPERIMENT/i)).toBeInTheDocument();
     });
 
+    it("HR fair test panel uses softer checklist label and links Try in an AI tool to #validation-lab", () => {
+      window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "hr");
+      renderWithAudience(<Home />);
+      fireEvent.click(
+        screen.getByRole("button", { name: /how to run a fair test/i })
+      );
+      expect(screen.getByText(/STEP-BY-STEP AI CHECKLIST/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", { name: /Try in an AI tool/i })
+      ).toHaveAttribute("href", "#validation-lab");
+    });
+
     it("renders flow as numbered list with sample CV, inject, download, VL protocol pointer, external mirror, compare, confirm", () => {
       renderWithAudience(<Home />);
       fireEvent.click(
@@ -233,8 +245,11 @@ describe("Home page", () => {
       expect(screen.getByText(/Inject adversarial layers/i)).toBeInTheDocument();
       expect(screen.getByText(/Download your .armed. CV/i)).toBeInTheDocument();
       expect(
+        screen.getByRole("link", { name: "Validation Lab" })
+      ).toHaveAttribute("href", "#validation-lab");
+      expect(
         screen.getByText(
-          /Open the Validation Lab section on this page and follow its numbered External comparative evaluation steps/i
+          /section on this page and follow its numbered External comparative evaluation steps/i
         )
       ).toBeInTheDocument();
       expect(
@@ -304,6 +319,57 @@ describe("Home page", () => {
       expect(screen.getByText("BASE-00")).toBeInTheDocument();
       expect(screen.getByText("BASE-01")).toBeInTheDocument();
       expect(screen.getByTestId("validation-prompt-LLM01")).toBeInTheDocument();
+    });
+
+    describe("Validation Lab #validation-lab hash", () => {
+      afterEach(() => {
+        window.history.replaceState(null, "", "/");
+      });
+
+      it("opens the fold and applies attention-pulse when URL hash is #validation-lab on load", async () => {
+        window.history.replaceState(null, "", "/#validation-lab");
+        renderWithAudience(<Home />);
+        const btn = screen.getByRole("button", {
+          name: /validation lab: show or hide/i,
+        });
+        await waitFor(() => {
+          expect(btn).toHaveAttribute("aria-expanded", "true");
+        });
+        await waitFor(() => {
+          expect(btn).toHaveClass("attention-pulse");
+        });
+      });
+
+      it("opens the fold and pulses when hash changes to #validation-lab after mount", async () => {
+        renderWithAudience(<Home />);
+        const btn = screen.getByRole("button", {
+          name: /validation lab: show or hide/i,
+        });
+        expect(btn).toHaveAttribute("aria-expanded", "false");
+        window.history.replaceState(null, "", "/#validation-lab");
+        fireEvent(window, new HashChangeEvent("hashchange"));
+        await waitFor(() => {
+          expect(btn).toHaveAttribute("aria-expanded", "true");
+        });
+        await waitFor(() => {
+          expect(btn).toHaveClass("attention-pulse");
+        });
+      });
+
+      it("opens HR Try in an AI tool fold when hash is #validation-lab on load", async () => {
+        window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "hr");
+        window.history.replaceState(null, "", "/#validation-lab");
+        renderWithAudience(<Home />);
+        const btn = screen.getByRole("button", {
+          name: /try in an ai tool: show or hide/i,
+        });
+        await waitFor(() => {
+          expect(btn).toHaveAttribute("aria-expanded", "true");
+        });
+        await waitFor(() => {
+          expect(btn).toHaveClass("attention-pulse");
+        });
+      });
     });
 
     it("renders Try in an AI tool fold for HR audience (validation section rename)", () => {

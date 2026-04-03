@@ -7,6 +7,7 @@ import { createDocumentWithText, MIME_DOCX, MIME_PDF } from "./documentExtract";
 import { DUALITY_ALERT_MESSAGE } from "../lib/Scanner";
 import { invisibleHand, DEFAULT_INVISIBLE_HAND_TRAP } from "../eggs/InvisibleHand";
 import { canaryWing } from "../eggs/CanaryWing";
+import { MACHINE_METADATA_DECOYS } from "./divergenceProfile";
 import { metadataShadow } from "../eggs/MetadataShadow";
 import { incidentMailto } from "../eggs/IncidentMailto";
 import { extractText } from "./documentExtract";
@@ -206,6 +207,74 @@ describe("Processor", () => {
       expect(relsXml).toMatch(/Target="https?:\/\/[^"]+\/api\/canary\/[a-f0-9-]+\/docx-hidden/);
       const extracted = await extractText(result.buffer, MIME_DOCX);
       expect(extracted).toMatch(/\/api\/canary\//);
+    }, 15000);
+  });
+
+  describe("divergence profiles (machine vs balanced)", () => {
+    it("machine profile increases parser-visible trap text vs balanced (invisible-hand)", async () => {
+      const buffer = await createDocumentWithText("Senior engineer. TypeScript.", MIME_DOCX);
+      const balancedResult = await process({
+        buffer,
+        mimeType: MIME_DOCX,
+        eggs: [invisibleHand],
+        preserveStyles: false,
+        divergenceProfile: "balanced",
+      });
+      const machineResult = await process({
+        buffer,
+        mimeType: MIME_DOCX,
+        eggs: [invisibleHand],
+        preserveStyles: false,
+        divergenceProfile: "machine",
+      });
+      const balText = await extractText(balancedResult.buffer, MIME_DOCX);
+      const machText = await extractText(machineResult.buffer, MIME_DOCX);
+      expect(machText.length).toBeGreaterThan(balText.length);
+      expect(machText).toContain(DEFAULT_INVISIBLE_HAND_TRAP);
+      expect(machText).toContain("Secondary system note");
+    }, 15000);
+
+    it("machine profile adds metadata decoys when metadata-shadow runs", async () => {
+      const buffer = await createDocumentWithText("Role: Engineer", MIME_DOCX);
+      const result = await process({
+        buffer,
+        mimeType: MIME_DOCX,
+        eggs: [metadataShadow],
+        preserveStyles: true,
+        divergenceProfile: "machine",
+        payloads: {},
+      });
+      const zip = await JSZip.loadAsync(result.buffer);
+      const customXml = await zip.file("docProps/custom.xml")?.async("string");
+      expect(customXml).toBeDefined();
+      for (const key of Object.keys(MACHINE_METADATA_DECOYS)) {
+        expect(customXml).toContain(key);
+      }
+    }, 15000);
+
+    it("visible-diff guardrail: paragraph delta machine vs balanced stays bounded (canary + invisible)", async () => {
+      const buffer = await createDocumentWithText("Line one\nLine two", MIME_DOCX);
+      const canaryPayload = JSON.stringify({ token: "profile-guard-token-1" });
+      const eggs = [invisibleHand, canaryWing];
+      const balancedResult = await process({
+        buffer,
+        mimeType: MIME_DOCX,
+        eggs,
+        preserveStyles: true,
+        divergenceProfile: "balanced",
+        payloads: { "canary-wing": canaryPayload },
+      });
+      const machineResult = await process({
+        buffer,
+        mimeType: MIME_DOCX,
+        eggs,
+        preserveStyles: true,
+        divergenceProfile: "machine",
+        payloads: { "canary-wing": canaryPayload },
+      });
+      const balP = await countDocxParagraphs(balancedResult.buffer);
+      const machP = await countDocxParagraphs(machineResult.buffer);
+      expect(Math.abs(machP - balP)).toBeLessThanOrEqual(4);
     }, 15000);
   });
 });

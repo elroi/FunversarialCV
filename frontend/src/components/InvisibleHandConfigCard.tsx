@@ -18,11 +18,11 @@ export interface InvisibleHandConfigCardProps {
   manualCheckAndValidation?: string;
 }
 
-export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = ({
+/** Form body only (no outer CollapsibleCard) — for EggConfiguratorRow and card wrapper. */
+export const InvisibleHandConfigBody: React.FC<InvisibleHandConfigCardProps> = ({
   payload = "",
   onPayloadChange,
   disabled = false,
-  className,
   manualCheckAndValidation,
 }) => {
   const copy = useCopy();
@@ -44,22 +44,7 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
   );
 
   return (
-    <CollapsibleCard
-      title={
-        <span className="flex flex-col gap-0.5">
-          <span>{copy.eggInvisibleHandTitle}</span>
-          <span className="text-xs font-mono text-foreground/60">
-            {copy.styleAffecting}
-          </span>
-        </span>
-      }
-      titleId="invisible-hand-card-title"
-      contentId="invisible-hand-card-content"
-      ariaLabel={`Expand ${copy.eggInvisibleHandTitle} config`}
-      defaultExpanded={false}
-      disabled={disabled}
-      className={className}
-    >
+    <>
       <p
         className="text-caption sm:text-sm text-foreground/70 mb-4"
         title={copy.invisibleHandPlaceholder}
@@ -111,6 +96,42 @@ export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = (
           </p>
         )}
       </div>
+    </>
+  );
+};
+
+export const InvisibleHandConfigCard: React.FC<InvisibleHandConfigCardProps> = ({
+  payload = "",
+  onPayloadChange,
+  disabled = false,
+  className,
+  manualCheckAndValidation,
+}) => {
+  const copy = useCopy();
+
+  return (
+    <CollapsibleCard
+      title={
+        <span className="flex flex-col gap-0.5">
+          <span>{copy.eggInvisibleHandTitle}</span>
+          <span className="text-xs font-mono text-foreground/60">
+            {copy.styleAffecting}
+          </span>
+        </span>
+      }
+      titleId="invisible-hand-card-title"
+      contentId="invisible-hand-card-content"
+      ariaLabel={`Expand ${copy.eggInvisibleHandTitle} config`}
+      defaultExpanded={false}
+      disabled={disabled}
+      className={className}
+    >
+      <InvisibleHandConfigBody
+        payload={payload}
+        onPayloadChange={onPayloadChange}
+        disabled={disabled}
+        manualCheckAndValidation={manualCheckAndValidation}
+      />
     </CollapsibleCard>
   );
 };

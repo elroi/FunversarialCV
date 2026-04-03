@@ -8,14 +8,14 @@ export const hrCopy: Copy = {
   backHome: "Back home",
 
   experimentFlowCollapsibleTitle: "How to run a fair test",
-  experimentFlowLabel: "RUN THE CV EXPERIMENT",
+  experimentFlowLabel: "STEP-BY-STEP AI CHECKLIST",
   positioningLine:
     "Run a simple before-and-after test to see whether AI-visible signals change the output.",
   flowSteps: [
     "Start with our sample CV (recommended) or upload your own CV",
     "Add subtle AI-visible signals to your CV",
     "Download your modified CV",
-    "Open Try in an AI tool on this page and follow its numbered External comparative evaluation steps end-to-end (BASE-00, job description, BASE-01, both CV files, and test prompts).",
+    "Open [Try in an AI tool](#validation-lab) on this page and follow its numbered External comparative evaluation steps end-to-end (BASE-00, job description, BASE-01, both CV files, and test prompts).",
     "In your external AI tool, mirror that sequence in your chats—use two tabs for a side-by-side comparison if you like\n(e.g. Claude, Gemini, Copilot).",
     "Compare the AI's outputs using the goals under each test prompt once both CV variants are in place, as the protocol describes.",
     "Confirm whether the signals changed the AI's response",
@@ -46,7 +46,7 @@ export const hrCopy: Copy = {
   dirtySublabel: "Sample with hidden signals",
   demoLoadingMessage: "Generating sample CV… this may take a few seconds.",
   demoArmedInlineHint:
-    "Sample CV loaded — Engine Configuration is open below. Use Add signals when you're ready.",
+    "Sample CV loaded — How it runs is open below. Use Add signals when you're ready.",
   lastPresetLabel: "Last sample:",
   armedCvLabel: "CV loaded:",
   downloadDemoLabel: "Download the current sample as-is",
@@ -239,7 +239,7 @@ export const hrCopy: Copy = {
   resourcesWhatAreEggsBody1:
     "Each option adds a different kind of hidden or test signal to your CV. For example: a note only AI systems can see, a trackable link, or extra metadata. The document stays readable for people.",
   resourcesWhatAreEggsBody2:
-    "Think of them like easter eggs in software: small, intentional additions that are there to be discovered. These are for learning how AI hiring tools work, not for tricking human reviewers or breaking applicant systems.",
+    "Think of them like optional extras developers sometimes tuck into software: small, intentional additions that can show up when a system reads your file closely. These are for learning how AI hiring tools work, not for tricking human reviewers or breaking applicant systems.",
   resourcesForCandidatesTitle: "For job seekers",
   resourcesForCandidatesBody1:
     "Use this tool responsibly. Only add these signals to CVs you submit to systems you own or where you have clear permission to test (for example, roles or companies that say they use AI screening and are open to research).",

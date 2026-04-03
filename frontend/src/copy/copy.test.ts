@@ -41,7 +41,7 @@ describe("copy", () => {
 
     it("demoArmedInlineHint points users to the engine fold after sample load", () => {
       expect(getCopy("security").demoArmedInlineHint).toMatch(/Engine Configuration/i);
-      expect(getCopy("hr").demoArmedInlineHint).toMatch(/Engine Configuration/i);
+      expect(getCopy("hr").demoArmedInlineHint).toMatch(/How it runs/i);
     });
 
     it("HR home uses Try in an AI tool for the validation section title; security keeps Validation Lab", () => {
@@ -118,14 +118,14 @@ describe("copy", () => {
     it("positioningLine, flowSteps (length 7), philosophyLine, and experimentFlowLabel are set for both audiences", () => {
       const security = getCopy("security");
       const hr = getCopy("hr");
-      expect(security.experimentFlowLabel).toBeDefined();
+      expect(security.experimentFlowLabel).toBe("RUN THE CV EXPERIMENT");
+      expect(hr.experimentFlowLabel).toBe("STEP-BY-STEP AI CHECKLIST");
       expect(security.experimentFlowLabel.length).toBeGreaterThan(0);
       expect(security.positioningLine).toBeDefined();
       expect(security.positioningLine.length).toBeGreaterThan(0);
       expect(security.flowSteps).toHaveLength(7);
       expect(security.philosophyLine).toBeDefined();
       expect(security.philosophyLine.length).toBeGreaterThan(0);
-      expect(hr.experimentFlowLabel).toBeDefined();
       expect(hr.experimentFlowLabel.length).toBeGreaterThan(0);
       expect(hr.positioningLine).toBeDefined();
       expect(hr.positioningLine.length).toBeGreaterThan(0);

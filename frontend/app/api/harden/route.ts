@@ -9,6 +9,7 @@ import { containsPii } from "@/lib/vault";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { logInfo, logError } from "@/lib/log";
 import { ADD_ONLY_EGG_IDS } from "@/engine/Processor";
+import { parseHardenDivergenceProfile } from "@/engine/divergenceProfile";
 
 function getClientIp(req: NextRequest): string {
   const xff = req.headers.get("x-forwarded-for");
@@ -78,6 +79,11 @@ export async function POST(request: NextRequest) {
   const preserveStylesRaw = formData.get("preserveStyles");
   const preserveStyles =
     preserveStylesRaw === "true" || preserveStylesRaw === "1";
+
+  const divergenceProfileRaw = formData.get("divergenceProfile");
+  const divergenceProfile = parseHardenDivergenceProfile(
+    typeof divergenceProfileRaw === "string" ? divergenceProfileRaw : undefined
+  );
 
   const includePdfExportRaw = formData.get("includePdfExport");
   const includePdfExport =
@@ -253,6 +259,7 @@ export async function POST(request: NextRequest) {
       eggs,
       payloads: payloadsForEggs,
       preserveStyles,
+      ...(divergenceProfile !== "balanced" ? { divergenceProfile } : {}),
     });
     logInfo("/api/harden", "success", { mimeType });
 

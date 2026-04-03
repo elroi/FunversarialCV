@@ -40,7 +40,8 @@ function parsePayloadSafe(payload: string | undefined): IncidentMailtoConfig {
   }
 }
 
-export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> = ({
+/** Form body and state (no outer CollapsibleCard) — for EggConfiguratorRow and card wrapper. */
+export const IncidentMailtoConfigBody: React.FC<IncidentMailtoConfigCardProps> = ({
   payload,
   onPayloadChange,
   disabled = false,
@@ -80,9 +81,6 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
   const selectedTemplate = templateId === CUSTOM_TEMPLATE_ID ? null : getIncidentMailtoTemplateById(templateId);
   const displaySubject = subject || (selectedTemplate?.config.subjectTemplate ?? "");
   const displayBody = body || (selectedTemplate?.config.bodyTemplate ?? "");
-
-  /** Card header is always the egg name (Mailto Surprise); template is shown inside the card. */
-  const cardTitle = copy.eggIncidentMailtoTitle;
 
   const emit = useCallback(
     (next: IncidentMailtoConfig) => {
@@ -150,22 +148,7 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
   }, [resultingLink]);
 
   return (
-    <CollapsibleCard
-      title={
-        <span className="flex flex-col gap-0.5">
-          <span>{cardTitle}</span>
-          <span className="text-xs font-mono text-foreground/60">
-            {copy.styleSafe}
-          </span>
-        </span>
-      }
-      titleId="incident-mailto-card-title"
-      contentId="incident-mailto-card-content"
-      ariaLabel={`Expand ${copy.eggIncidentMailtoTitle} config`}
-      defaultExpanded={false}
-      disabled={disabled}
-      className={className}
-    >
+    <>
       <p
         className="text-caption sm:text-sm text-foreground/70 mb-4"
         title={copy.incidentMailtoCardTooltip}
@@ -454,6 +437,32 @@ export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> =
           </p>
         )}
       </div>
+    </>
+  );
+};
+
+export const IncidentMailtoConfigCard: React.FC<IncidentMailtoConfigCardProps> = (
+  props
+) => {
+  const copy = useCopy();
+  return (
+    <CollapsibleCard
+      title={
+        <span className="flex flex-col gap-0.5">
+          <span>{copy.eggIncidentMailtoTitle}</span>
+          <span className="text-xs font-mono text-foreground/60">
+            {copy.styleSafe}
+          </span>
+        </span>
+      }
+      titleId="incident-mailto-card-title"
+      contentId="incident-mailto-card-content"
+      ariaLabel={`Expand ${copy.eggIncidentMailtoTitle} config`}
+      defaultExpanded={false}
+      disabled={props.disabled}
+      className={props.className}
+    >
+      <IncidentMailtoConfigBody {...props} className={undefined} />
     </CollapsibleCard>
   );
 };

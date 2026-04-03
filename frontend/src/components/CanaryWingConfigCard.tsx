@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import clsx from "clsx";
 import { CollapsibleCard } from "./ui/CollapsibleCard";
 import { CheckAndValidateBlock } from "./CheckAndValidateBlock";
 import { useCopy } from "../copy";
@@ -53,7 +52,8 @@ function parsePayloadSafe(payload: string | undefined): CanaryWingConfig {
   }
 }
 
-export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
+/** Form body and state (no outer CollapsibleCard) — for EggConfiguratorRow and card wrapper. */
+export const CanaryWingConfigBody: React.FC<CanaryWingConfigCardProps> = ({
   payload,
   onPayloadChange,
   disabled = false,
@@ -202,22 +202,7 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
   }, [token]);
 
   return (
-    <CollapsibleCard
-      title={
-        <span className="flex flex-col gap-0.5">
-          <span>{copy.eggCanaryWingTitle}</span>
-          <span className="text-xs font-mono text-foreground/60">
-            {copy.styleAffecting}
-          </span>
-        </span>
-      }
-      titleId="canary-wing-card-title"
-      contentId="canary-wing-card-content"
-      ariaLabel={`Expand ${copy.eggCanaryWingTitle} config`}
-      defaultExpanded={false}
-      disabled={disabled}
-      className={className}
-    >
+    <>
       <p
         className="text-caption sm:text-sm text-foreground/70 mb-4"
         title="The canary URL is built only from this config; no document content (and no PII) is ever included."
@@ -574,6 +559,32 @@ export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = ({
           </p>
         )}
       </div>
+    </>
+  );
+};
+
+export const CanaryWingConfigCard: React.FC<CanaryWingConfigCardProps> = (
+  props
+) => {
+  const copy = useCopy();
+  return (
+    <CollapsibleCard
+      title={
+        <span className="flex flex-col gap-0.5">
+          <span>{copy.eggCanaryWingTitle}</span>
+          <span className="text-xs font-mono text-foreground/60">
+            {copy.styleAffecting}
+          </span>
+        </span>
+      }
+      titleId="canary-wing-card-title"
+      contentId="canary-wing-card-content"
+      ariaLabel={`Expand ${copy.eggCanaryWingTitle} config`}
+      defaultExpanded={false}
+      disabled={props.disabled}
+      className={props.className}
+    >
+      <CanaryWingConfigBody {...props} className={undefined} />
     </CollapsibleCard>
   );
 };

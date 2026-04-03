@@ -8,7 +8,7 @@
 
 ## 1. Executive summary
 
-FunversarialCV ships **strong in-flow trust mechanics** (PII dehydration narrative, audience modes, long-form Resources). The gap to a “credible product surface” is mostly **positioning and product chrome**: the home console still **names itself as an experiment** (`RUN THE CV EXPERIMENT`), uses **lab vocabulary** (eggs, Validation Lab, Duality Monitor / pipeline stages, terminal log), and lacks **standard product affordances** (footer with legal/analytics disclosure, About/FAQ, status, curated SEO metadata). HR copy is softer than Security copy but **still shares the experiment label and monospace/uppercase affordances** in key places.
+FunversarialCV ships **strong in-flow trust mechanics** (PII dehydration narrative, audience modes, long-form Resources). The gap to a “credible product surface” is mostly **positioning and product chrome**: Security mode still **names the fair-test panel as an experiment** (`RUN THE CV EXPERIMENT`); HR uses **`STEP-BY-STEP AI CHECKLIST`** for the same panel. Both paths still use **lab vocabulary** in places (eggs, Validation Lab, Duality Monitor / pipeline stages, terminal log), and the product lacks **standard affordances** (footer with legal/analytics disclosure, About/FAQ, status, curated SEO metadata). HR copy is softer than Security copy but **still shares monospace/uppercase affordances** in key places.
 
 **Recommendation at a glance:** Treat “credibility” as **structural** (IA, policies, metadata, operational signals) and keep **playful depth** inside Security mode or secondary panels—without conflating the two in the first five seconds.
 
@@ -66,7 +66,7 @@ Pick one primary posture for vNext; the backlog below is tagged by which posture
 | Reader | Likely first read |
 |--------|-------------------|
 | Skim-only | “Funversarial” + gradient title + monospace badge → **hacker / demo tool** |
-| HR mode | Softer tagline but **same experiment label** in collapsible + uppercase section rails → **mixed: edu tool, not HR SaaS** |
+| HR mode | Softer tagline + **checklist** fair-test label (not “experiment”) + uppercase section rails → **mixed: edu tool, not HR SaaS** |
 | Security mode | “Adversarial,” “console,” “Duality Monitor” → **legit lab / red team** (credible for that niche, not “generic product”) |
 
 **Gap:** No single **plain-product sentence** above the fold that reads like a normal SaaS value prop without opening Resources.
@@ -77,8 +77,8 @@ Legend: **HR-OK** = appropriate for recruiter-facing mode; **Lab** = fine for Se
 
 | Term / pattern | HR copy | Security copy | Notes |
 |----------------|---------|----------------|--------|
-| `experimentFlowLabel` “RUN THE CV EXPERIMENT” | **Lab** | **Lab** | Same in both [`hr.ts`](../frontend/src/copy/hr.ts) / [`security.ts`](../frontend/src/copy/security.ts)—primary credibility clash for HR. |
-| “Eggs” / egg names | HR uses “options” in several places; Resources still “easter eggs” | “Eggs” everywhere | HR **partially** de-jargonized; engine section title HR: “Options to add”. |
+| `experimentFlowLabel` | **HR-OK** (`STEP-BY-STEP AI CHECKLIST`) | **Lab** (`RUN THE CV EXPERIMENT`) | Split shipped: HR avoids “experiment” in the panel headline; Security keeps lab framing. |
+| “Eggs” / egg names | HR uses “options” in several places; Resources uses softer “optional extras” wording | “Eggs” everywhere | HR **partially** de-jargonized; engine section title HR: “Options to add”. |
 | Primary pipeline CTA | Add signals | Inject Eggs | Good split (HR plain / security precise). |
 | “Duality Monitor” vs “Processing steps” | Processing steps | Duality Monitor | Good split. |
 | “Validation Lab” | **Try in an AI tool** (home section title + fair-test pointer) | “Validation Lab” | HR rename shipped for the collapsible section and related `flowSteps` text; protocol headline remains *External comparative evaluation*. |
@@ -161,7 +161,7 @@ Desk research only; use these as **pattern libraries**, not design copies.
 
 | Theme | Evidence | If confirmed in interviews |
 |-------|----------|----------------------------|
-| “Experiment” undermines HR trust | Shared `experimentFlowLabel` in both audiences | Rename HR label; demote “experiment” to Security-only or body copy. |
+| “Experiment” undermines HR trust | ~~Shared `experimentFlowLabel`~~ HR now uses checklist label | Security-only “experiment” language remains; validate in interviews whether uppercase rails still read as “lab.” |
 | Upload anxiety | Strong privacy copy exists but buried in `<details>` | One-line **link** “Privacy & data handling” above fold → anchor. |
 | “Lab” UI chrome | Monospace + uppercase rails in HR | Reduce on HR path (already partial via `font-sans` in header). |
 | Missing link previews / SEO | No `metadata` export in root layout | Add title/description/OG. |
@@ -189,7 +189,7 @@ Desk research only; use these as **pattern libraries**, not design copies.
 |----|------|---------|--------|--------|-------|
 | P0-1 | **User-facing analytics & data notice** when ingest is enabled: what is collected, opt-in, GPC, retention (ring buffer vs future DB). Link from footer. | Compliance, Candidate | M | H | P0 |
 | P0-2 | **Minimal footer** on all pages: Privacy (new or Resources anchor), GitHub, optional Security contact. | All | L | H | P0 |
-| P0-3 | **Differentiate HR primary framing** from “RUN THE CV EXPERIMENT” (rename HR `experimentFlowLabel`; consider Security-only “experiment” language). | HR | S | H | P0 |
+| P0-3 | **Differentiate HR primary framing** from “RUN THE CV EXPERIMENT” (rename HR `experimentFlowLabel`; consider Security-only “experiment” language). **Done (HR):** `STEP-BY-STEP AI CHECKLIST`; Security unchanged. | HR | S | H | P0 |
 | P1-1 | **Site metadata** (`metadata` / OG / Twitter) in root or segment layouts for credible link sharing. | All / SEO | S | M | P1 |
 | P1-2 | **Dedicated `/privacy` (and optional `/terms`)** instead of only long Resources scroll. | Compliance | M | M | P1 |
 | P1-3 | Oversize error: include **numeric limit** (4 MB) in client copy ([`hr.ts` / `security.ts`](../frontend/src/copy/hr.ts) `errorFileTooLarge`) — aligns with UX review follow-up. | Candidate | S | M | P1 |

@@ -10,6 +10,10 @@ import type { ScanResult, ScannerReport } from "../lib/Scanner";
 import { extractText, createDocumentWithText, isSupportedMimeType } from "./documentExtract";
 import { injectHiddenCanaryLinkIntoDocx } from "./docxCanary";
 import { getInvisibleHandTrapText } from "../eggs";
+import {
+  applyHardenProfileToPayloads,
+  type HardenDivergenceProfile,
+} from "./divergenceProfile";
 
 /** Matches canary URL as embedded in DOCX (our /api/canary/:token/docx-hidden pattern). */
 const DOCX_CANARY_URL_RE =
@@ -32,6 +36,10 @@ export interface ProcessorInput {
   payloads?: Record<string, string>;
   /** When true and only add-only eggs are selected, use original buffer (preserve styles). */
   preserveStyles?: boolean;
+  /**
+   * Payload shaping for parser vs human-visible trade-offs. Omitted → balanced (backward compatible).
+   */
+  divergenceProfile?: HardenDivergenceProfile;
 }
 
 export interface ProcessorOutput {
@@ -53,7 +61,20 @@ export interface ProcessorOutput {
  * When preserveStyles is true and only add-only eggs are selected, skips rebuild and runs eggs on the original buffer.
  */
 export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
-  const { buffer, mimeType, eggs, payloads = {}, preserveStyles = false } = input;
+  const {
+    buffer,
+    mimeType,
+    eggs,
+    payloads = {},
+    preserveStyles = false,
+    divergenceProfile = "balanced",
+  } = input;
+
+  const effectivePayloads = applyHardenProfileToPayloads(
+    divergenceProfile,
+    eggs.map((e) => e.id),
+    payloads
+  );
 
   // —— Stage 1: Accept buffer ——
   if (!isSupportedMimeType(mimeType)) {
@@ -87,7 +108,7 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
     const scannerReport = buildScannerReport(scan);
     let currentBuffer = buffer;
     for (const egg of eggs) {
-      const payload = payloads[egg.id] ?? "";
+      const payload = effectivePayloads[egg.id] ?? "";
       if (!egg.validatePayload(payload)) {
         throw new Error(`Egg "${egg.id}" rejected payload validation.`);
       }
@@ -107,7 +128,7 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
 
   // —— Stage 4: Injection — run each egg on the dehydrated document ——
   for (const egg of eggs) {
-    const payload = payloads[egg.id] ?? "";
+    const payload = effectivePayloads[egg.id] ?? "";
     if (!egg.validatePayload(payload)) {
       throw new Error(`Egg "${egg.id}" rejected payload validation.`);
     }
@@ -127,7 +148,7 @@ export async function process(input: ProcessorInput): Promise<ProcessorOutput> {
     const canaryUrlMatch = rehydratedText.match(DOCX_CANARY_URL_RE);
     const invisibleRan = eggs.some((e) => e.id === "invisible-hand");
     const trapText = invisibleRan
-      ? getInvisibleHandTrapText(payloads["invisible-hand"] ?? "")
+      ? getInvisibleHandTrapText(effectivePayloads["invisible-hand"] ?? "")
       : "";
     const hasTrapInPlainText =
       trapText.length > 0 && rehydratedText.includes(trapText);

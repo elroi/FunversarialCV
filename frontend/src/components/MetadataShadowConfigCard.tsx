@@ -103,7 +103,8 @@ export interface MetadataShadowConfigCardProps {
   manualCheckAndValidation?: string;
 }
 
-export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> = ({
+/** Form body and state (no outer CollapsibleCard) — for EggConfiguratorRow and card wrapper. */
+export const MetadataShadowConfigBody: React.FC<MetadataShadowConfigCardProps> = ({
   payload,
   onPayloadChange,
   disabled = false,
@@ -198,22 +199,7 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
   const hasGlobalTooMany = uiIssues.some((i) => i.code === "custom_too_many_keys");
 
   return (
-    <CollapsibleCard
-      title={
-        <span className="flex flex-col gap-0.5">
-          <span>{copy.eggMetadataShadowTitle}</span>
-          <span className="text-xs font-mono text-foreground/60">
-            {copy.styleSafe}
-          </span>
-        </span>
-      }
-      titleId="metadata-shadow-card-title"
-      contentId="metadata-shadow-card-content"
-      ariaLabel={`Expand ${copy.eggMetadataShadowTitle} config`}
-      defaultExpanded={false}
-      disabled={disabled}
-      className={className}
-    >
+    <>
       <p className="text-caption sm:text-sm text-foreground/70 mb-4">
         {copy.metadataShadowDescription}
       </p>
@@ -542,6 +528,32 @@ export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> =
           </p>
         )}
       </div>
+    </>
+  );
+};
+
+export const MetadataShadowConfigCard: React.FC<MetadataShadowConfigCardProps> = (
+  props
+) => {
+  const copy = useCopy();
+  return (
+    <CollapsibleCard
+      title={
+        <span className="flex flex-col gap-0.5">
+          <span>{copy.eggMetadataShadowTitle}</span>
+          <span className="text-xs font-mono text-foreground/60">
+            {copy.styleSafe}
+          </span>
+        </span>
+      }
+      titleId="metadata-shadow-card-title"
+      contentId="metadata-shadow-card-content"
+      ariaLabel={`Expand ${copy.eggMetadataShadowTitle} config`}
+      defaultExpanded={false}
+      disabled={props.disabled}
+      className={props.className}
+    >
+      <MetadataShadowConfigBody {...props} className={undefined} />
     </CollapsibleCard>
   );
 };

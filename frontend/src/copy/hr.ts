@@ -15,9 +15,9 @@ export const hrCopy: Copy = {
     "Start with our sample CV (recommended) or upload your own CV",
     "Add subtle AI-visible signals to your CV",
     "Download your modified CV",
-    "Open Validation Lab to copy the BASE-00 prompt and the sample job description",
-    "In your external AI tool, send BASE-00 first, then send the job description alone (before any CV)\n(e.g. Claude, Gemini, Copilot)",
-    "Paste each downloaded CV and the Validation Lab prompts; compare how the outputs differ",
+    "Open the Validation Lab section on this page and follow its numbered External comparative evaluation steps end-to-end (BASE-00, job description, BASE-01, both CV files, and test prompts).",
+    "In your external AI tool, mirror that sequence in your chats—use two tabs for a side-by-side comparison if you like\n(e.g. Claude, Gemini, Copilot).",
+    "Compare the AI's outputs using the goals under each test prompt once both CV variants are in place, as the protocol describes.",
     "Confirm whether the signals changed the AI's response",
   ] as const,
   experimentFlowClarifier:

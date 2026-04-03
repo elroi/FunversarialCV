@@ -224,7 +224,7 @@ describe("Home page", () => {
       expect(screen.getByText(/RUN THE CV EXPERIMENT/i)).toBeInTheDocument();
     });
 
-    it("renders flow as numbered list with sample CV, inject, download, VL copy, BASE-00 then JD in external LLM, test, confirm", () => {
+    it("renders flow as numbered list with sample CV, inject, download, VL protocol pointer, external mirror, compare, confirm", () => {
       renderWithAudience(<Home />);
       fireEvent.click(
         screen.getByRole("button", { name: /how to run a fair test/i })
@@ -233,12 +233,18 @@ describe("Home page", () => {
       expect(screen.getByText(/Inject adversarial layers/i)).toBeInTheDocument();
       expect(screen.getByText(/Download your .armed. CV/i)).toBeInTheDocument();
       expect(
-        screen.getByText(/Open Validation Lab to copy the BASE-00 prompt and the sample job description/i)
+        screen.getByText(
+          /Open the Validation Lab section on this page and follow its numbered External comparative evaluation steps/i
+        )
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/send BASE-00 first, then send the job description alone/i)
+        screen.getByText(/In your external LLM, mirror that sequence in your chat threads/i)
       ).toBeInTheDocument();
-      expect(screen.getByText(/Paste each downloaded CV and the Validation Lab prompts/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Compare the model's replies using the goals under each Validation Lab test prompt/i
+        )
+      ).toBeInTheDocument();
       expect(screen.getByText(/Confirm or reject the observed influence/i)).toBeInTheDocument();
       const list = document.querySelector("ol");
       expect(list).toBeInTheDocument();

@@ -14,9 +14,9 @@ export const securityCopy: Copy = {
     "Start with our sample CV (recommended)\nor upload your own CV",
     "Inject adversarial layers",
     "Download your \"armed\" CV",
-    "Open Validation Lab to copy the BASE-00 prompt and the sample job description",
-    "In your external LLM, send BASE-00 first, then send the job description alone (before any CV)\n(e.g. Claude, Gemini, Copilot)",
-    "Paste each downloaded CV and the Validation Lab prompts; observe differences in behavior",
+    "Open the Validation Lab section on this page and follow its numbered External comparative evaluation steps end-to-end (BASE-00, job description, BASE-01, both CV files, and test prompts).",
+    "In your external LLM, mirror that sequence in your chat threads—use two tabs for side-by-side baseline vs armed if you like\n(e.g. Claude, Gemini, Copilot).",
+    "Compare the model's replies using the goals under each Validation Lab test prompt once both CV variants are in the threads, as the protocol describes.",
     "Confirm or reject the observed influence",
   ] as const,
   philosophyLine:

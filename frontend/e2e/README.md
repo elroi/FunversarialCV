@@ -6,6 +6,7 @@
 - **Engine section:** The armed-CV line and **Inject Eggs** (security) or **Add signals** (HR) live inside **Engine Configuration** / **How it runs**. The fold starts **collapsed**; after a file arms it **auto-expands**. `expandEngineConfigurationSection` waits for the armed line to become visible and only clicks the fold when `aria-expanded="false"` (a blind toggle would collapse an already-open section).
 - **Security copy in one place:** Matchers for security-audience strings are built from `src/copy/security.ts` in `helpers/security-ui.ts`. When you change those fields in product copy, E2E usually needs no regex edits—only run the suite. If you add **new** security-only UI, add a derived regex there (or a `data-testid` on the component and assert that).
 - **HR-only or shared copy:** If a test should reflect HR wording, do not call `ensureSecurityAudienceForE2e`; assert against `src/copy/hr.ts` or stable roles/test ids instead.
+- **Validation section:** `specs/validation-lab.spec.ts` expands the section fold (`validationLabTitle` + `validationLabCollapsibleAriaLabel` prefix) for **security** (`ensureSecurityAudienceForE2e`) and **HR** (default home), then asserts **BASE-00** is visible.
 
 ## Commands
 

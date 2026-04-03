@@ -88,6 +88,25 @@ describe("ValidationLab", () => {
     expect(screen.getByText("Sample prompts")).toBeInTheDocument();
   });
 
+  it("parse-fallback path uses the same details disclosure for the badge hint as the parsed path", () => {
+    window.localStorage.setItem("funversarialcv-audience", "security");
+    const unparsable =
+      "Invalid protocol headline\n\nBody without parenthesized step numbers so parse returns null.";
+    renderWithAudience(
+      <ValidationLab
+        armedEggIds={new Set()}
+        manualMirrorProtocolOverride={unparsable}
+      />
+    );
+
+    const summary = screen.getByText("About the ENABLED badge").closest("summary");
+    expect(summary).toBeTruthy();
+    fireEvent.click(summary!);
+    expect(
+      screen.getByText(/last successful Inject Eggs run on this page/i)
+    ).toBeInTheDocument();
+  });
+
   it("keeps prompt descriptions inside collapsed prompt panels until expanded", () => {
     renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
 

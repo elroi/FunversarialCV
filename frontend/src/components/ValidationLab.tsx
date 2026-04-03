@@ -87,17 +87,49 @@ function promptCollapsibleAriaLabel(template: string, promptId: string): string 
   return template.replace(/\{id\}/g, promptId);
 }
 
+/** Same disclosure for ENABLED-badge hint in parsed and parse-fallback protocol paths (a11y consistency). */
+function ValidationLabMatchBadgeHintDetails({
+  title,
+  hint,
+}: {
+  title: string;
+  hint: string;
+}): React.ReactElement {
+  return (
+    <details className="group rounded-md border border-border/50 bg-panel/30 text-foreground/80">
+      <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 font-sans text-caption uppercase tracking-[0.12em] text-foreground/55 transition-colors hover:bg-panel/50 hover:text-foreground/75 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 [&::-webkit-details-marker]:hidden">
+        <span
+          aria-hidden
+          className="inline-block text-accent transition-transform duration-200 group-open:rotate-90"
+        >
+          ▸
+        </span>
+        {title}
+      </summary>
+      <p className="border-t border-border/40 px-3 py-2.5 font-sans text-caption leading-relaxed text-foreground/65">
+        {hint}
+      </p>
+    </details>
+  );
+}
+
 export interface ValidationLabProps {
   /** Egg ids included in the last successful arm/harden on this page (latest downloaded CV). */
   armedEggIds: Set<string>;
   onPromptCopy?: (promptId: string) => void;
   onSampleJdCopy?: () => void;
+  /**
+   * When set, replaces locale `validationLabManualMirrorProtocol` for parsing and fallback body (tests only).
+   * Use an unparsable string to exercise the fallback renderer.
+   */
+  manualMirrorProtocolOverride?: string;
 }
 
 export const ValidationLab: React.FC<ValidationLabProps> = ({
   armedEggIds,
   onPromptCopy,
   onSampleJdCopy,
+  manualMirrorProtocolOverride,
 }) => {
   const copy = useCopy();
   const { contentAudience } = useAudience();
@@ -105,9 +137,12 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const protocolSource =
+    manualMirrorProtocolOverride ?? copy.validationLabManualMirrorProtocol;
+
   const protocolParsed = useMemo(
-    () => parseValidationLabProtocol(copy.validationLabManualMirrorProtocol),
-    [copy.validationLabManualMirrorProtocol]
+    () => parseValidationLabProtocol(protocolSource),
+    [protocolSource]
   );
 
   const resetCopyTimeout = useCallback(() => {
@@ -197,29 +232,22 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
           ))}
         </ol>
       </div>
-      <details className="group rounded-md border border-border/50 bg-panel/30 text-foreground/80">
-        <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 font-sans text-caption uppercase tracking-[0.12em] text-foreground/55 transition-colors hover:bg-panel/50 hover:text-foreground/75 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 [&::-webkit-details-marker]:hidden">
-          <span
-            aria-hidden
-            className="inline-block text-accent transition-transform duration-200 group-open:rotate-90"
-          >
-            ▸
-          </span>
-          {copy.validationLabMatchBadgeHintTitle}
-        </summary>
-        <p className="border-t border-border/40 px-3 py-2.5 font-sans text-caption leading-relaxed text-foreground/65">
-          {copy.validationLabMatchBadgeHint}
-        </p>
-      </details>
+      <ValidationLabMatchBadgeHintDetails
+        title={copy.validationLabMatchBadgeHintTitle}
+        hint={copy.validationLabMatchBadgeHint}
+      />
     </div>
   ) : (
     <div className="mb-5 space-y-2 text-sm text-foreground/80 font-sans leading-relaxed">
-      {copy.validationLabManualMirrorProtocol.split(/\n\n+/).map((paragraph, i) => (
+      {protocolSource.split(/\n\n+/).map((paragraph, i) => (
         <p key={i} className={paragraph.includes("\n") ? "whitespace-pre-line" : undefined}>
           {paragraph}
         </p>
       ))}
-      <p className="text-caption text-foreground/60">{copy.validationLabMatchBadgeHint}</p>
+      <ValidationLabMatchBadgeHintDetails
+        title={copy.validationLabMatchBadgeHintTitle}
+        hint={copy.validationLabMatchBadgeHint}
+      />
     </div>
   );
 

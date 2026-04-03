@@ -40,7 +40,7 @@ describe("parseValidationLabProtocol", () => {
     expect(parsed!.headline).toMatch(/External comparative evaluation/i);
     expect(parsed!.title).toMatch(/^External comparative evaluation$/i);
     expect(parsed!.subtitle).toMatch(/Manual steps to run the same JD, CV, and prompts/i);
-    expect(parsed!.description).toMatch(/sample JD describes|logistics/i);
+    expect(parsed!.description).toMatch(/After you arm eggs|LLM01/i);
     expect(parsed!.description).toMatch(/BASE-00.*BASE-01/s);
     expect(parsed!.steps).toHaveLength(10);
     expect(parsed!.steps[0]).toMatch(/Open two browser tabs[\s\S]*Claude/i);
@@ -65,7 +65,8 @@ describe("parseValidationLabProtocol", () => {
     expect(parsed!.headline).toMatch(/External comparative evaluation/i);
     expect(parsed!.title).toMatch(/^External comparative evaluation$/i);
     expect(parsed!.subtitle).toMatch(/Manual steps to run the same JD, CV, and prompts/i);
-    expect(parsed!.description).toMatch(/sample job describes|logistics|security leadership/i);
+    expect(parsed!.description).toMatch(/After you add signals|LLM01/i);
+    expect(parsed!.description).toMatch(/BASE-00.*BASE-01/s);
     expect(parsed!.steps).toHaveLength(10);
     expect(parsed!.steps[0]).toMatch(/Open two browser tabs[\s\S]*Claude/i);
     expect(parsed!.steps[1]).toMatch(/BASE-00/i);

@@ -224,7 +224,7 @@ describe("Home page", () => {
       expect(screen.getByText(/RUN THE CV EXPERIMENT/i)).toBeInTheDocument();
     });
 
-    it("renders flow as numbered list with sample CV, inject, download, JD copy, distinct JD message, test, confirm", () => {
+    it("renders flow as numbered list with sample CV, inject, download, VL copy, BASE-00 then JD in external LLM, test, confirm", () => {
       renderWithAudience(<Home />);
       fireEvent.click(
         screen.getByRole("button", { name: /how to run a fair test/i })
@@ -232,9 +232,11 @@ describe("Home page", () => {
       expect(screen.getByText(/Start with our sample CV/i)).toBeInTheDocument();
       expect(screen.getByText(/Inject adversarial layers/i)).toBeInTheDocument();
       expect(screen.getByText(/Download your .armed. CV/i)).toBeInTheDocument();
-      expect(screen.getByText(/Open Validation Lab and copy the sample job description/i)).toBeInTheDocument();
       expect(
-        screen.getByText(/send the job description alone as the first message/i)
+        screen.getByText(/Open Validation Lab to copy the BASE-00 prompt and the sample job description/i)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/send BASE-00 first, then send the job description alone/i)
       ).toBeInTheDocument();
       expect(screen.getByText(/Paste each downloaded CV and the Validation Lab prompts/i)).toBeInTheDocument();
       expect(screen.getByText(/Confirm or reject the observed influence/i)).toBeInTheDocument();
@@ -266,7 +268,7 @@ describe("Home page", () => {
       expect(screen.getByText("Engine Configuration")).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Choose which eggs to run, expand each to set payloads, then arm a CV and Inject Eggs/i
+          /Arm a CV first, then use the list below to enable eggs and expand rows to set payloads/i
         )
       ).toBeInTheDocument();
       expect(screen.getAllByText(/The Invisible Hand/i).length).toBeGreaterThanOrEqual(1);
@@ -280,7 +282,7 @@ describe("Home page", () => {
       );
       expect(
         await screen.findByText(
-          /Choose which signals to add, open each section to adjust details, then upload a CV and run Add signals/i
+          /Upload a CV first, then turn on options below and expand a row to adjust details/i
         )
       ).toBeInTheDocument();
     });
@@ -364,7 +366,9 @@ describe("Home page", () => {
       ensureEngineConfigExpanded();
 
       expect(
-        screen.getByText(/Expand each egg to set payloads, then click Inject Eggs/i)
+        screen.getByText(
+          /Enable eggs in the list, expand a row to configure payloads, set output options below, then click Inject Eggs/i
+        )
       ).toBeInTheDocument();
 
       const injectBtn = screen.getByRole("button", { name: /inject eggs/i });
@@ -964,7 +968,7 @@ describe("Home page", () => {
       expect(toggle).toHaveClass("min-h-10");
     });
 
-    it("egg checkbox labels have touch-friendly row padding", async () => {
+    it("egg rows have touch-friendly minimum height on the expand control", async () => {
       renderWithAudience(<Home />);
       const input = screen.getByTestId("dropzone-input");
       fireEvent.change(input, {
@@ -973,8 +977,10 @@ describe("Home page", () => {
       await waitFor(() => screen.getByText(/Armed CV:/i));
       ensureEngineConfigExpanded();
       await waitFor(() => screen.getByText(/Eggs to run/i));
-      const label = screen.getByRole("checkbox", { name: /Invisible Hand/i }).closest("label");
-      expect(label).toHaveClass("py-2");
+      const expandBtn = screen.getByRole("button", {
+        name: /expand configuration:.*invisible hand/i,
+      });
+      expect(expandBtn).toHaveClass("min-h-[44px]");
     });
 
     it("scrolls focused element into view when egg injection succeeds", async () => {

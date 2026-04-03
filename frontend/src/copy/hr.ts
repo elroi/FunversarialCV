@@ -15,8 +15,8 @@ export const hrCopy: Copy = {
     "Start with our sample CV (recommended) or upload your own CV",
     "Add subtle AI-visible signals to your CV",
     "Download your modified CV",
-    "Open Validation Lab and copy the sample job description",
-    "In your external AI tool, send the job description alone as the first message (before any CV)\n(e.g. Claude, Gemini, Copilot)",
+    "Open Validation Lab to copy the BASE-00 prompt and the sample job description",
+    "In your external AI tool, send BASE-00 first, then send the job description alone (before any CV)\n(e.g. Claude, Gemini, Copilot)",
     "Paste each downloaded CV and the Validation Lab prompts; compare how the outputs differ",
     "Confirm whether the signals changed the AI's response",
   ] as const,
@@ -53,9 +53,9 @@ export const hrCopy: Copy = {
   selectDemoLabel: "Choose a sample above and click here to view it",
   changeFileButton: "Change file",
   engineConfigIntroNoCv:
-    "Choose which signals to add, open each section to adjust details, then upload a CV and run Add signals.",
+    "Upload a CV first, then turn on options below and expand a row to adjust details. Set format options, then run Add signals.",
   engineConfigIntroCvReady:
-    "Open each section to adjust details, then click Add signals.",
+    "Turn on options in the list, expand a row to adjust details, set format options below, then click Add signals.",
   outputPlainTextHint:
     'The result will be plain text unless “Preserve styles” is on (for options that only add content).',
   preserveStylesLabel: "Preserve styles",
@@ -64,6 +64,7 @@ export const hrCopy: Copy = {
   preserveStylesDesc:
     "If an option changes the main text, we may have to rebuild the document and some formatting might change; the log will say which approach was used.",
   eggsToRunTitle: "Options to add",
+  engineOutputSectionTitle: "Format",
   engineConfigTitle: "How it runs",
   styleAffecting: "May change layout",
   styleSafe: "Layout-safe",
@@ -78,7 +79,10 @@ export const hrCopy: Copy = {
   downloadButton: "Download",
   downloadPdfButton: "Download PDF (signals for parsers)",
   includePdfExportLabel: "Also export PDF (plain layout; parser signals preserved)",
-  includePdfExportHint:
+  includePdfExportSummary:
+    "Plain layout; signals stay in the PDF for parsers. Word and PDF may show contact details differently.",
+  includePdfExportDetailAnchor: "More about PDF and placeholders",
+  includePdfExportDetailDesc:
     "We generate the PDF here so your signals stay in the file. Layout is plain text. If tokens were restored only in the Word download, the PDF may still show placeholders.",
   downloadStaleConfigWarning:
     "This file matches your last successful run, not the options on screen now. Add signals again to refresh the download.",
@@ -313,16 +317,17 @@ export const hrCopy: Copy = {
     "Validation Lab: show or hide sample job description, external comparative evaluation steps, and test prompts",
   sampleJobDescriptionTitle: "Sample job description (synthetic)",
   sampleJobDescriptionIntro:
-    "Sample logistics and AI-solutions job description (made up company). The built-in sample CV is a security-leadership profile on purpose—on a fair first pass, the AI should notice the mismatch. Then you can compare what changes after you add signals and follow-up prompts.",
+    "Sample logistics and AI-solutions job description (made up company). The built-in sample CV is security leadership on purpose; on BASE-01, a careful AI should show moderate or low fit. Full steps and follow-ups are in External comparative evaluation below.",
   sampleJobDescriptionAriaLabel: "Sample job description: show or hide full text and copy button",
   sampleJobDescriptionCopyButton: "Copy JD",
   sampleJobDescriptionCopyButtonSuccess: "Copied",
   sampleJobDescriptionCopyAriaLabel: "Copy sample job description",
   validationJdCopySuccessLogMessage: "> [SYSTEM] Sample JD copied to clipboard",
   validationLabPromptCollapsibleAriaLabel: "Prompt {id}: show or hide full text and copy button",
+  /** Shape is parsed by validationLabProtocol.ts — see CONTRIBUTING.md "Validation Lab protocol copy". */
   validationLabManualMirrorProtocol: `External comparative evaluation
 — Manual steps to run the same JD, CV, and prompts in another AI (optional side-by-side: baseline vs signaled).
-The sample job describes a logistics and production AI solutions role; the built-in sample CV is security leadership on purpose. On BASE-01, a careful AI should reflect that mismatch (moderate or low fit). After you add signals, send LLM01 or LLM09 and compare the new reply. Order in the thread: BASE-00, then the job description alone, then BASE-01 with your CV. For LLM01, you can type your own short hidden-note text on the main page before Add signals if you want it tailored to this sample job (stay within the limit; avoid special characters like angle brackets).
+After you add signals, send LLM01 or LLM09 and compare the new reply. Order in the thread: BASE-00, then the job description alone, then BASE-01 with your CV. For LLM01, you can type your own short hidden-note text on the main page before Add signals if you want it tailored to this sample job (stay within the limit; avoid special characters like angle brackets).
 
 (1) Open two browser tabs with your external AI (e.g. [Claude](https://claude.ai/), [Gemini](https://gemini.google.com/), [Copilot](https://copilot.microsoft.com/)), one for each CV variant you want to compare side by side.
 If you are only testing one variant, use a single tab.

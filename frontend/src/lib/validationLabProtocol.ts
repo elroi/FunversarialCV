@@ -19,7 +19,8 @@ export function parseValidationLabProtocol(protocol: string): {
     if (m) {
       steps.push(m[2].trim());
     } else if (steps.length > 0) {
-      steps[steps.length - 1] = `${steps[steps.length - 1]} ${line}`.trim();
+      // Continuation lines render as line breaks in the UI (see ValidationLab whitespace-pre-line).
+      steps[steps.length - 1] = `${steps[steps.length - 1]}\n${line}`.trim();
     }
   }
 

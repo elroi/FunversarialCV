@@ -224,7 +224,7 @@ describe("Home page", () => {
       expect(screen.getByText(/RUN THE CV EXPERIMENT/i)).toBeInTheDocument();
     });
 
-    it("renders flow as numbered list with sample CV, inject, download, test, observe, confirm", () => {
+    it("renders flow as numbered list with sample CV, inject, download, JD copy, distinct JD message, test, confirm", () => {
       renderWithAudience(<Home />);
       fireEvent.click(
         screen.getByRole("button", { name: /how to run a fair test/i })
@@ -232,12 +232,15 @@ describe("Home page", () => {
       expect(screen.getByText(/Start with our sample CV/i)).toBeInTheDocument();
       expect(screen.getByText(/Inject adversarial layers/i)).toBeInTheDocument();
       expect(screen.getByText(/Download your .armed. CV/i)).toBeInTheDocument();
-      expect(screen.getByText(/Test both versions against a real LLM/i)).toBeInTheDocument();
-      expect(screen.getByText(/Observe differences in behavior/i)).toBeInTheDocument();
+      expect(screen.getByText(/Open Validation Lab and copy the sample job description/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/send the job description alone as the first message/i)
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Paste each downloaded CV and the Validation Lab prompts/i)).toBeInTheDocument();
       expect(screen.getByText(/Confirm or reject the observed influence/i)).toBeInTheDocument();
       const list = document.querySelector("ol");
       expect(list).toBeInTheDocument();
-      expect(list?.querySelectorAll("li")).toHaveLength(6);
+      expect(list?.querySelectorAll("li")).toHaveLength(7);
     });
 
     it("includes a Resources link in the header that points to \\/resources", () => {
@@ -291,6 +294,7 @@ describe("Home page", () => {
         screen.getByRole("button", { name: /validation lab: show or hide/i })
       );
       expect(screen.getByText("BASE-00")).toBeInTheDocument();
+      expect(screen.getByText("BASE-01")).toBeInTheDocument();
       expect(screen.getByTestId("validation-prompt-LLM01")).toBeInTheDocument();
     });
 

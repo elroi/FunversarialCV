@@ -1693,6 +1693,17 @@ export default function Home() {
                     },
                   ])
                 }
+                onSampleJdCopy={() =>
+                  setLog((prev) => [
+                    ...prev,
+                    {
+                      id: `validation-copy-jd-${crypto.randomUUID()}`,
+                      stage: "accept",
+                      level: "success",
+                      message: copy.validationJdCopySuccessLogMessage,
+                    },
+                  ])
+                }
               />
             </SectionFold>
           </div>

@@ -1,0 +1,17 @@
+---
+description: Lightweight post-change sanity check before finishing edits
+alwaysApply: true
+---
+
+# Post-change review (lightweight)
+
+When this turn **changed application or test code** (not docs-only), before treating the task as done:
+
+1. **Bugs & edge cases** — Null/empty inputs, off-by-one, async races, and paths you did not exercise mentally.
+2. **Error handling** — User-visible failures are clear; do not swallow errors silently unless intentional; avoid leaking internals in messages.
+3. **Project fit** — Naming, file placement, and patterns match nearby code (see repo `.cursorrules` and existing modules).
+4. **Security & product rules** — Stateless processing, no durable uploads of user files, security-sensitive blocks commented where applicable.
+
+If issues appear trivial to fix in one step, fix them; otherwise call them out briefly.
+
+For a **full structured review** (PR-style checklist, severity, tests/security deep pass), use the project skill **`change-review`** (`.cursor/skills/change-review/SKILL.md`) when the user asks for a thorough review or before merge.

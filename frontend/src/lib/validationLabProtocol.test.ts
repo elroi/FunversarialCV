@@ -3,22 +3,53 @@ import { hrCopy } from "../copy/hr";
 import { parseValidationLabProtocol } from "./validationLabProtocol";
 
 describe("parseValidationLabProtocol", () => {
-  it("parses security Manual Mirror copy into headline and four steps", () => {
+  it("joins continuation lines with newlines so steps can render as multiple lines", () => {
+    const parsed = parseValidationLabProtocol(
+      "Test headline\n\n(1) First sentence.\nSecond sentence.\n(2) Only line."
+    );
+    expect(parsed).not.toBeNull();
+    expect(parsed!.steps[0]).toBe("First sentence.\nSecond sentence.");
+    expect(parsed!.steps[1]).toBe("Only line.");
+  });
+
+  it("parses security external comparative evaluation copy into headline and ten steps", () => {
     const parsed = parseValidationLabProtocol(
       securityCopy.validationLabManualMirrorProtocol
     );
     expect(parsed).not.toBeNull();
-    expect(parsed!.headline).toMatch(/Manual Mirror Protocol/i);
-    expect(parsed!.steps).toHaveLength(4);
-    expect(parsed!.steps[0]).toMatch(/Inject Eggs/i);
-    expect(parsed!.steps[3]).toMatch(/forensic proof-of-concept|proof-of-concept/i);
+    expect(parsed!.headline).toMatch(/External comparative evaluation/i);
+    expect(parsed!.steps).toHaveLength(10);
+    expect(parsed!.steps[0]).toMatch(/Open two browser tabs[\s\S]*Claude/i);
+    expect(parsed!.steps[1]).toMatch(/BASE-00/i);
+    expect(parsed!.steps[2]).toMatch(/sample job description/i);
+    expect(parsed!.steps[3]).toMatch(/BASE-01/i);
+    expect(parsed!.steps[4]).toMatch(
+      /load the sample CV or upload your own[\s\S]*generated sample Word file[\s\S]*baseline/is
+    );
+    expect(parsed!.steps[5]).toMatch(/one tab:[\s\S]*baseline CV[\s\S]*BASE-01/is);
+    expect(parsed!.steps[6]).toMatch(/Inject Eggs[\s\S]*armed build/is);
+    expect(parsed!.steps[7]).toMatch(/other tab:[\s\S]*armed CV/is);
+    expect(parsed!.steps[8]).toMatch(/baseline.*armed.*tab/is);
+    expect(parsed!.steps[9]).toMatch(
+      /Pick a test prompt[\s\S]*Compare the model|\(A\).*Check for hidden/is
+    );
   });
 
-  it("parses HR validation copy into headline and four steps", () => {
+  it("parses HR validation copy into headline and ten steps", () => {
     const parsed = parseValidationLabProtocol(hrCopy.validationLabManualMirrorProtocol);
     expect(parsed).not.toBeNull();
-    expect(parsed!.headline).toMatch(/How to test your CV/i);
-    expect(parsed!.steps).toHaveLength(4);
-    expect(parsed!.steps[0]).toMatch(/Add signals/i);
+    expect(parsed!.headline).toMatch(/External comparative evaluation/i);
+    expect(parsed!.steps).toHaveLength(10);
+    expect(parsed!.steps[0]).toMatch(/Open two browser tabs[\s\S]*Claude/i);
+    expect(parsed!.steps[1]).toMatch(/BASE-00/i);
+    expect(parsed!.steps[2]).toMatch(/sample job description/i);
+    expect(parsed!.steps[3]).toMatch(/BASE-01/i);
+    expect(parsed!.steps[4]).toMatch(
+      /load the sample CV or upload your own[\s\S]*generated sample Word file[\s\S]*baseline/is
+    );
+    expect(parsed!.steps[6]).toMatch(/Add signals[\s\S]*signaled build/is);
+    expect(parsed!.steps[9]).toMatch(
+      /Pick a test prompt[\s\S]*Compare the AI|\(A\).*Check for hidden/is
+    );
   });
 });

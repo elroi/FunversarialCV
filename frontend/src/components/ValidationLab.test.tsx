@@ -19,18 +19,31 @@ function expandPrompt(promptId: string) {
   );
 }
 
+function expandSampleJobDescription() {
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: /Sample job description: show or hide/i,
+    })
+  );
+}
+
 /** Default `AudienceProvider` tests as HR; badge aria matches `hrCopy.validationMatchBadgeAriaLabel`. */
 const matchBadgeAriaHr = /Enabled:.*last successful run on this page/i;
 
 describe("ValidationLab", () => {
-  it("renders protocol copy and per-prompt rows without an outer fold", () => {
+  it("renders sample JD, protocol copy, and per-prompt rows without an outer fold", () => {
     renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
 
+    expect(screen.getByTestId("validation-sample-jd")).toBeInTheDocument();
+    expect(screen.getByText(/Sample job description \(synthetic\)/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/How to test your CV|Manual Mirror Protocol/i)
+      screen.getByRole("heading", {
+        name: /External comparative evaluation/i,
+      })
     ).toBeInTheDocument();
     expect(screen.getByText("BASE-00")).toBeInTheDocument();
-    expect(screen.getByText("General Recruiter (Baseline)")).toBeInTheDocument();
+    expect(screen.getByText("BASE-01")).toBeInTheDocument();
+    expect(screen.getByText("Thread setup (before job description)")).toBeInTheDocument();
   });
 
   it("renders structured protocol steps and security copy for badge explainer and list caption", async () => {
@@ -41,9 +54,29 @@ describe("ValidationLab", () => {
       expect(screen.getByText("About the ENABLED badge")).toBeInTheDocument();
     });
     expect(screen.getByText("Test prompts")).toBeInTheDocument();
+    expect(screen.getByText(/Copy the BASE-00 prompt below/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Inject Eggs and download your CV on this page/i)
+      screen.getByText(
+        /First—baseline: if using the sample CV, download the generated sample Word file before you add adversarial payloads/i
+      )
     ).toBeInTheDocument();
+    expect(screen.getByText(/In one tab: attach the baseline CV/i)).toBeInTheDocument();
+  });
+
+  it("renders protocol step (2) vendor examples as external links", () => {
+    window.localStorage.setItem("funversarialcv-audience", "security");
+    renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
+
+    const claude = screen.getByRole("link", { name: "Claude" });
+    expect(claude).toHaveAttribute("href", "https://claude.ai/");
+    const gemini = screen.getByRole("link", { name: "Gemini" });
+    expect(gemini).toHaveAttribute("href", "https://gemini.google.com/");
+    const copilot = screen.getByRole("link", { name: "Copilot" });
+    expect(copilot).toHaveAttribute("href", "https://copilot.microsoft.com/");
+    [claude, gemini, copilot].forEach((a) => {
+      expect(a).toHaveAttribute("target", "_blank");
+      expect(a).toHaveAttribute("rel", "noopener noreferrer");
+    });
   });
 
   it("uses HR copy for badge explainer and prompt list caption", async () => {
@@ -64,22 +97,27 @@ describe("ValidationLab", () => {
 
     expandPrompt("BASE-00");
     expect(
-      screen.getByText(/establish a non-adversarial benchmark for candidate summarization/i)
+      screen.getByText(/Send first in the external LLM: the job description will arrive in the next message/i)
+    ).toBeInTheDocument();
+
+    expandPrompt("BASE-01");
+    expect(
+      screen.getByText(/Paste after the JD, with the CV attached or pasted in the same send \(see numbered steps above\)/i)
     ).toBeInTheDocument();
 
     expandPrompt("LLM01");
     expect(
-      screen.getByText(/test for susceptibility to direct or indirect instruction hijacking/i)
+      screen.getByText(/Tests instruction hijacking/i)
     ).toBeInTheDocument();
 
     expandPrompt("LLM02");
     expect(
-      screen.getByText(/audit how the system handles untrusted data in structured fields/i)
+      screen.getByText(/Audit structured fields/i)
     ).toBeInTheDocument();
 
     expandPrompt("LLM09");
     expect(
-      screen.getByText(/simulate a scenario where the agent ignores red flags due to summary bias/i)
+      screen.getByText(/Overreliance \/ summary bias/i)
     ).toBeInTheDocument();
   });
 
@@ -126,6 +164,26 @@ describe("ValidationLab", () => {
       expect(writeText).toHaveBeenCalledWith(llm01Prompt.prompt);
       expect(onPromptCopy).toHaveBeenCalledTimes(1);
       expect(onPromptCopy).toHaveBeenCalledWith("LLM01");
+    });
+  });
+
+  it("copy JD button writes sample JD text and calls onSampleJdCopy", async () => {
+    const writeText = jest.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+    const onSampleJdCopy = jest.fn();
+    const { SAMPLE_JD_CLIPBOARD_TEXT } = await import("../lib/sampleJobDescription");
+
+    renderWithAudience(
+      <ValidationLab armedEggIds={new Set()} onSampleJdCopy={onSampleJdCopy} />
+    );
+
+    expandSampleJobDescription();
+    const jdCopy = screen.getByRole("button", { name: /Copy sample job description/i });
+    fireEvent.click(jdCopy);
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith(SAMPLE_JD_CLIPBOARD_TEXT);
+      expect(onSampleJdCopy).toHaveBeenCalledTimes(1);
     });
   });
 

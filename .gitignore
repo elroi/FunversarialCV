@@ -58,6 +58,7 @@ ehthumbs.db
 .cursor/projects/*/agent-transcripts/
 .cursor/projects/*/terminals/
 .cursor/browser-logs/
+.cursor/debug-*.log
 
 # Testing & coverage
 coverage/

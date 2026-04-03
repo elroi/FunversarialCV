@@ -56,7 +56,7 @@ flowchart LR
   CVRepo --> CVProj
   DNS[funversarial.com DNS]
   DNS --> LobbyProj
-  CVProj --> cv_host[cv host e.g. funversarial-cv.vercel.app]
+  CVProj --> cv_host[cv.funversarial.com or funversarial-cv.vercel.app]
   LobbyProj -->|NEXT_PUBLIC_CV_APP_URL| cv_host
 ```
 
@@ -72,7 +72,7 @@ flowchart LR
 1. **Create the empty repo** on GitHub (private or public). Example: `gh repo create funversarial-com --private --clone` (adjust name and visibility).
 2. **Scaffold Next.js** at the **root** of that clone: `npx create-next-app@14 . --typescript --tailwind --eslint --app` (App Router + Tailwind).
 3. **Install extras:** `npm install lucide-react framer-motion`
-4. **Environment:** Add `.env.example` with `NEXT_PUBLIC_CV_APP_URL=https://funversarial-cv.vercel.app` (update when the CV app gets a custom domain). In Vercel → Project → Environment Variables, set the same for Production (and Preview if previews should use a stable CV URL).
+4. **Environment:** Add `.env.example` with `NEXT_PUBLIC_CV_APP_URL=https://cv.funversarial.com` in production (or `https://funversarial-cv.vercel.app` until DNS is live). In Vercel → **lobby** Project → Environment Variables, set the same for Production (and Preview if previews should use a stable CV URL). See **§8b** for wiring `cv.funversarial.com` to the CV project.
 5. **README:** Describe the site + link to the FunversarialCV repo + note that design tokens align to the CV app.
 6. **Branching:** Default `main`; feature branches + PRs (match FunversarialCV workflow).
 7. **Vercel:** Import **this** Git repo → Framework Preset Next.js → Root Directory = repo root (default) → Deploy. Add `funversarial.com` and `www.funversarial.com`; set apex vs www redirect; DNS at registrar per Vercel.
@@ -130,7 +130,41 @@ flowchart LR
 
 ### 8. Domain: funversarial.com (apex + www)
 
-- Add both hostnames; configure **one canonical** + redirect; align `metadataBase` and OG URLs.
+- Add both hostnames to the **lobby** Vercel project; configure **one canonical** + redirect; align `metadataBase` and OG URLs.
+
+### 8b. CV subdomain: `cv.funversarial.com` (FunversarialCV Vercel project)
+
+Use this hostname for the **CV tool** (this repo’s deployment). The **lobby** stays on apex + `www`; only the CV project gets `cv`.
+
+**1. Vercel (project linked to FunversarialCV repo)**
+
+- Dashboard → select the **FunversarialCV** project (the one that builds `frontend/` or your configured root).
+- **Settings → Domains → Add** → enter `cv.funversarial.com`.
+- Vercel shows the exact DNS records it expects. Typically:
+  - **Subdomain** `cv`: add a **CNAME** at your DNS host pointing `cv` → `cname.vercel-dns.com` (or the hostname Vercel displays for that domain).
+- Wait for **Valid Configuration** and **SSL** (Let’s Encrypt) to turn green. Propagation can take a few minutes to 48h depending on TTL.
+- In the same project, you may set **Primary Domain** to `https://cv.funversarial.com` so redirects from the default `*.vercel.app` URL go to the custom host (optional but tidy).
+
+**2. DNS registrar (e.g. Namecheap, Cloudflare)**
+
+- Ensure **no conflicting** A/CNAME on `cv` (remove parking or old targets).
+- Add the **CNAME** exactly as Vercel instructs. If the domain uses Cloudflare proxy (“orange cloud”), it usually still works; if SSL misbehaves, try DNS-only (grey cloud) for `cv` first.
+
+**3. Lobby env (separate Vercel project)**
+
+- In the **lobby** project: set `NEXT_PUBLIC_CV_APP_URL=https://cv.funversarial.com` for **Production** (and Preview if you want stable demo links).
+- Redeploy the lobby so the client bundle picks up the new value (`NEXT_PUBLIC_*` is baked in at build time).
+
+**4. Verify**
+
+- Open `https://cv.funversarial.com` — app loads, no certificate warnings.
+- From the lobby, **Launch Demo** goes to the same host.
+- Optional: `curl -I https://cv.funversarial.com` — `200` and correct `strict-transport-security` once HSTS is active.
+
+**5. Apex vs CV (no mix-up)**
+
+- `funversarial.com` / `www` → **lobby** project only.
+- `cv.funversarial.com` → **FunversarialCV** project only. Do not attach `cv` to the lobby project.
 
 ### 9. Launch checklist
 

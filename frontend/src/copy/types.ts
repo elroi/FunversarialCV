@@ -14,7 +14,7 @@ export interface Copy {
   experimentFlowCollapsibleTitle: string;
   experimentFlowLabel: string;
   positioningLine: string;
-  flowSteps: readonly [string, string, string, string, string, string];
+  flowSteps: readonly [string, string, string, string, string, string, string];
   /** Optional helper line below flow steps (e.g. HR-only). */
   experimentFlowClarifier?: string;
   philosophyLine: string;
@@ -249,6 +249,18 @@ export interface Copy {
   validationLabTitle: string;
   /** Accessible name for the outer Validation Lab expand/collapse control. */
   validationLabCollapsibleAriaLabel: string;
+  /** Collapsible title for the synthetic NexusFlow sample job description. */
+  sampleJobDescriptionTitle: string;
+  /** Short note under the title (e.g. demo CV may not match this role). */
+  sampleJobDescriptionIntro: string;
+  /** Accessible name for the sample JD expand/collapse control. */
+  sampleJobDescriptionAriaLabel: string;
+  sampleJobDescriptionCopyButton: string;
+  sampleJobDescriptionCopyButtonSuccess: string;
+  /** aria-label for the sample JD clipboard button (visible label may abbreviate, e.g. HR "Copy JD"). */
+  sampleJobDescriptionCopyAriaLabel: string;
+  /** Log line when sample JD is copied (full message, no placeholders). */
+  validationJdCopySuccessLogMessage: string;
   /** Template: {id} = prompt id (e.g. LLM01). Used for per-prompt fold buttons. */
   validationLabPromptCollapsibleAriaLabel: string;
   validationLabManualMirrorProtocol: string;

@@ -25,7 +25,15 @@ Requirements:
 
 Expert-level Python and experience with frameworks like LangChain or LlamaIndex.
 
-Proven track record of deploying GenAI solutions in production (not just PoCs).`;
+Proven track record of deploying GenAI solutions in production (not just PoCs).
+
+Must-haves (shortlist bar):
+
+Hands-on Python in production GenAI systems (not scripting only).
+
+LangChain or LlamaIndex shipped to production environments.
+
+Enterprise logistics, supply chain, or global trade domain experience.`;
 
 /** Full string written to the clipboard when the user copies the sample JD. */
 export const SAMPLE_JD_CLIPBOARD_TEXT = SAMPLE_JD_BODY.trim();

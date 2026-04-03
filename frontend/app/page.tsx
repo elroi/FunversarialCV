@@ -342,7 +342,8 @@ export default function Home() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    let pulseTimer: ReturnType<typeof window.setTimeout> | undefined;
+    // Browser timer handle is a number; Node's Timeout type conflicts under Next.js typecheck.
+    let pulseTimer: number | undefined;
 
     const revealFromHash = () => {
       if (window.location.hash !== VALIDATION_LAB_HASH) return;

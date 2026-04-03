@@ -3,6 +3,7 @@
  * Security uses "Validation Lab"; HR uses "Try in an AI tool" (validationLabTitle).
  */
 import { test, expect } from "@playwright/test";
+import { ensureFairTestPanelExpanded } from "../helpers/fair-test-panel";
 import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
 import { securityCopy } from "../../src/copy/security";
 import { hrCopy } from "../../src/copy/hr";
@@ -27,9 +28,7 @@ test.describe("Validation section", () => {
   }) => {
     await page.goto("/");
     await ensureSecurityAudienceForE2e(page);
-    await page
-      .getByRole("button", { name: /how to run a fair test/i })
-      .click();
+    await ensureFairTestPanelExpanded(page);
     // Scoped to the protocol pointer step (same substring in HR/security copy).
     const stepLink = page
       .getByRole("listitem")
@@ -71,9 +70,7 @@ test.describe("Validation section", () => {
       () => document.documentElement.hasAttribute("data-audience"),
       { timeout: 30_000 }
     );
-    await page
-      .getByRole("button", { name: /how to run a fair test/i })
-      .click();
+    await ensureFairTestPanelExpanded(page);
     const stepLink = page
       .getByRole("listitem")
       .filter({ hasText: /External comparative evaluation steps end-to-end/ })

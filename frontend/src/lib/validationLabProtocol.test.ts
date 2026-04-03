@@ -1,6 +1,23 @@
 import { securityCopy } from "../copy/security";
 import { hrCopy } from "../copy/hr";
-import { parseValidationLabProtocol } from "./validationLabProtocol";
+import {
+  parseValidationLabProtocol,
+  splitValidationLabProtocolHeadline,
+} from "./validationLabProtocol";
+
+describe("splitValidationLabProtocolHeadline", () => {
+  it("splits title, em-dash subtitle, and multi-line description", () => {
+    const block = `External comparative evaluation
+— Manual steps to run the same JD in another LLM.
+First para of context. On BASE-01, expect mismatch.
+Second para if any.`;
+    const split = splitValidationLabProtocolHeadline(block);
+    expect(split.title).toBe("External comparative evaluation");
+    expect(split.subtitle).toBe("Manual steps to run the same JD in another LLM.");
+    expect(split.description).toContain("First para of context");
+    expect(split.description).toContain("Second para if any.");
+  });
+});
 
 describe("parseValidationLabProtocol", () => {
   it("joins continuation lines with newlines so steps can render as multiple lines", () => {
@@ -8,6 +25,9 @@ describe("parseValidationLabProtocol", () => {
       "Test headline\n\n(1) First sentence.\nSecond sentence.\n(2) Only line."
     );
     expect(parsed).not.toBeNull();
+    expect(parsed!.title).toBe("Test headline");
+    expect(parsed!.subtitle).toBeNull();
+    expect(parsed!.description).toBeNull();
     expect(parsed!.steps[0]).toBe("First sentence.\nSecond sentence.");
     expect(parsed!.steps[1]).toBe("Only line.");
   });
@@ -18,6 +38,10 @@ describe("parseValidationLabProtocol", () => {
     );
     expect(parsed).not.toBeNull();
     expect(parsed!.headline).toMatch(/External comparative evaluation/i);
+    expect(parsed!.title).toMatch(/^External comparative evaluation$/i);
+    expect(parsed!.subtitle).toMatch(/Manual steps to run the same JD, CV, and prompts/i);
+    expect(parsed!.description).toMatch(/sample JD describes|logistics/i);
+    expect(parsed!.description).toMatch(/BASE-00.*BASE-01/s);
     expect(parsed!.steps).toHaveLength(10);
     expect(parsed!.steps[0]).toMatch(/Open two browser tabs[\s\S]*Claude/i);
     expect(parsed!.steps[1]).toMatch(/BASE-00/i);
@@ -39,6 +63,9 @@ describe("parseValidationLabProtocol", () => {
     const parsed = parseValidationLabProtocol(hrCopy.validationLabManualMirrorProtocol);
     expect(parsed).not.toBeNull();
     expect(parsed!.headline).toMatch(/External comparative evaluation/i);
+    expect(parsed!.title).toMatch(/^External comparative evaluation$/i);
+    expect(parsed!.subtitle).toMatch(/Manual steps to run the same JD, CV, and prompts/i);
+    expect(parsed!.description).toMatch(/sample job describes|logistics|security leadership/i);
     expect(parsed!.steps).toHaveLength(10);
     expect(parsed!.steps[0]).toMatch(/Open two browser tabs[\s\S]*Claude/i);
     expect(parsed!.steps[1]).toMatch(/BASE-00/i);

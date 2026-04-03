@@ -159,14 +159,30 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
   const protocolIntro = protocolParsed ? (
     <div className="mb-5 space-y-3">
       <div className="rounded-lg border border-border/70 border-l-[3px] border-l-accent/50 bg-bg/40 p-3 shadow-sm sm:p-4">
-        <h3
-          className={clsx(
-            "mb-3 whitespace-pre-line text-caption uppercase tracking-[0.18em] text-accent",
-            isHr ? "font-sans font-semibold" : "font-mono"
-          )}
-        >
-          {protocolParsed.headline}
-        </h3>
+        <header className="mb-4 space-y-2 border-b border-border/40 pb-4">
+          <h3
+            className={clsx(
+              isHr
+                ? "font-sans text-base font-semibold tracking-tight text-foreground/90"
+                : "font-mono text-caption uppercase tracking-[0.18em] text-accent"
+            )}
+          >
+            {protocolParsed.title}
+          </h3>
+          {protocolParsed.subtitle ? (
+            <p
+              className={clsx(
+                "text-sm font-medium leading-snug text-foreground/80",
+                isHr ? "font-sans" : "font-mono text-caption"
+              )}
+            >
+              {protocolParsed.subtitle}
+            </p>
+          ) : null}
+          {protocolParsed.description ? (
+            <p className="font-sans text-sm leading-relaxed text-foreground/70">{protocolParsed.description}</p>
+          ) : null}
+        </header>
         <ol className="list-none space-y-3 font-sans text-sm leading-relaxed text-foreground/85">
           {protocolParsed.steps.map((step, i) => (
             <li key={i} className="flex gap-3">

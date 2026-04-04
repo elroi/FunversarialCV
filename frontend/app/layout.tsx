@@ -2,6 +2,7 @@ import "./globals.css";
 import { JetBrains_Mono } from "next/font/google";
 import { viewport } from "./viewport";
 import { AudienceProvider } from "../src/contexts/AudienceContext";
+import { Analytics } from "@vercel/analytics/next";
 
 export { viewport };
 
@@ -27,6 +28,7 @@ export default function RootLayout({
           Skip to main content
         </a>
         <AudienceProvider>{children}</AudienceProvider>
+        <Analytics />
       </body>
     </html>
   );

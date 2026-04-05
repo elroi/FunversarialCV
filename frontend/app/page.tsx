@@ -200,6 +200,8 @@ export default function Home() {
   const [enabledEggIds, setEnabledEggIds] = useState<Set<string>>(() => new Set(DEFAULT_ENABLED_EGG_IDS));
   /** Eggs applied in the last successful harden; drives Validation Lab ENABLED badge (not live checkboxes). */
   const [armedEggIds, setArmedEggIds] = useState<Set<string>>(() => new Set());
+  /** In-memory .docx from last successful inject (lab default before user picks another file). */
+  const [labHardenedDocxFile, setLabHardenedDocxFile] = useState<File | null>(null);
   const [preserveStyles, setPreserveStyles] = useState(true);
   const [preserveStylesDetailExpanded, setPreserveStylesDetailExpanded] =
     useState(false);
@@ -461,6 +463,7 @@ export default function Home() {
   const armPipelineWithFile = useCallback((file: File) => {
     setError(null);
     setSuccessMessage(null);
+    setLabHardenedDocxFile(null);
     setSelectedFile(file);
     setSelectedFileName(file.name);
     lastHardenedBlobRef.current = null;
@@ -513,6 +516,7 @@ export default function Home() {
     lastPdfExportFileNameRef.current = null;
     lastHardenedConfigRef.current = null;
     setArmedEggIds(new Set());
+    setLabHardenedDocxFile(null);
     setDualityResult(null);
     setLog([]);
     setProcessingState("idle");
@@ -760,7 +764,18 @@ export default function Home() {
           return;
         }
 
+        const noEggsApplied = eggIdsToUse.length === 0;
         lastHardenedBlobRef.current = blob;
+        const outputDocxFileName = noEggsApplied
+          ? originalName
+          : buildFinalFileName(originalName);
+        setLabHardenedDocxFile(
+          new File([blob], outputDocxFileName, {
+            type:
+              blob.type ||
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          })
+        );
         lastHardenedPdfBlobRef.current = null;
         lastPdfExportFileNameRef.current = null;
         const pdfB64 = data.pdfExportBase64;
@@ -832,8 +847,7 @@ export default function Home() {
 
         setProcessingState("completed");
         setActiveStage("rehydration");
-        const noEggsApplied = eggIdsToUse.length === 0;
-        setSuccessMessage(noEggsApplied ? originalName : buildFinalFileName(originalName));
+        setSuccessMessage(outputDocxFileName);
         successMessageRef.current?.focus();
         setLog((prev) => [
           ...prev,
@@ -881,7 +895,7 @@ export default function Home() {
         ]);
       }
     },
-    [canaryWingPayload, includePdfExport]
+    [canaryWingPayload]
   );
 
   const startPipelineForFile = async (file: File) => {
@@ -902,6 +916,7 @@ export default function Home() {
     }
     setError(null);
     setSuccessMessage(null);
+    setLabHardenedDocxFile(null);
     lastHardenedBlobRef.current = null;
     lastHardenedPdfBlobRef.current = null;
     lastPdfExportFileNameRef.current = null;
@@ -1335,7 +1350,13 @@ export default function Home() {
               ariaLabel={`${copy.inputChannel}: show or hide`}
               defaultExpanded
             >
-              <DropZone onFileSelect={onFileSelect} maxSizeBytes={MAX_FILE_SIZE_BYTES} openFilePickerRef={openFilePickerRef} />
+              <div id="console-cv-upload" className="scroll-mt-6">
+                <DropZone
+                  onFileSelect={onFileSelect}
+                  maxSizeBytes={MAX_FILE_SIZE_BYTES}
+                  openFilePickerRef={openFilePickerRef}
+                />
+              </div>
               <p className="mt-1 text-caption text-foreground/50">
                 {copy.maxFileHint}
               </p>
@@ -1446,7 +1467,7 @@ export default function Home() {
                 : copy.engineConfigIntroNoCv}
             </p>
             {selectedFileName && (
-              <div ref={armedSectionRef}>
+              <div ref={armedSectionRef} id="console-armed-cv" className="scroll-mt-6">
                 <p className="mt-0 text-sm text-success">
                   {copy.armedCvLabel} <span className="font-semibold">{selectedFileName}</span>
                 </p>
@@ -1684,24 +1705,26 @@ export default function Home() {
                   </div>
                 </div>
                 </div>
-                <Button
-                  onClick={runHarden}
-                  disabled={pipelineHardenDisabled}
-                  aria-label={pipelineHardenAria}
-                  className="mt-4 w-full flex items-center justify-center gap-2"
-                >
-                  {processingState === "processing" && (
-                    <span className="flex items-end gap-0.5 h-4" aria-hidden="true">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <span
-                          key={i}
-                          className="music-loading-bar w-0.5 h-3 bg-accent rounded-full origin-bottom"
-                        />
-                      ))}
-                    </span>
-                  )}
-                  {processingState === "processing" ? copy.hardenProcessing : copy.hardenButton}
-                </Button>
+                <div id="console-inject-eggs" className="scroll-mt-6">
+                  <Button
+                    onClick={runHarden}
+                    disabled={pipelineHardenDisabled}
+                    aria-label={pipelineHardenAria}
+                    className="mt-4 w-full flex items-center justify-center gap-2"
+                  >
+                    {processingState === "processing" && (
+                      <span className="flex items-end gap-0.5 h-4" aria-hidden="true">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <span
+                            key={i}
+                            className="music-loading-bar w-0.5 h-3 bg-accent rounded-full origin-bottom"
+                          />
+                        ))}
+                      </span>
+                    )}
+                    {processingState === "processing" ? copy.hardenProcessing : copy.hardenButton}
+                  </Button>
+                </div>
               </div>
             )}
             {successMessage && (
@@ -1725,11 +1748,12 @@ export default function Home() {
                   </p>
                 ) : null}
                 <div
+                  id="console-download-armed-docx"
                   data-testid="download-hardened-actions"
                   className={
                     downloadSuccessHasInjectedEggs
-                      ? "mt-3 w-full flex flex-col items-center gap-2"
-                      : "mt-1 flex flex-wrap gap-2"
+                      ? "mt-3 w-full flex flex-col items-center gap-2 scroll-mt-6"
+                      : "mt-1 flex flex-wrap gap-2 scroll-mt-6"
                   }
                 >
                   <Button
@@ -1800,6 +1824,13 @@ export default function Home() {
             >
               <ValidationLab
                 armedEggIds={armedEggIds}
+                consoleSelectedDocxFile={
+                  selectedFile &&
+                  selectedFile.name.toLowerCase().endsWith(".docx")
+                    ? selectedFile
+                    : null
+                }
+                hardenedOutputDocxFile={labHardenedDocxFile}
                 onPromptCopy={(id) =>
                   setLog((prev) => [
                     ...prev,

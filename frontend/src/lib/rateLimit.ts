@@ -1,4 +1,4 @@
-type RateLimitKind = "harden" | "canary" | "canaryStatus";
+type RateLimitKind = "harden" | "canary" | "canaryStatus" | "labExtract" | "labComplete";
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -32,6 +32,26 @@ function getConfig(kind: RateLimitKind) {
       return { max: Infinity, windowMs: 60_000, now, disabled: true as const };
     }
     const max = Number.parseInt(maxEnv ?? "", 10) || 60;
+    const windowMs = Number.parseInt(windowEnv ?? "", 10) || 60_000;
+    return { max, windowMs, now, disabled: false as const };
+  }
+  if (kind === "labExtract") {
+    const maxEnv = process.env.RATE_LIMIT_LAB_EXTRACT_MAX;
+    const windowEnv = process.env.RATE_LIMIT_LAB_EXTRACT_WINDOW_MS;
+    if (process.env.NODE_ENV === "test" && !maxEnv && !windowEnv) {
+      return { max: Infinity, windowMs: 60_000, now, disabled: true as const };
+    }
+    const max = Number.parseInt(maxEnv ?? "", 10) || 60;
+    const windowMs = Number.parseInt(windowEnv ?? "", 10) || 60_000;
+    return { max, windowMs, now, disabled: false as const };
+  }
+  if (kind === "labComplete") {
+    const maxEnv = process.env.RATE_LIMIT_LAB_COMPLETE_MAX;
+    const windowEnv = process.env.RATE_LIMIT_LAB_COMPLETE_WINDOW_MS;
+    if (process.env.NODE_ENV === "test" && !maxEnv && !windowEnv) {
+      return { max: Infinity, windowMs: 60_000, now, disabled: true as const };
+    }
+    const max = Number.parseInt(maxEnv ?? "", 10) || 10;
     const windowMs = Number.parseInt(windowEnv ?? "", 10) || 60_000;
     return { max, windowMs, now, disabled: false as const };
   }

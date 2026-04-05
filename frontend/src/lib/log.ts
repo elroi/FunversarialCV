@@ -1,4 +1,4 @@
-type LogLevel = "info" | "error";
+type LogLevel = "info" | "error" | "warn";
 
 interface LogPayload {
   level: LogLevel;
@@ -12,6 +12,8 @@ function emit(payload: LogPayload) {
   const line = JSON.stringify(payload);
   if (payload.level === "error") {
     console.error(line);
+  } else if (payload.level === "warn") {
+    console.warn(line);
   } else {
     console.log(line);
   }
@@ -28,5 +30,9 @@ export function logError(
   meta?: Record<string, unknown>
 ) {
   emit({ level: "error", route, event, message, meta });
+}
+
+export function logWarn(route: string, event: string, meta?: Record<string, unknown>) {
+  emit({ level: "warn", route, event, meta });
 }
 

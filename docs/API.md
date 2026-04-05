@@ -106,3 +106,83 @@ All error responses have a JSON body `{ error: string }`.
 | 500    | Unexpected server error | "Processing failed. Please try again." |
 
 No stack traces or internal paths are returned to the client.
+
+---
+
+## Validation Lab API (`/api/lab/*`)
+
+Stateless: no uploaded files are stored. Lab extract runs entirely in memory; lab complete causes **egress** to the configured LLM provider (billable / subprocessor) even though CV files are not retained.
+
+### `GET /api/lab/config`
+
+- **Method:** `GET`
+- **URL:** `/api/lab/config`
+
+**Success (200)** — JSON:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `harnessVersion` | string | Lab harness version (aligned with extract responses). |
+| `labCompleteEnabled` | boolean | `true` only when completion is available **and** operator config allows it: non-empty `LAB_ALLOWED_MODELS`, `OPENROUTER_API_KEY` and/or valid `OLLAMA_BASE_URL`, and **`LAB_COMPLETE_DISABLED` unset**. Otherwise **`false`**; the UI **must not** render a disabled “run model” shell—omit completion UI entirely. |
+| `extractionModeIds` | string[] | Stable mode ids (no secrets). |
+| `allowedModelIds` | string[]? | Included when `labCompleteEnabled` is true; values from `LAB_ALLOWED_MODELS` (comma-separated env). |
+| `openRouterConfigured` | boolean? | Whether an OpenRouter key is present (not the key). Omitted if `LAB_CONFIG_MINIMAL=1`. |
+| `ollamaConfigured` | boolean? | Whether `OLLAMA_BASE_URL` parses as `http:`/`https:` with a host. Omitted if minimal. |
+
+**Privacy:** Responses **must not** include `OLLAMA_BASE_URL`, internal hostnames, or raw paths. Optional `ollamaReachable` may be added later as a boolean only.
+
+### `POST /api/lab/extract`
+
+- **Method:** `POST`
+- **URL:** `/api/lab/extract`
+- **Content-Type:** `multipart/form-data`
+- **Field:** `file` — one `.docx` (magic bytes). **PDF** returns **400** with a message that PDF lab modes are not available yet. Max size **4 MB** (same as `/api/harden`).
+
+**Success (200):** `{ harnessVersion, modes }` where each element of `modes` includes `modeId`, `version`, `warnings`, and a mode-specific payload (`text`, or `entries`, or `links`).
+
+**Rate limit:** Per client IP; defaults **60** requests / **60 minutes**. Env: `RATE_LIMIT_LAB_EXTRACT_MAX`, `RATE_LIMIT_LAB_EXTRACT_WINDOW_MS`. **429** with `Retry-After` when exceeded.
+
+### `POST /api/lab/complete`
+
+- **Method:** `POST`
+- **Content-Type:** `application/json`
+- **v1 body (pinned template + slots only — no client `messages[]`):**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `promptTemplateId` | string | `lab_fit_summary_v1` |
+| `extractText` | string | Dehydrated CV extract (browser tokenization required). |
+| `jobDescriptionText` | string | Dehydrated JD text. |
+| `modelId` | string | Must appear in `LAB_ALLOWED_MODELS` **unless** freeform gate is active (see below). |
+
+**Responses:** **200** `{ text, providerKind, promptTemplateId }`; **400** validation / possible PII; **403** completion disabled; **429** rate limit; **502** provider error; **503** no provider.
+
+**Rate limit:** Defaults **10** requests / **60 minutes** per IP. Env: `RATE_LIMIT_LAB_COMPLETE_MAX`, `RATE_LIMIT_LAB_COMPLETE_WINDOW_MS`.
+
+**Input caps:** `LAB_COMPLETE_MAX_INPUT_CHARS` (default **48000** per field). Provider `max_tokens`: `LAB_COMPLETE_MAX_OUTPUT_TOKENS` (default **900**).
+
+**Provider selection:** `LAB_PROVIDER` = `openrouter` | `ollama` to force; otherwise OpenRouter is preferred when `OPENROUTER_API_KEY` is set, else Ollama when `OLLAMA_BASE_URL` is valid.
+
+### Freeform model ids (high risk)
+
+Arbitrary `modelId` is **rejected** unless **all** of the following are set:
+
+- `LAB_FREEFORM_BUILD=1`
+- `LAB_MODEL_INPUT=freeform`
+- `LAB_FREEFORM_MODEL_ACK=I_ACCEPT_ABUSE_RISK`
+
+When active, the server logs a structured **warn** (no model id content). Prefer **`LAB_ALLOWED_MODELS`** on any internet-exposed deployment.
+
+### Operator environment summary
+
+| Variable | Role |
+|----------|------|
+| `LAB_ALLOWED_MODELS` | Comma-separated allowlist; required for `labCompleteEnabled`. |
+| `LAB_COMPLETE_DISABLED` | If `1` / `true`, forces `labCompleteEnabled: false`. |
+| `OPENROUTER_API_KEY` | OpenRouter server key. |
+| `OPENROUTER_HTTP_REFERER` | Optional Referer header for OpenRouter. |
+| `OLLAMA_BASE_URL` | Base URL only (server-side); never exposed in config JSON. |
+| `LAB_CONFIG_MINIMAL` | If `1`, config omits extra capability fields. |
+| `LAB_PROVIDER` | `openrouter` or `ollama` to pin provider when both exist. |
+
+**Subprocessors / egress:** Successful `POST /api/lab/complete` sends user-supplied **tokenized** text to OpenRouter and/or a self-hosted Ollama instance per the active provider.

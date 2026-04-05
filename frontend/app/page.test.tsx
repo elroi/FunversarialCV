@@ -236,7 +236,7 @@ describe("Home page", () => {
       ).toHaveAttribute("href", "#validation-lab");
     });
 
-    it("renders flow as numbered list with sample CV, inject, download, VL protocol pointer, external mirror, compare, confirm", () => {
+    it("renders flow as numbered list with sample CV, inject, download, VL ingestion focus, optional external mirror, compare, confirm", () => {
       renderWithAudience(<Home />);
       fireEvent.click(
         screen.getByRole("button", { name: /how to run a fair test/i })
@@ -249,15 +249,15 @@ describe("Home page", () => {
       ).toHaveAttribute("href", "#validation-lab");
       expect(
         screen.getByText(
-          /section on this page and follow its numbered External comparative evaluation steps/i
+          /run the ingestion lab on your baseline and armed builds/i
         )
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/In your external LLM, mirror that sequence in your chat threads/i)
+        screen.getByText(/Optional: in an external LLM, mirror the BASE prompts/i)
       ).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Compare the model's replies using the goals under each Validation Lab test prompt/i
+          /If you use external chats, compare the model's replies using the goals under each test prompt/i
         )
       ).toBeInTheDocument();
       expect(screen.getByText(/Confirm or reject the observed influence/i)).toBeInTheDocument();
@@ -457,7 +457,7 @@ describe("Home page", () => {
       fireEvent.click(injectBtn);
 
       await waitFor(() => {
-        expect(screen.getByText(/my-cv_final\.docx/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/my-cv_final\.docx/i).length).toBeGreaterThanOrEqual(1);
       });
 
       const downloadBtn = screen.getByRole("button", { name: /download/i });
@@ -513,7 +513,7 @@ describe("Home page", () => {
       fireEvent.click(screen.getByRole("button", { name: /inject eggs/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/pulse-lab_final\.docx/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/pulse-lab_final\.docx/i).length).toBeGreaterThanOrEqual(1);
       });
 
       const validationTrigger = screen.getByRole("button", {
@@ -602,7 +602,7 @@ describe("Home page", () => {
       fireEvent.click(screen.getByRole("button", { name: /inject eggs/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/my-cv_final\.docx/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/my-cv_final\.docx/i).length).toBeGreaterThanOrEqual(1);
       });
 
       expect(
@@ -627,7 +627,7 @@ describe("Home page", () => {
       fireEvent.click(screen.getByRole("button", { name: /inject eggs/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/my-cv_final\.docx/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/my-cv_final\.docx/i).length).toBeGreaterThanOrEqual(1);
       });
 
       expect(screen.getByRole("button", { name: /inject eggs/i })).toBeDisabled();

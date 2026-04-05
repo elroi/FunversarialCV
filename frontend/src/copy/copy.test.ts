@@ -49,6 +49,24 @@ describe("copy", () => {
       expect(getCopy("security").validationLabTitle).toBe("Validation Lab");
     });
 
+    it("lab harness strings exist for both audiences with distinct tone", () => {
+      const sec = getCopy("security");
+      const hr = getCopy("hr");
+      expect(sec.labHarnessTitle.length).toBeGreaterThan(0);
+      expect(hr.labHarnessTitle.length).toBeGreaterThan(0);
+      expect(sec.labHarnessIntro).toMatch(/LLM02|LLM10/i);
+      expect(hr.labHarnessIntro).not.toMatch(/LLM02/i);
+      expect(sec.labHarnessRunExtract).not.toBe(hr.labHarnessRunExtract);
+      expect(sec.labHarnessVendorDisclaimer.length).toBeGreaterThan(20);
+      expect(hr.labHarnessVendorDisclaimer.length).toBeGreaterThan(20);
+      expect(sec.labHarnessSourcePicked).toContain("{name}");
+      expect(sec.labHarnessSourceHardenedOutput).toContain("{name}");
+      expect(sec.labHarnessSourceConsoleSelection).toContain("{name}");
+      expect(hr.labHarnessSourcePicked).toContain("{name}");
+      expect(hr.labHarnessSourceHardenedOutput).toContain("{name}");
+      expect(hr.labHarnessSourceConsoleSelection).toContain("{name}");
+    });
+
     it("Validation Lab prompts share stable ids; security vs HR titles differ", () => {
       const sec = getCopy("security");
       const hr = getCopy("hr");

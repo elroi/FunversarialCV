@@ -4,11 +4,13 @@
 
 **Goal:** Single inventory of sources of truth, duplication and drift risks, IA observations, persona findings, and prioritized issues (P0–P2), plus optional structural recommendations for a follow-up implementation pass.
 
+**Post-audit (implementation):** The live app has since moved to a **harness-first** lab order (sample JD → ingestion harness → **External comparative evaluation** in a nested fold → prompts), reframed fair-test copy for **in-app extraction first** and **optional** external chat, and added **`#validation-lab-guided`** deep-link behavior (opens the outer Validation Lab section and expands the protocol fold). The narrative below still reflects the original audit findings where useful; structural bullets in §2, §4.2, and §10 track current behavior.
+
 ---
 
 ## 1. Executive summary
 
-The Validation Lab works, but **content and instructions are split across many files**, with **meaningful duplication** of the “fit gap” narrative and a **hard contradiction** between **How to run a fair test** (step 5) and the **Validation Lab protocol** (BASE-00 must precede the JD). **HR** copy softens console language, yet **`VALIDATION_PROMPTS` remains security-flavored and shared** across audiences. **`parseValidationLabProtocol`** ties copy shape to UI: a bad edit switches to a **fallback layout** with different badge placement. **E2E** does not cover Validation Lab; coverage is **unit/integration tests** with **string-locked** assertions.
+The Validation Lab works, but **content and instructions are split across many files**, with **meaningful duplication** of the “fit gap” narrative. A **hard contradiction** between **How to run a fair test** and the **Validation Lab protocol** (BASE-00 vs JD order) was **VL-01** and has been **addressed in product copy** (fair-test steps and protocol alignment; later passes emphasize ingestion on-page before optional vendor mirrors). **HR** copy softens console language; validation **prompts are audience-localized** in `Copy.validationPrompts`. **`parseValidationLabProtocol`** ties copy shape to UI: a bad edit switches to a **fallback layout** with different badge placement. **Playwright** covers Validation Lab in [`frontend/e2e/specs/validation-lab.spec.ts`](../frontend/e2e/specs/validation-lab.spec.ts); many assertions remain **string-locked** in Jest.
 
 ---
 
@@ -17,7 +19,7 @@ The Validation Lab works, but **content and instructions are split across many f
 | Artifact | Path | Role |
 |----------|------|------|
 | Section shell, `armedEggIds`, attention pulse after DOCX download | [`frontend/app/page.tsx`](../frontend/app/page.tsx) | Wraps lab in `SectionFold`; passes clipboard success into `DualityMonitor` log |
-| Lab UI layout, `VALIDATION_PROMPTS`, parse vs fallback branching | [`frontend/src/components/ValidationLab.tsx`](../frontend/src/components/ValidationLab.tsx) | Renders **Sample JD → protocol → prompts**; two render paths for protocol |
+| Lab UI layout, `copy.validationPrompts`, parse vs fallback branching | [`frontend/src/components/ValidationLab.tsx`](../frontend/src/components/ValidationLab.tsx) | Renders **Sample JD → ingestion harness (`LabHarnessPanel`) → External comparative evaluation** (inner `CollapsibleCard`, default collapsed) **→ prompts**; two render paths for protocol body |
 | Inline link rendering in protocol steps | [`frontend/src/lib/protocolStepRichText.tsx`](../frontend/src/lib/protocolStepRichText.tsx) | `[label](url)` in step lines |
 | Protocol headline + numbered-step parser | [`frontend/src/lib/validationLabProtocol.ts`](../frontend/src/lib/validationLabProtocol.ts) | Returns `null` if shape invalid |
 | Parser unit tests (locks security/hr protocol shape) | [`frontend/src/lib/validationLabProtocol.test.ts`](../frontend/src/lib/validationLabProtocol.test.ts) | Regression on real `Copy` strings |
@@ -29,7 +31,8 @@ The Validation Lab works, but **content and instructions are split across many f
 | Fair test panel (consumes `flowSteps`) | [`frontend/src/components/ExperimentFlowPanel.tsx`](../frontend/src/components/ExperimentFlowPanel.tsx) | Upstream summary; references Validation Lab by name |
 | Component tests | [`frontend/src/components/ValidationLab.test.tsx`](../frontend/src/components/ValidationLab.test.tsx) | Prompt rows, copy, badge, links |
 | Copy tests | [`frontend/src/copy/copy.test.ts`](../frontend/src/copy/copy.test.ts) | Badge hint semantics |
-| Home page tests | [`frontend/app/page.test.tsx`](../frontend/app/page.test.tsx) | DOM order, fair-test text, lab collapsible |
+| Home page tests | [`frontend/app/page.test.tsx`](../frontend/app/page.test.tsx) | DOM order, fair-test text, `#validation-lab` / `#validation-lab-guided` hash behavior |
+| Nested disclosure | [`frontend/src/components/ui/CollapsibleCard.tsx`](../frontend/src/components/ui/CollapsibleCard.tsx) | Protocol fold; optional **controlled** `expanded` / `onExpandedChange` for hash sync |
 | UI disclosure / examples | [`docs/UI_STYLE_GUIDE.md`](UI_STYLE_GUIDE.md) | `ValidationLab.tsx` cited |
 | UX / IA notes | [`docs/UX_UI_REVIEW.md`](UX_UI_REVIEW.md) | ENABLED badge semantics, home IA |
 | Disclosure tier refs | [`docs/brand-guide.json`](brand-guide.json) | `ValidationLab.tsx` in `inSection` example |
@@ -37,7 +40,7 @@ The Validation Lab works, but **content and instructions are split across many f
 
 **Additional notes**
 
-- **E2E:** No Playwright specs reference Validation Lab or fair-test strings under `frontend/e2e/` (grep April 2026).
+- **E2E:** [`validation-lab.spec.ts`](../frontend/e2e/specs/validation-lab.spec.ts) — expand folds, BASE-00, fair-test `#validation-lab` link, harness order, `#validation-lab-guided`, fixture extract.
 - **CONTRIBUTING.md:** No guidance on `validationLabManualMirrorProtocol` format or parser contract.
 - **Storybook:** No stories for `ValidationLab`.
 
@@ -46,7 +49,7 @@ The Validation Lab works, but **content and instructions are split across many f
 In [`ValidationLab.tsx`](../frontend/src/components/ValidationLab.tsx), `parseValidationLabProtocol(copy.validationLabManualMirrorProtocol)`:
 
 - Returns **`null`** if the string splits into fewer than **two** `\n\n`-separated blocks, or if no lines match `^(n) ` after the first block.
-- **Parsed path:** Card with title/subtitle/description, numbered `<ol>`, `ProtocolStepRichText`, then **ENABLED** hint inside `<details>`.
+- **Parsed path:** Inner fold body: subtitle/description, numbered `<ol>`, `ProtocolStepRichText`, then **ENABLED** hint inside `<details>` (fold title from `validationLabProtocolFoldTitle`).
 - **Fallback path:** Same string rendered as **plain paragraphs** via `split(/\n\n+/)`, then badge hint as a **visible paragraph** (not inside `<details>`).
 
 Maintainers must treat the protocol string as **schema-bearing**, not free prose.
@@ -123,13 +126,21 @@ HR softens **protocol** and **badge** strings but **not** prompt `title` / `desc
 
 ### 4.2 Visual order vs narrative
 
-Rendered order: **Sample JD** (with intro) → **protocol** (references “prompts below” and “Sample job description panel”) → **prompts**. Reading order is coherent; the **duplicate intros** (JD panel + protocol description) are the main clutter, not the sequence.
+Rendered order (current): **Sample JD** → **ingestion harness** → **External comparative evaluation** (nested `CollapsibleCard`; steps reference JD/harness “above this block”) → **prompts**. Protocol copy and `sampleJobDescriptionIntro` should stay consistent with “above/below” language.
 
 ### 4.3 Progressive disclosure depth
 
-Three mechanisms: outer `SectionFold`, multiple `CollapsibleCard`s (JD + each prompt), `<details>` for badge hint (parsed path only). **Cognitive load:** high but consistent with “lab bench” metaphor. **Credibility brief** suggests HR rename / less classroom tone — conflicts slightly with deep nesting unless copy is warmed.
+Mechanisms: outer `SectionFold` (Validation Lab), `CollapsibleCard` for sample JD + **protocol fold** + each prompt, `<details>` for badge hint (parsed path). **Cognitive load:** high but consistent with “lab bench” metaphor.
 
-### 4.4 Section naming (credibility backlog)
+### 4.4 Deep links (`page.tsx`)
+
+| Hash | Behavior |
+|------|-----------|
+| `#validation-lab` | Opens outer Validation Lab `SectionFold`, pulse on trigger, scroll to section id `validation-lab`. |
+| `#validation-lab-guided` | Same outer open + pulse; **`ValidationLab`** sets protocol fold **expanded** (`useLayoutEffect` + `hashchange`); scroll targets `#validation-lab-guided` (short delay so inner fold paints). |
+| `#validation-lab-jd`, `#validation-lab-harness` | In-page scroll only (no automatic expand of sibling folds unless user navigates to guided hash). |
+
+### 4.5 Section naming (credibility backlog)
 
 [`CREDIBILITY_IA_RESEARCH_BRIEF.md`](CREDIBILITY_IA_RESEARCH_BRIEF.md) lists **P2** HR Validation Lab rename + copy pass. Security audience may keep “Validation Lab”; HR might use “Try in an AI tool” or similar — **requires** `flowSteps`, `validationLabTitle`, `validationLabCollapsibleAriaLabel`, and possibly Resources cross-links to stay consistent.
 
@@ -210,4 +221,6 @@ Tracks the phased rollout aligned with the Validation Lab implementation plan (V
 | **D** | VL-03 — Audience-localized validation prompts (`Copy.validationPrompts`) | **Done** — [`types.ts`](../frontend/src/copy/types.ts) `ValidationLabPromptEntry`; security vs HR strings in [`security.ts`](../frontend/src/copy/security.ts) / [`hr.ts`](../frontend/src/copy/hr.ts); [`ValidationLab.tsx`](../frontend/src/components/ValidationLab.tsx) reads `copy.validationPrompts` |
 | **E** | VL-05 — Fair test points to Validation Lab protocol (less duplication) | **Done** — `flowSteps` 4–6 in [`security.ts`](../frontend/src/copy/security.ts) / [`hr.ts`](../frontend/src/copy/hr.ts); [`UX_UI_REVIEW.md`](UX_UI_REVIEW.md) |
 | **F** | VL-06 — HR section rename / credibility copy | **Done** — HR `validationLabTitle` **Try in an AI tool**; `validationLabCollapsibleAriaLabel` + `flowSteps[3]` updated in [`hr.ts`](../frontend/src/copy/hr.ts); [`CREDIBILITY_IA_RESEARCH_BRIEF.md`](CREDIBILITY_IA_RESEARCH_BRIEF.md) table row updated |
-| **G** | VL-07 — E2E smoke for Validation Lab | **Done** — [`frontend/e2e/specs/validation-lab.spec.ts`](../frontend/e2e/specs/validation-lab.spec.ts) (security + HR fold, assert **BASE-00**) |
+| **G** | VL-07 — E2E smoke for Validation Lab | **Done** — [`frontend/e2e/specs/validation-lab.spec.ts`](../frontend/e2e/specs/validation-lab.spec.ts) (security + HR fold, **BASE-00**, fair-test link, harness order, **`#validation-lab-guided`**, fixture extract) |
+| **H** | Harness-first layout + optional external chat + protocol nested fold + `#validation-lab-guided` | **Done** — [`ValidationLab.tsx`](../frontend/src/components/ValidationLab.tsx), [`page.tsx`](../frontend/app/page.tsx) hash helpers, [`security.ts`](../frontend/src/copy/security.ts) / [`hr.ts`](../frontend/src/copy/hr.ts), tests + E2E |
+

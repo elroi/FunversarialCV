@@ -18,6 +18,11 @@ export interface CollapsibleCardProps {
   /** Initial expanded state. Default false so cards start collapsed on all viewports. */
   defaultExpanded?: boolean;
   /**
+   * Controlled expanded state. When set, use `onExpandedChange` to update; `expandOnWide` is ignored.
+   */
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
+  /**
    * When true, sync expanded state with `md` breakpoint after mount (expanded on wide, collapsed on narrow).
    * User toggles still work; resize updates state so desktop readers see steps without a long mobile scroll.
    */
@@ -46,22 +51,34 @@ export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
   contentId,
   ariaLabel,
   defaultExpanded = false,
+  expanded: expandedControlled,
+  onExpandedChange,
   expandOnWide = false,
   children,
   className,
   titleClassName,
   disabled = false,
 }) => {
-  const [expanded, setExpanded] = useState(defaultExpanded);
+  const isControlled = expandedControlled !== undefined;
+  const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
+  const expanded = isControlled ? expandedControlled : internalExpanded;
+
+  const setExpanded = (next: boolean) => {
+    if (isControlled) {
+      onExpandedChange?.(next);
+    } else {
+      setInternalExpanded(next);
+    }
+  };
 
   useEffect(() => {
-    if (!expandOnWide || typeof window === "undefined" || !window.matchMedia) return;
+    if (isControlled || !expandOnWide || typeof window === "undefined" || !window.matchMedia) return;
     const mq = window.matchMedia(MD_MIN_WIDTH);
-    const apply = () => setExpanded(mq.matches);
+    const apply = () => setInternalExpanded(mq.matches);
     apply();
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
-  }, [expandOnWide]);
+  }, [expandOnWide, isControlled]);
 
   return (
     <div
@@ -77,7 +94,7 @@ export const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
         aria-expanded={expanded}
         aria-controls={contentId}
         aria-label={ariaLabel}
-        onClick={() => setExpanded((e) => !e)}
+        onClick={() => setExpanded(!expanded)}
         className="flex w-full min-h-10 flex-shrink-0 items-center justify-between gap-1.5 px-3 py-2 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-inset"
       >
         <span

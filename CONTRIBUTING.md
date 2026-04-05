@@ -43,6 +43,8 @@ cd frontend && npm install && npm run dev
 
 **Verification:** From `frontend/`, run `npm test -- src/lib/validationLabProtocol.test.ts`.
 
+**Deep links (home):** `#validation-lab` opens the outer Validation Lab section. `#validation-lab-guided` does the same and **expands** the nested “External comparative evaluation” fold (`frontend/app/page.tsx` + `frontend/src/components/ValidationLab.tsx`). Sub-anchors `#validation-lab-jd` and `#validation-lab-harness` scroll in-page.
+
 ## Git workflow
 
 All changes go through a short, predictable flow:

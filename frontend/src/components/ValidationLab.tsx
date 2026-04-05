@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useRef, useMemo } from "react";
+import React, { useState, useCallback, useRef, useMemo, useEffect, useLayoutEffect } from "react";
 import clsx from "clsx";
 import { ExternalLink } from "lucide-react";
 import { useCopy } from "../copy";
@@ -13,6 +13,9 @@ import { LabHarnessPanel } from "./LabHarnessPanel";
 import type { ValidationLabPromptEntry } from "../copy/types";
 
 const JD_COPY_SENTINEL = "__jd__";
+
+/** Must match `page.tsx` deep-link handling: opens outer lab fold and the protocol `CollapsibleCard`. */
+const VALIDATION_LAB_GUIDED_HASH = "#validation-lab-guided";
 
 const COPY_RESET_MS = 2500;
 
@@ -74,7 +77,27 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
   const { contentAudience } = useAudience();
   const isHr = contentAudience === "hr";
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [protocolFoldExpanded, setProtocolFoldExpanded] = useState(false);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Deep link #validation-lab-guided: expand protocol before paint when possible; keep in sync on hashchange.
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.location.hash === VALIDATION_LAB_GUIDED_HASH) {
+      setProtocolFoldExpanded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onHash = () => {
+      if (window.location.hash === VALIDATION_LAB_GUIDED_HASH) {
+        setProtocolFoldExpanded(true);
+      }
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
 
   const protocolSource =
     manualMirrorProtocolOverride ?? copy.validationLabManualMirrorProtocol;
@@ -201,6 +224,8 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
         contentId="validation-lab-protocol-fold-content"
         ariaLabel={copy.validationLabProtocolCollapsibleAriaLabel}
         defaultExpanded={false}
+        expanded={protocolFoldExpanded}
+        onExpandedChange={setProtocolFoldExpanded}
         titleClassName="block w-full min-w-0"
         className="rounded-lg border border-border/80 bg-panel/50 transition-colors hover:border-accent/25"
       >

@@ -51,6 +51,12 @@ const ATTENTION_PULSE_STAGGER_MS = 500;
 /** DOM id / hash target for Validation Lab (`SectionFold` + fair-test markdown links). */
 const VALIDATION_LAB_SECTION_ID = "validation-lab";
 const VALIDATION_LAB_HASH = `#${VALIDATION_LAB_SECTION_ID}`;
+/** Inner anchor: External comparative evaluation block (`#validation-lab-guided`); opens outer lab + protocol fold. */
+const VALIDATION_LAB_GUIDED_HASH = "#validation-lab-guided";
+
+function isValidationLabDeepLinkHash(hash: string): boolean {
+  return hash === VALIDATION_LAB_HASH || hash === VALIDATION_LAB_GUIDED_HASH;
+}
 
 /** Let `SectionFold` apply `expanded` before pulsing the trigger (mirrors engine-fold timing). */
 const VALIDATION_LAB_HASH_PULSE_DELAY_MS = 150;
@@ -348,7 +354,7 @@ export default function Home() {
     let pulseTimer: number | undefined;
 
     const revealFromHash = () => {
-      if (window.location.hash !== VALIDATION_LAB_HASH) return;
+      if (!isValidationLabDeepLinkHash(window.location.hash)) return;
       if (pulseTimer !== undefined) window.clearTimeout(pulseTimer);
       setValidationLabFoldExpandRevision((r) => r + 1);
       pulseTimer = window.setTimeout(() => {
@@ -365,29 +371,42 @@ export default function Home() {
     };
   }, []);
 
-  // After the Validation Lab fold opens from #validation-lab, scroll again so the section anchor
-  // sits near the top of the viewport. The browser's first scroll targets the collapsed shell;
-  // expanding adds body content below, which otherwise stays off-screen or poorly framed.
+  // After the Validation Lab fold opens from #validation-lab or #validation-lab-guided, scroll so the
+  // hash target sits near the top. Guided links need an extra frame so the inner protocol fold can expand.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (validationLabFoldExpandRevision === 0) return;
-    if (window.location.hash !== VALIDATION_LAB_HASH) return;
+    const hash = window.location.hash;
+    if (!isValidationLabDeepLinkHash(hash)) return;
 
     let cancelled = false;
+    // Browser timer handle is a number; Node's Timeout type conflicts under Next.js typecheck.
+    let scrollTimer: number | undefined;
     const scrollIntoPlace = () => {
       if (cancelled) return;
-      const el = document.getElementById(VALIDATION_LAB_SECTION_ID);
+      const id =
+        hash === VALIDATION_LAB_GUIDED_HASH ? "validation-lab-guided" : VALIDATION_LAB_SECTION_ID;
+      const el = document.getElementById(id);
       if (!el || typeof el.scrollIntoView !== "function") return;
       el.scrollIntoView({ behavior: "smooth", block: "start" });
     };
 
+    const delayMs = hash === VALIDATION_LAB_GUIDED_HASH ? 80 : 0;
     const outerRaf = requestAnimationFrame(() => {
-      requestAnimationFrame(scrollIntoPlace);
+      requestAnimationFrame(() => {
+        if (cancelled) return;
+        if (delayMs > 0) {
+          scrollTimer = window.setTimeout(scrollIntoPlace, delayMs);
+        } else {
+          scrollIntoPlace();
+        }
+      });
     });
 
     return () => {
       cancelled = true;
       cancelAnimationFrame(outerRaf);
+      if (scrollTimer !== undefined) window.clearTimeout(scrollTimer);
     };
   }, [validationLabFoldExpandRevision]);
 

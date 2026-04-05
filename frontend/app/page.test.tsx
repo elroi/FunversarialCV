@@ -370,6 +370,39 @@ describe("Home page", () => {
           expect(btn).toHaveClass("attention-pulse");
         });
       });
+
+      it("opens Validation Lab and External comparative evaluation fold when hash is #validation-lab-guided on load", async () => {
+        window.history.replaceState(null, "", "/#validation-lab-guided");
+        renderWithAudience(<Home />);
+        const sectionBtn = screen.getByRole("button", {
+          name: /validation lab: show or hide/i,
+        });
+        await waitFor(() => {
+          expect(sectionBtn).toHaveAttribute("aria-expanded", "true");
+        });
+        const protocolBtn = screen.getByRole("button", {
+          name: /External comparative evaluation: show or hide/i,
+        });
+        await waitFor(() => {
+          expect(protocolBtn).toHaveAttribute("aria-expanded", "true");
+        });
+      });
+
+      it("opens protocol fold when hash changes to #validation-lab-guided after mount", async () => {
+        renderWithAudience(<Home />);
+        fireEvent.click(
+          screen.getByRole("button", { name: /validation lab: show or hide/i })
+        );
+        const protocolBtn = screen.getByRole("button", {
+          name: /External comparative evaluation: show or hide/i,
+        });
+        expect(protocolBtn).toHaveAttribute("aria-expanded", "false");
+        window.history.replaceState(null, "", "/#validation-lab-guided");
+        fireEvent(window, new HashChangeEvent("hashchange"));
+        await waitFor(() => {
+          expect(protocolBtn).toHaveAttribute("aria-expanded", "true");
+        });
+      });
     });
 
     it("renders Try in an AI tool fold for HR audience (validation section rename)", () => {

@@ -23,6 +23,23 @@ test.describe("Validation section", () => {
     await expect(page.getByText("BASE-00", { exact: true })).toBeVisible();
   });
 
+  test("security audience: #validation-lab-guided opens lab section and protocol fold", async ({
+    page,
+  }) => {
+    await page.goto("/#validation-lab-guided");
+    await ensureSecurityAudienceForE2e(page);
+    const sectionToggle = page.getByRole("button", {
+      name: new RegExp(
+        `^${securityCopy.validationLabTitle}: show or hide`,
+        "i"
+      ),
+    });
+    await expect(sectionToggle).toHaveAttribute("aria-expanded", "true", { timeout: 15_000 });
+    await expect(
+      page.getByRole("button", { name: /External comparative evaluation: show or hide/i })
+    ).toHaveAttribute("aria-expanded", "true", { timeout: 15_000 });
+  });
+
   test("security audience: fair-test step links Validation Lab to #validation-lab", async ({
     page,
   }) => {

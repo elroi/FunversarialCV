@@ -55,6 +55,38 @@ describe("CollapsibleCard", () => {
     expect(titleSpan).not.toHaveClass("uppercase");
   });
 
+  it("supports controlled expanded state via expanded and onExpandedChange", () => {
+    const onExpandedChange = jest.fn();
+    const { rerender } = render(
+      <CollapsibleCard
+        title="Ctrl"
+        titleId="ct"
+        contentId="cc"
+        ariaLabel="Toggle ctrl"
+        expanded={false}
+        onExpandedChange={onExpandedChange}
+      >
+        <p>Controlled body</p>
+      </CollapsibleCard>
+    );
+    expect(document.getElementById("cc")).toHaveClass("hidden");
+    fireEvent.click(screen.getByRole("button", { name: /toggle ctrl/i }));
+    expect(onExpandedChange).toHaveBeenCalledWith(true);
+    rerender(
+      <CollapsibleCard
+        title="Ctrl"
+        titleId="ct"
+        contentId="cc"
+        ariaLabel="Toggle ctrl"
+        expanded={true}
+        onExpandedChange={onExpandedChange}
+      >
+        <p>Controlled body</p>
+      </CollapsibleCard>
+    );
+    expect(document.getElementById("cc")).not.toHaveClass("hidden");
+  });
+
   it("hides content when trigger is clicked again", () => {
     render(
       <CollapsibleCard

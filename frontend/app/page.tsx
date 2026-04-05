@@ -1800,6 +1800,12 @@ export default function Home() {
             >
               <ValidationLab
                 armedEggIds={armedEggIds}
+                armedDocxFile={
+                  selectedFile &&
+                  selectedFile.name.toLowerCase().endsWith(".docx")
+                    ? selectedFile
+                    : null
+                }
                 onPromptCopy={(id) =>
                   setLog((prev) => [
                     ...prev,

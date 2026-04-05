@@ -64,6 +64,41 @@ test.describe("Validation section", () => {
     await expect(page.getByText("BASE-00", { exact: true })).toBeVisible();
   });
 
+  test("security audience: ingestion lab extracts fixture docx", async ({ page }) => {
+    await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
+    await page
+      .getByRole("button", {
+        name: new RegExp(
+          `^${securityCopy.validationLabTitle}: show or hide`,
+          "i"
+        ),
+      })
+      .click();
+    await expect(page.getByTestId("lab-harness-root")).toBeVisible();
+    await page.getByTestId("lab-harness-file-input").setInputFiles("e2e/fixtures/minimal.docx");
+    await page.getByTestId("lab-harness-run-extract").click();
+    await expect(page.getByTestId("lab-harness-results")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId("lab-harness-mode-docx_forensic_body")).toBeVisible();
+  });
+
+  test("HR audience: ingestion lab extracts fixture docx", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForFunction(
+      () => document.documentElement.hasAttribute("data-audience"),
+      { timeout: 30_000 }
+    );
+    await page
+      .getByRole("button", {
+        name: new RegExp(`^${hrCopy.validationLabTitle}: show or hide`, "i"),
+      })
+      .click();
+    await expect(page.getByTestId("lab-harness-root")).toBeVisible();
+    await page.getByTestId("lab-harness-file-input").setInputFiles("e2e/fixtures/minimal.docx");
+    await page.getByTestId("lab-harness-run-extract").click();
+    await expect(page.getByTestId("lab-harness-results")).toBeVisible({ timeout: 20_000 });
+  });
+
   test("HR audience: fair-test deep link opens section with pulse", async ({ page }) => {
     await page.goto("/");
     await page.waitForFunction(

@@ -9,6 +9,7 @@ import { parseValidationLabProtocol } from "../lib/validationLabProtocol";
 import { ProtocolStepRichText } from "../lib/protocolStepRichText";
 import { SAMPLE_JD_BODY, SAMPLE_JD_CLIPBOARD_TEXT } from "../lib/sampleJobDescription";
 import { CollapsibleCard } from "./ui/CollapsibleCard";
+import { LabHarnessPanel } from "./LabHarnessPanel";
 import type { ValidationLabPromptEntry } from "../copy/types";
 
 const JD_COPY_SENTINEL = "__jd__";
@@ -48,6 +49,8 @@ function ValidationLabMatchBadgeHintDetails({
 export interface ValidationLabProps {
   /** Egg ids included in the last successful arm/harden on this page (latest downloaded CV). */
   armedEggIds: Set<string>;
+  /** Armed .docx from the main console for the ingestion lab, when available. */
+  armedDocxFile?: File | null;
   onPromptCopy?: (promptId: string) => void;
   onSampleJdCopy?: () => void;
   /**
@@ -59,6 +62,7 @@ export interface ValidationLabProps {
 
 export const ValidationLab: React.FC<ValidationLabProps> = ({
   armedEggIds,
+  armedDocxFile = null,
   onPromptCopy,
   onSampleJdCopy,
   manualMirrorProtocolOverride,
@@ -226,6 +230,7 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
   return (
     <>
       {sampleJdBlock}
+      <LabHarnessPanel copy={copy} armedDocxFile={armedDocxFile} />
       {protocolIntro}
       <div className="space-y-2.5">
         <p className="mb-1 font-sans text-caption uppercase tracking-[0.14em] text-foreground/50">

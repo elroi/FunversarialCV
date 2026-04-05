@@ -53,6 +53,7 @@ describe("ValidationLab", () => {
     });
     expect(screen.getByText("Test prompts")).toBeInTheDocument();
     expect(screen.getByText("Thread setup (before job description)")).toBeInTheDocument();
+    expect(screen.getByText(/Open the Ingestion lab below/i)).toBeInTheDocument();
     expect(screen.getByText(/Copy the BASE-00 prompt below/i)).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -62,7 +63,7 @@ describe("ValidationLab", () => {
     expect(screen.getByText(/In one tab: attach the baseline CV/i)).toBeInTheDocument();
   });
 
-  it("renders protocol step (2) vendor examples as external links", () => {
+  it("renders protocol step with vendor examples as external links", () => {
     window.localStorage.setItem("funversarialcv-audience", "security");
     renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
 
@@ -85,6 +86,15 @@ describe("ValidationLab", () => {
       expect(screen.getByText("About the Enabled badge")).toBeInTheDocument();
     });
     expect(screen.getByText("Sample prompts")).toBeInTheDocument();
+  });
+
+  it("renders HR harness-first protocol copy", async () => {
+    renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Open What the file says below\. Upload a Word file/i)
+      ).toBeInTheDocument();
+    });
   });
 
   it("parse-fallback path uses the same details disclosure for the badge hint as the parsed path", () => {

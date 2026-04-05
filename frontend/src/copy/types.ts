@@ -295,6 +295,40 @@ export interface Copy {
   /** Validation Lab copyable prompts (order preserved). */
   validationPrompts: readonly ValidationLabPromptEntry[];
 
+  // —— Lab harness (ingestion + optional completion) ——
+  labHarnessTitle: string;
+  labHarnessIntro: string;
+  labHarnessRunExtract: string;
+  labHarnessExtractLoading: string;
+  labHarnessNoFile: string;
+  labHarnessError: string;
+  labHarnessModeDocxForensic: string;
+  labHarnessModeServerWordExtractor: string;
+  labHarnessModeServerMammoth: string;
+  labHarnessModePackageMetadata: string;
+  labHarnessModeHyperlinks: string;
+  labHarnessHyperlinksEmpty: string;
+  labHarnessMetadataEmpty: string;
+  labHarnessWarnings: string;
+  labHarnessCompareTitle: string;
+  labHarnessCompareLeft: string;
+  labHarnessCompareRight: string;
+  labHarnessOnlyInLeft: string;
+  labHarnessOnlyInRight: string;
+  labHarnessServerWordVsMammothNote: string;
+  labHarnessCompleteTitle: string;
+  labHarnessCompleteIntro: string;
+  labHarnessJdLabel: string;
+  labHarnessModelLabel: string;
+  labHarnessCompleteSubmit: string;
+  labHarnessCompleteLoading: string;
+  labHarnessCompleteError: string;
+  labHarnessVendorDisclaimer: string;
+  labHarnessUsingArmedFile: string;
+  labHarnessPickFile: string;
+  /** Label for which extraction mode supplies text to the optional completion call. */
+  labHarnessExtractSourceLabel: string;
+
   // —— Audience switcher ——
   audienceSecurity: string;
   audienceHr: string;

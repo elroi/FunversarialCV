@@ -1,0 +1,52 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`extractDocxForLab matches golden snapshot for normalized text modes (fixture-built docx) 1`] = `
+[
+  {
+    "modeId": "docx_forensic_body",
+    "text": "Lead line with FUNV_LAB_TRAP_X9q2 marker.Report incidentCanary link",
+    "warnings": [],
+  },
+  {
+    "modeId": "server_word_extractor",
+    "text": "Lead line with FUNV_LAB_TRAP_X9q2 marker.
+Report incident
+Canary link",
+    "warnings": [],
+  },
+  {
+    "modeId": "server_mammoth_raw",
+    "text": "Lead line with FUNV_LAB_TRAP_X9q2 marker.
+
+Report incident
+
+Canary link",
+    "warnings": [],
+  },
+  {
+    "entries": [
+      {
+        "key": "creator",
+        "namespace": "core",
+        "value": "Un-named",
+      },
+    ],
+    "modeId": "docx_package_metadata",
+    "warnings": [],
+  },
+  {
+    "links": [
+      {
+        "scheme": "https",
+        "target": "https://example.test/canary-lab-owasp-demo",
+      },
+      {
+        "scheme": "mailto",
+        "target": "mailto:lab-incident@example.com?subject=FunversarialLab",
+      },
+    ],
+    "modeId": "docx_hyperlinks",
+    "warnings": [],
+  },
+]
+`;

@@ -380,7 +380,8 @@ export default function Home() {
     if (!isValidationLabDeepLinkHash(hash)) return;
 
     let cancelled = false;
-    let scrollTimer: ReturnType<typeof setTimeout> | undefined;
+    // Browser timer handle is a number; Node's Timeout type conflicts under Next.js typecheck.
+    let scrollTimer: number | undefined;
     const scrollIntoPlace = () => {
       if (cancelled) return;
       const id =

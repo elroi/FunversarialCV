@@ -881,7 +881,7 @@ export default function Home() {
         ]);
       }
     },
-    [canaryWingPayload, includePdfExport]
+    [canaryWingPayload]
   );
 
   const startPipelineForFile = async (file: File) => {

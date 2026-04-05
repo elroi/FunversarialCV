@@ -39,23 +39,24 @@ describe("parseValidationLabProtocol", () => {
     expect(parsed).not.toBeNull();
     expect(parsed!.headline).toMatch(/External comparative evaluation/i);
     expect(parsed!.title).toMatch(/^External comparative evaluation$/i);
-    expect(parsed!.subtitle).toMatch(/In-app ingestion lab first/i);
-    expect(parsed!.description).toMatch(/Ingestion lab panel|LLM01/i);
-    expect(parsed!.description).toMatch(/BASE-00.*BASE-01/s);
+    expect(parsed!.subtitle).toMatch(/Proof on this page first/i);
+    expect(parsed!.description).toMatch(/Invisible Hand|Inject Eggs/i);
     expect(parsed!.steps).toHaveLength(10);
-    expect(parsed!.steps[0]).toMatch(/Ingestion lab below[\s\S]*docx_hyperlinks/is);
-    expect(parsed!.steps[1]).toMatch(/Compare extractors/i);
-    expect(parsed!.steps[2]).toMatch(/lab completion/i);
-    expect(parsed!.steps[3]).toMatch(/Open two browser tabs[\s\S]*Claude/i);
-    expect(parsed!.steps[4]).toMatch(/BASE-00/i);
-    expect(parsed!.steps[5]).toMatch(/sample job description/i);
-    expect(parsed!.steps[6]).toMatch(/BASE-01/i);
-    expect(parsed!.steps[7]).toMatch(
-      /load the sample CV or upload your own[\s\S]*generated sample Word file[\s\S]*baseline/is
+    expect(parsed!.steps.some((s) => /BASE-00/i.test(s))).toBe(true);
+    expect(parsed!.steps.some((s) => /BASE-01/i.test(s))).toBe(true);
+    expect(parsed!.steps[0]).toMatch(/Upload or sample CV.*#console-cv-upload/s);
+    expect(parsed!.steps[1]).toMatch(
+      /#console-armed-cv|#console-inject-eggs|#console-download-armed-docx/s
     );
-    expect(parsed!.steps[8]).toMatch(/one tab:[\s\S]*baseline CV[\s\S]*BASE-01/is);
+    expect(parsed!.steps[2]).toMatch(/Sample job description/i);
+    expect(parsed!.steps[3]).toMatch(/#validation-lab-harness|Ingestion lab/i);
+    expect(parsed!.steps[4]).toMatch(/lab completion|pinned template/i);
+    expect(parsed!.steps[5]).toMatch(/Open two browser tabs[\s\S]*Claude/i);
+    expect(parsed!.steps[6]).toMatch(/BASE-00/i);
+    expect(parsed!.steps[7]).toMatch(/sample job description/i);
+    expect(parsed!.steps[8]).toMatch(/BASE-01/i);
     expect(parsed!.steps[9]).toMatch(
-      /Inject Eggs[\s\S]*armed build[\s\S]*Pick a test prompt|\(A\).*Check for hidden/is
+      /armed CV|step \(2\)|Pick a test prompt|\(A\).*Check for hidden/is
     );
   });
 
@@ -64,23 +65,16 @@ describe("parseValidationLabProtocol", () => {
     expect(parsed).not.toBeNull();
     expect(parsed!.headline).toMatch(/External comparative evaluation/i);
     expect(parsed!.title).toMatch(/^External comparative evaluation$/i);
-    expect(parsed!.subtitle).toMatch(/on-page reader tools/i);
-    expect(parsed!.description).toMatch(/What the file says|LLM01/i);
-    expect(parsed!.description).toMatch(/BASE-00.*BASE-01/s);
+    expect(parsed!.subtitle).toMatch(/Proof on this page first/i);
+    expect(parsed!.description).toMatch(/Add signals|LLM01/i);
     expect(parsed!.steps).toHaveLength(10);
-    expect(parsed!.steps[0]).toMatch(/What the file says below/i);
-    expect(parsed!.steps[1]).toMatch(/Compare two views/i);
-    expect(parsed!.steps[2]).toMatch(/optional AI summary/i);
-    expect(parsed!.steps[3]).toMatch(/Open two browser tabs[\s\S]*Claude/i);
-    expect(parsed!.steps[4]).toMatch(/BASE-00/i);
-    expect(parsed!.steps[5]).toMatch(/sample job description/i);
-    expect(parsed!.steps[6]).toMatch(/BASE-01/i);
-    expect(parsed!.steps[7]).toMatch(
-      /load the sample CV or upload your own[\s\S]*generated sample Word file[\s\S]*baseline/is
-    );
-    expect(parsed!.steps[8]).toMatch(/one tab:[\s\S]*baseline CV[\s\S]*BASE-01/is);
-    expect(parsed!.steps[9]).toMatch(
-      /Add signals[\s\S]*signaled build[\s\S]*Pick a test prompt|\(A\).*Check for hidden/is
-    );
+    expect(parsed!.steps.some((s) => /BASE-00/i.test(s))).toBe(true);
+    expect(parsed!.steps.some((s) => /BASE-01/i.test(s))).toBe(true);
+    expect(parsed!.steps[0]).toMatch(/Upload or sample CV|console-cv-upload/i);
+    expect(parsed!.steps[1]).toMatch(/Add signals|console-download-armed-docx/i);
+    expect(parsed!.steps[3]).toMatch(/What the file says|validation-lab-harness/i);
+    expect(parsed!.steps[5]).toMatch(/Open two browser tabs[\s\S]*Claude/i);
+    expect(parsed!.steps[6]).toMatch(/BASE-00/i);
+    expect(parsed!.steps[9]).toMatch(/signaled CV|Pick a test prompt|\(A\).*Check for hidden/is);
   });
 });

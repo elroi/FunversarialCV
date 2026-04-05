@@ -116,11 +116,36 @@ function renderModeBody(copy: Copy, m: LabModeApi): React.ReactNode {
 
 export interface LabHarnessPanelProps {
   copy: Copy;
-  /** Armed .docx from the main console, when available. */
-  armedDocxFile: File | null;
+  /** Word file selected on the main console, when any. */
+  consoleSelectedDocxFile: File | null;
+  /** Last successful inject output for this tab (in-memory File), when any. */
+  hardenedOutputDocxFile: File | null;
 }
 
-export const LabHarnessPanel: React.FC<LabHarnessPanelProps> = ({ copy, armedDocxFile }) => {
+function activeSourceCaption(
+  copy: Copy,
+  active: File,
+  pick: File | null,
+  hardened: File | null,
+  consoleSel: File | null
+): string {
+  if (pick !== null && pick === active) {
+    return copy.labHarnessSourcePicked.replace("{name}", active.name);
+  }
+  if (hardened !== null && hardened === active) {
+    return copy.labHarnessSourceHardenedOutput.replace("{name}", active.name);
+  }
+  if (consoleSel !== null && consoleSel === active) {
+    return copy.labHarnessSourceConsoleSelection.replace("{name}", active.name);
+  }
+  return copy.labHarnessSourceConsoleSelection.replace("{name}", active.name);
+}
+
+export const LabHarnessPanel: React.FC<LabHarnessPanelProps> = ({
+  copy,
+  consoleSelectedDocxFile,
+  hardenedOutputDocxFile,
+}) => {
   const [config, setConfig] = useState<LabConfigClient | null>(null);
   const [pickFile, setPickFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -157,7 +182,15 @@ export const LabHarnessPanel: React.FC<LabHarnessPanelProps> = ({ copy, armedDoc
     };
   }, []);
 
-  const activeFile = pickFile ?? armedDocxFile;
+  const activeFile =
+    pickFile ?? hardenedOutputDocxFile ?? consoleSelectedDocxFile;
+
+  // New underlying file → old extract results are misleading.
+  useEffect(() => {
+    setResult(null);
+    setCompleteText(null);
+    setCompleteError(null);
+  }, [activeFile]);
 
   const runExtract = useCallback(async () => {
     if (!activeFile) {
@@ -237,7 +270,11 @@ export const LabHarnessPanel: React.FC<LabHarnessPanelProps> = ({ copy, armedDoc
   }, [result, config, extractForCompleteMode, jdInput, modelId, copy]);
 
   return (
-    <div className="mb-6" data-testid="lab-harness-root">
+    <div
+      id="validation-lab-harness"
+      className="mb-6 scroll-mt-6"
+      data-testid="lab-harness-root"
+    >
       <CollapsibleCard
         title={
           <span className="font-sans text-sm font-medium text-foreground/90">
@@ -252,9 +289,15 @@ export const LabHarnessPanel: React.FC<LabHarnessPanelProps> = ({ copy, armedDoc
       >
         <p className="mb-3 text-sm leading-relaxed text-foreground/75">{copy.labHarnessIntro}</p>
 
-        {armedDocxFile ? (
+        {activeFile ? (
           <p className="mb-2 font-mono text-caption text-foreground/65">
-            {copy.labHarnessUsingArmedFile.replace("{name}", armedDocxFile.name)}
+            {activeSourceCaption(
+              copy,
+              activeFile,
+              pickFile,
+              hardenedOutputDocxFile,
+              consoleSelectedDocxFile
+            )}
           </p>
         ) : null}
 

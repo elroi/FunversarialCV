@@ -49,8 +49,10 @@ function ValidationLabMatchBadgeHintDetails({
 export interface ValidationLabProps {
   /** Egg ids included in the last successful arm/harden on this page (latest downloaded CV). */
   armedEggIds: Set<string>;
-  /** Armed .docx from the main console for the ingestion lab, when available. */
-  armedDocxFile?: File | null;
+  /** Word file selected on the main console, when any. */
+  consoleSelectedDocxFile?: File | null;
+  /** Last successful inject output (in-memory File) for the lab default, when any. */
+  hardenedOutputDocxFile?: File | null;
   onPromptCopy?: (promptId: string) => void;
   onSampleJdCopy?: () => void;
   /**
@@ -62,7 +64,8 @@ export interface ValidationLabProps {
 
 export const ValidationLab: React.FC<ValidationLabProps> = ({
   armedEggIds,
-  armedDocxFile = null,
+  consoleSelectedDocxFile = null,
+  hardenedOutputDocxFile = null,
   onPromptCopy,
   onSampleJdCopy,
   manualMirrorProtocolOverride,
@@ -127,70 +130,89 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
     [onPromptCopy, resetCopyTimeout]
   );
 
-  const protocolIntro = protocolParsed ? (
-    <div className="mb-5 space-y-3">
-      <div className="rounded-lg border border-border/70 border-l-[3px] border-l-accent/50 bg-bg/40 p-3 shadow-sm sm:p-4">
-        <header className="mb-4 space-y-2 border-b border-border/40 pb-4">
-          <h3
+  const protocolIntroBody = protocolParsed ? (
+    <>
+      <div className="mb-4 space-y-2 border-b border-border/40 pb-4">
+        {protocolParsed.subtitle ? (
+          <p
             className={clsx(
-              isHr
-                ? "font-sans text-base font-semibold tracking-tight text-foreground/90"
-                : "font-mono text-caption uppercase tracking-[0.18em] text-accent"
+              "text-sm font-medium leading-snug text-foreground/80",
+              isHr ? "font-sans" : "font-mono text-caption"
             )}
           >
-            {protocolParsed.title}
-          </h3>
-          {protocolParsed.subtitle ? (
-            <p
-              className={clsx(
-                "text-sm font-medium leading-snug text-foreground/80",
-                isHr ? "font-sans" : "font-mono text-caption"
-              )}
-            >
-              {protocolParsed.subtitle}
-            </p>
-          ) : null}
-          {protocolParsed.description ? (
-            <p className="font-sans text-sm leading-relaxed text-foreground/70">{protocolParsed.description}</p>
-          ) : null}
-        </header>
-        <ol className="list-none space-y-3 font-sans text-sm leading-relaxed text-foreground/85">
-          {protocolParsed.steps.map((step, i) => (
-            <li key={i} className="flex gap-3">
-              <span
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-accent/35 bg-accent/[0.07] text-caption font-mono font-semibold text-accent"
-                aria-hidden
-              >
-                {i + 1}
-              </span>
-              <ProtocolStepRichText text={step} />
-            </li>
-          ))}
-        </ol>
+            {protocolParsed.subtitle}
+          </p>
+        ) : null}
+        {protocolParsed.description ? (
+          <p className="font-sans text-sm leading-relaxed text-foreground/70">{protocolParsed.description}</p>
+        ) : null}
       </div>
-      <ValidationLabMatchBadgeHintDetails
-        title={copy.validationLabMatchBadgeHintTitle}
-        hint={copy.validationLabMatchBadgeHint}
-      />
-    </div>
+      <ol className="list-none space-y-3 font-sans text-sm leading-relaxed text-foreground/85">
+        {protocolParsed.steps.map((step, i) => (
+          <li key={i} className="flex gap-3">
+            <span
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-accent/35 bg-accent/[0.07] text-caption font-mono font-semibold text-accent"
+              aria-hidden
+            >
+              {i + 1}
+            </span>
+            <ProtocolStepRichText text={step} />
+          </li>
+        ))}
+      </ol>
+      <div className="mt-4">
+        <ValidationLabMatchBadgeHintDetails
+          title={copy.validationLabMatchBadgeHintTitle}
+          hint={copy.validationLabMatchBadgeHint}
+        />
+      </div>
+    </>
   ) : (
-    <div className="mb-5 space-y-2 text-sm text-foreground/80 font-sans leading-relaxed">
-      {protocolSource.split(/\n\n+/).map((paragraph, i) => (
-        <p key={i} className={paragraph.includes("\n") ? "whitespace-pre-line" : undefined}>
-          {paragraph}
-        </p>
-      ))}
-      <ValidationLabMatchBadgeHintDetails
-        title={copy.validationLabMatchBadgeHintTitle}
-        hint={copy.validationLabMatchBadgeHint}
-      />
+    <>
+      <div className="space-y-2 text-sm text-foreground/80 font-sans leading-relaxed">
+        {protocolSource.split(/\n\n+/).map((paragraph, i) => (
+          <p key={i} className={paragraph.includes("\n") ? "whitespace-pre-line" : undefined}>
+            {paragraph}
+          </p>
+        ))}
+      </div>
+      <div className="mt-4">
+        <ValidationLabMatchBadgeHintDetails
+          title={copy.validationLabMatchBadgeHintTitle}
+          hint={copy.validationLabMatchBadgeHint}
+        />
+      </div>
+    </>
+  );
+
+  const protocolIntro = (
+    <div
+      id="validation-lab-guided"
+      className="mb-5 scroll-mt-6"
+      data-testid="validation-lab-protocol-fold"
+    >
+      <CollapsibleCard
+        title={
+          <span className="font-sans text-sm font-medium leading-snug text-foreground/90">
+            {copy.validationLabProtocolFoldTitle}
+          </span>
+        }
+        titleId="validation-lab-protocol-fold-title"
+        contentId="validation-lab-protocol-fold-content"
+        ariaLabel={copy.validationLabProtocolCollapsibleAriaLabel}
+        defaultExpanded={false}
+        titleClassName="block w-full min-w-0"
+        className="rounded-lg border border-border/80 bg-panel/50 transition-colors hover:border-accent/25"
+      >
+        {protocolIntroBody}
+      </CollapsibleCard>
     </div>
   );
 
   const jdCopied = copiedId === JD_COPY_SENTINEL;
 
   const sampleJdBlock = (
-    <div className="mb-5" data-testid="validation-sample-jd">
+    <div id="validation-lab-jd" className="mb-5 scroll-mt-6" data-testid="validation-sample-jd">
       <CollapsibleCard
         title={
           <span className="font-sans text-sm font-medium leading-snug text-foreground/90">
@@ -230,7 +252,11 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
   return (
     <>
       {sampleJdBlock}
-      <LabHarnessPanel copy={copy} armedDocxFile={armedDocxFile} />
+      <LabHarnessPanel
+        copy={copy}
+        consoleSelectedDocxFile={consoleSelectedDocxFile}
+        hardenedOutputDocxFile={hardenedOutputDocxFile}
+      />
       {protocolIntro}
       <div className="space-y-2.5">
         <p className="mb-1 font-sans text-caption uppercase tracking-[0.14em] text-foreground/50">

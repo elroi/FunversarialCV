@@ -29,11 +29,8 @@ test.describe("Validation section", () => {
     await page.goto("/");
     await ensureSecurityAudienceForE2e(page);
     await ensureFairTestPanelExpanded(page);
-    // Scoped to the protocol pointer step (same substring in HR/security copy).
-    const stepLink = page
-      .getByRole("listitem")
-      .filter({ hasText: /External comparative evaluation steps end-to-end/ })
-      .locator('a[href="#validation-lab"]');
+    // Fair-test step 4 links to Validation Lab (copy varies; href is stable).
+    const stepLink = page.locator("#experiment-flow-card-content a[href=\"#validation-lab\"]");
     await expect(stepLink).toBeVisible({ timeout: 15_000 });
     await stepLink.click();
     await expect(page.locator("#validation-lab")).toBeVisible();
@@ -62,6 +59,50 @@ test.describe("Validation section", () => {
       })
       .click();
     await expect(page.getByText("BASE-00", { exact: true })).toBeVisible();
+  });
+
+  test("security audience: ingestion harness appears before guided protocol in DOM order", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
+    await page
+      .getByRole("button", {
+        name: new RegExp(
+          `^${securityCopy.validationLabTitle}: show or hide`,
+          "i"
+        ),
+      })
+      .click();
+    const order = await page.locator("#validation-lab-section-content").evaluate((el) => {
+      const g = el.querySelector("#validation-lab-guided");
+      const h = el.querySelector("#validation-lab-harness");
+      if (!g || !h) return 0;
+      return h.compareDocumentPosition(g);
+    });
+    // Node.DOCUMENT_POSITION_FOLLOWING === 4; guided follows harness.
+    expect(order & 4).toBe(4);
+  });
+
+  test("security audience: protocol link scrolls to console upload anchor", async ({ page }) => {
+    await page.goto("/");
+    await ensureSecurityAudienceForE2e(page);
+    await page
+      .getByRole("button", {
+        name: new RegExp(
+          `^${securityCopy.validationLabTitle}: show or hide`,
+          "i"
+        ),
+      })
+      .click();
+    await page
+      .getByRole("button", {
+        name: /External comparative evaluation: show or hide/i,
+      })
+      .click();
+    await page.getByRole("link", { name: /Upload or sample CV/i }).first().click();
+    await expect(page.locator("#console-cv-upload")).toBeVisible();
+    await expect(page.locator("#console-cv-upload")).toBeInViewport({ timeout: 10_000 });
   });
 
   test("security audience: ingestion lab extracts fixture docx", async ({ page }) => {
@@ -106,10 +147,7 @@ test.describe("Validation section", () => {
       { timeout: 30_000 }
     );
     await ensureFairTestPanelExpanded(page);
-    const stepLink = page
-      .getByRole("listitem")
-      .filter({ hasText: /External comparative evaluation steps end-to-end/ })
-      .locator('a[href="#validation-lab"]');
+    const stepLink = page.locator("#experiment-flow-card-content a[href=\"#validation-lab\"]");
     await expect(stepLink).toBeVisible({ timeout: 15_000 });
     await stepLink.click();
     const toggle = page.getByRole("button", {

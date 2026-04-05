@@ -280,6 +280,10 @@ export interface Copy {
   validationJdCopySuccessLogMessage: string;
   /** Template: {id} = prompt id (e.g. LLM01). Used for per-prompt fold buttons. */
   validationLabPromptCollapsibleAriaLabel: string;
+  /** Visible title on the External comparative evaluation inner fold (matches protocol block title). */
+  validationLabProtocolFoldTitle: string;
+  /** Accessible name for the External comparative evaluation expand/collapse control. */
+  validationLabProtocolCollapsibleAriaLabel: string;
   validationLabManualMirrorProtocol: string;
   /** Short label for the collapsible block that explains the ENABLED / Enabled badge. */
   validationLabMatchBadgeHintTitle: string;
@@ -324,7 +328,12 @@ export interface Copy {
   labHarnessCompleteLoading: string;
   labHarnessCompleteError: string;
   labHarnessVendorDisclaimer: string;
-  labHarnessUsingArmedFile: string;
+  /** Shown when the user picked a .docx in the lab panel (overrides defaults). */
+  labHarnessSourcePicked: string;
+  /** Shown when analyzing the last successful Inject output held in memory on this tab. */
+  labHarnessSourceHardenedOutput: string;
+  /** Shown when falling back to the Word file selected on the main console. */
+  labHarnessSourceConsoleSelection: string;
   labHarnessPickFile: string;
   /** Label for which extraction mode supplies text to the optional completion call. */
   labHarnessExtractSourceLabel: string;

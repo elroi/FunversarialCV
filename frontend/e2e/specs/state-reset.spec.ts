@@ -104,7 +104,7 @@ test.describe("State reset", () => {
     await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
       timeout: 15_000,
     });
-    // Scope to engine Armed CV line — lab harness also mentions the filename ("Using armed file: …").
+    // Scope to engine Armed CV line — lab harness also echoes the active filename in its source line.
     await expect(
       page.locator("p").filter({ hasText: securityUiRx.armedCvLabel }).locator("span.font-semibold")
     ).toHaveText("minimal.docx");

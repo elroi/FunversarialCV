@@ -25,6 +25,14 @@ function expandSampleJobDescription() {
   );
 }
 
+function expandExternalComparativeEvaluation() {
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: /External comparative evaluation: show or hide/i,
+    })
+  );
+}
+
 /** Default `AudienceProvider` tests as HR; badge aria matches `hrCopy.validationMatchBadgeAriaLabel`. */
 const matchBadgeAriaHr = /Enabled:.*last successful run on this page/i;
 
@@ -35,10 +43,18 @@ describe("ValidationLab", () => {
     expect(screen.getByTestId("validation-sample-jd")).toBeInTheDocument();
     expect(screen.getByText(/Sample job description \(synthetic\)/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", {
-        name: /External comparative evaluation/i,
+      screen.getByRole("button", {
+        name: /External comparative evaluation: show or hide/i,
       })
     ).toBeInTheDocument();
+    const guided = document.getElementById("validation-lab-guided");
+    const jd = document.getElementById("validation-lab-jd");
+    const harness = document.getElementById("validation-lab-harness");
+    const firstPrompt = document.querySelector("[data-testid^=\"validation-prompt-\"]");
+    expect(guided && jd && harness && firstPrompt).toBeTruthy();
+    expect(jd!.compareDocumentPosition(harness!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(harness!.compareDocumentPosition(guided!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(guided!.compareDocumentPosition(firstPrompt!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByText("BASE-00")).toBeInTheDocument();
     expect(screen.getByText("BASE-01")).toBeInTheDocument();
     expect(screen.getByText("First message: job description next")).toBeInTheDocument();
@@ -48,16 +64,20 @@ describe("ValidationLab", () => {
     window.localStorage.setItem("funversarialcv-audience", "security");
     renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
 
+    expandExternalComparativeEvaluation();
     await waitFor(() => {
       expect(screen.getByText("About the ENABLED badge")).toBeInTheDocument();
     });
     expect(screen.getByText("Test prompts")).toBeInTheDocument();
     expect(screen.getByText("Thread setup (before job description)")).toBeInTheDocument();
-    expect(screen.getByText(/Open the Ingestion lab below/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Upload or sample CV/i })).toHaveAttribute(
+      "href",
+      "#console-cv-upload"
+    );
     expect(screen.getByText(/Copy the BASE-00 prompt below/i)).toBeInTheDocument();
     expect(
       screen.getByText(
-        /First—baseline: if using the sample CV, download the generated sample Word file before you add adversarial payloads/i
+        /download the generated Word file before adding adversarial payloads/i
       )
     ).toBeInTheDocument();
     expect(screen.getByText(/In one tab: attach the baseline CV/i)).toBeInTheDocument();
@@ -67,6 +87,7 @@ describe("ValidationLab", () => {
     window.localStorage.setItem("funversarialcv-audience", "security");
     renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
 
+    expandExternalComparativeEvaluation();
     const claude = screen.getByRole("link", { name: "Claude" });
     expect(claude).toHaveAttribute("href", "https://claude.ai/");
     const gemini = screen.getByRole("link", { name: "Gemini" });
@@ -82,18 +103,21 @@ describe("ValidationLab", () => {
   it("uses HR copy for badge explainer and prompt list caption", async () => {
     renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
 
+    expandExternalComparativeEvaluation();
     await waitFor(() => {
       expect(screen.getByText("About the Enabled badge")).toBeInTheDocument();
     });
     expect(screen.getByText("Sample prompts")).toBeInTheDocument();
   });
 
-  it("renders HR harness-first protocol copy", async () => {
+  it("renders HR guided protocol with ingestion anchor", async () => {
     renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
+    expandExternalComparativeEvaluation();
     await waitFor(() => {
-      expect(
-        screen.getByText(/Open What the file says below\. Upload a Word file/i)
-      ).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /What the file says/i })).toHaveAttribute(
+        "href",
+        "#validation-lab-harness"
+      );
     });
   });
 
@@ -108,12 +132,26 @@ describe("ValidationLab", () => {
       />
     );
 
+    expandExternalComparativeEvaluation();
     const summary = screen.getByText("About the ENABLED badge").closest("summary");
     expect(summary).toBeTruthy();
     fireEvent.click(summary!);
     expect(
       screen.getByText(/last successful Inject Eggs run on this page/i)
     ).toBeInTheDocument();
+  });
+
+  it("keeps External comparative evaluation steps inside collapsed protocol fold until expanded", () => {
+    window.localStorage.setItem("funversarialcv-audience", "security");
+    renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
+
+    const protocolContent = document.getElementById("validation-lab-protocol-fold-content");
+    expect(protocolContent).toBeTruthy();
+    expect(protocolContent).toHaveClass("hidden");
+
+    expandExternalComparativeEvaluation();
+    expect(protocolContent).not.toHaveClass("hidden");
+    expect(screen.getByText(/Copy the BASE-00 prompt below/i)).toBeInTheDocument();
   });
 
   it("keeps prompt descriptions inside collapsed prompt panels until expanded", () => {

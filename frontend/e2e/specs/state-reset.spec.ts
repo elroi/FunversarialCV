@@ -104,7 +104,10 @@ test.describe("State reset", () => {
     await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
       timeout: 15_000,
     });
-    await expect(page.getByText(/minimal\.docx/i)).toBeVisible();
+    // Scope to engine Armed CV line — lab harness also mentions the filename ("Using armed file: …").
+    await expect(
+      page.locator("p").filter({ hasText: securityUiRx.armedCvLabel }).locator("span.font-semibold")
+    ).toHaveText("minimal.docx");
     await page.getByRole("button", { name: /inject eggs/i }).click();
 
     await expect(
@@ -123,7 +126,9 @@ test.describe("State reset", () => {
     await expect(page.getByText(securityUiRx.armedCvLabel)).toBeVisible({
       timeout: 15_000,
     });
-    await expect(page.getByText(/second\.docx/i)).toBeVisible();
+    await expect(
+      page.locator("p").filter({ hasText: securityUiRx.armedCvLabel }).locator("span.font-semibold")
+    ).toHaveText("second.docx");
     await page.getByRole("button", { name: /inject eggs/i }).click();
 
     await expect(

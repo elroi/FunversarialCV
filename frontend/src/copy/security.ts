@@ -26,22 +26,19 @@ export const securityCopy: Copy = {
   introDetail:
     "Signals are implemented as **OWASP-aligned** patterns; PII is dehydrated in your browser so outbound traffic carries tokens only; the service keeps **zero retention** after each response (**authorized testing and research only**).",
   piiNotice:
-    "Your CV is processed in your browser first. Before anything leaves your device, we replace email, phone, and other identifiers with short-lived tokens. Our server only sees tokens, never your raw contact details. Operation is in-memory with zero retention; PII is dehydrated for transit and rehydrated only in your browser for the final file.",
+    "Our server only sees tokenized placeholders (for example {{PII_EMAIL_0}}), not your raw email, phone, or address. Work is in-memory per request with no durable CV store; the file you save is rehydrated in your browser.",
   privacyDetailsSummary: "PII handling (details)",
 
-  inputChannel: "Input Channel",
+  inputChannel: "TRY IT NOW",
   maxFileHint: "Max 4 MB. DOCX (Word) only.",
   verifyHowToAnchor: "How to verify",
   verifyPayloadHint:
     "Before you trust the service, upload a dummy CV or use our sample CV to test. Once a file has been uploaded, open the browser's DevTools (F12 or right‑click → Inspect), switch to the Network tab, then click Inject Eggs. Find the POST request to /api/harden and inspect its payload (Request Payload or Form Data). You should see tokenized placeholders such as {{PII_EMAIL_0}} or {{PII_PHONE_0}}; the request must not contain your raw email, phone, or other identifiers. That confirms only dehydrated tokens are sent and the server never receives your contact details.",
-  sampleCvTitle: "Use Sample CV to Test",
-  sampleCvAriaLabel: "Expand Use Sample CV to Test",
-  sampleCvDescription:
-    "Load a synthetic demo CV instead of your own — use Clean for a safe baseline, or Dirty to explore adversarial content.",
-  cleanLabel: "Clean · DOCX",
-  cleanSublabel: "Baseline sample",
-  dirtyLabel: "Dirty · DOCX",
-  dirtySublabel: "Adversarial sample",
+  cleanCvCta: "Clean · DOCX — Start here, then add your own signals ▶",
+  dirtyCvCta: "Dirty · DOCX — See a pre-injected example (no config needed)",
+  cvUploadSampleSeparator: "— or drop your own CV below —",
+  uploadPrivacyLine:
+    "Contacts are replaced with placeholders before anything leaves your browser; nothing is stored.",
   demoLoadingMessage: "> Generating demo CV… this may take a few seconds.",
   demoArmedInlineHint:
     "> Sample CV armed — Engine Configuration opened below. Use Inject Eggs when ready.",
@@ -138,13 +135,11 @@ export const securityCopy: Copy = {
     "FunversarialCV local audit log (client-side only; nothing stored server-side)\n",
   auditLogEmpty: "> No entries yet. Drop a CV to start the pipeline.\n",
 
-  dropzoneTitle: "Funversarial Upload Channel",
+  dropzoneTitle: "Your document",
   dropzonePrompt: "Drop your CV here",
   dropzoneHint: "browse",
-  dropzonePiiNotice:
-    "PII dehydrated client-side; outbound request carries tokens only. Nothing persisted after response.",
   dropzoneSrHint:
-    "Upload a Word (.docx). Client dehydrates PII before send; server sees tokens only; no document storage after download.",
+    "Upload a Word (.docx). Drag and drop or choose browse to open the file picker.",
   errorOnlyDocx: "Only Word documents (.docx) are allowed.",
   errorFileTooLarge: "File is too large.",
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import clsx from "clsx";
 import { DropZone } from "../src/components/DropZone";
 import {
   DualityMonitor,
@@ -86,6 +87,18 @@ function eggPayloadsConfigurationEquivalent(a: string, b: string): boolean {
   } catch {
     return false;
   }
+}
+
+/** Renders CTA copy with a trailing ▶ excluded from the accessibility tree (decorative). */
+function CtaWithOptionalArrow({ text }: { text: string }) {
+  const trimmed = text.replace(/\s*▶\s*$/, "");
+  const showArrow = /\s*▶\s*$/.test(text);
+  return (
+    <>
+      {trimmed}
+      {showArrow ? <span aria-hidden="true"> ▶</span> : null}
+    </>
+  );
 }
 
 /** PII notice paragraph; security audience gets blueish accent + inline "How to verify" expandable. */
@@ -480,6 +493,8 @@ export default function Home() {
 
   /** Applies a validated file to pipeline state (clears prior run, errors, PII map). */
   const armPipelineWithFile = useCallback((file: File) => {
+    // User file (or any non-preset arm) clears demo-loaded so sample CTAs are not shown as "selected".
+    setHasDemoLoaded(false);
     setError(null);
     setSuccessMessage(null);
     setLabHardenedDocxFile(null);
@@ -526,6 +541,7 @@ export default function Home() {
   };
 
   const clearFile = useCallback(() => {
+    setHasDemoLoaded(false);
     setSelectedFile(null);
     setSelectedFileName(null);
     setError(null);
@@ -1240,6 +1256,14 @@ export default function Home() {
     }
   };
 
+  /** Sample button chrome: emphasize the preset that is actually armed, or Clean when idle; neither when a user file is armed. */
+  const userHasArmedCv = Boolean(selectedFileName);
+  const cleanSampleActive = hasDemoLoaded && demoVariant === "clean";
+  const dirtySampleActive = hasDemoLoaded && demoVariant === "dirty";
+  const cleanIdleRecommended = !userHasArmedCv && !hasDemoLoaded;
+  const cleanEmphasized = cleanSampleActive || cleanIdleRecommended;
+  const dirtyEmphasized = dirtySampleActive;
+
   return (
     <>
       {serverPdfConfirm && (
@@ -1369,88 +1393,79 @@ export default function Home() {
               ariaLabel={`${copy.inputChannel}: show or hide`}
               defaultExpanded
             >
-              <div id="console-cv-upload" className="scroll-mt-6">
+              <div id="console-cv-upload" className="scroll-mt-6 space-y-3">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2">
+                  <Button
+                    type="button"
+                    variant={cleanEmphasized ? "primary" : "secondary"}
+                    className={clsx(
+                      "min-h-[44px] h-auto px-3 py-2.5 text-left text-sm sm:text-xs font-mono justify-start items-start whitespace-normal",
+                      cleanEmphasized
+                        ? "border border-success/50 hover:border-success hover:shadow-success/30"
+                        : "border border-border/80 text-foreground/80 hover:text-foreground"
+                    )}
+                    disabled={isDemoLoading}
+                    onClick={() => loadPreset("clean", "docx")}
+                  >
+                    <CtaWithOptionalArrow text={copy.cleanCvCta} />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className={clsx(
+                      "min-h-[44px] h-auto px-3 py-2.5 text-left text-sm sm:text-xs font-mono text-success justify-start items-start whitespace-normal",
+                      dirtyEmphasized
+                        ? "border-2 border-solid border-amber-400 bg-panel shadow-md shadow-amber-500/15 hover:border-amber-300"
+                        : "border border-amber-300/70 border-dashed hover:border-amber-400/80"
+                    )}
+                    disabled={isDemoLoading}
+                    onClick={() => loadPreset("dirty", "docx")}
+                  >
+                    {copy.dirtyCvCta}
+                  </Button>
+                </div>
+                <p className="text-caption text-foreground/60">
+                  {copy.lastPresetLabel}{" "}
+                  <span className="font-mono text-success">
+                    {demoVariant === "clean" ? "clean" : "dirty"} ·{" "}
+                    {demoFormat.toUpperCase()}
+                  </span>
+                </p>
+                {hasDemoLoaded && selectedFileName ? (
+                  <p
+                    className="text-caption text-success font-mono"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {copy.demoArmedInlineHint}
+                  </p>
+                ) : null}
+                {isDemoLoading ? (
+                  <p
+                    className="text-caption text-accent/80 font-mono"
+                    aria-live="polite"
+                  >
+                    {copy.demoLoadingMessage}
+                  </p>
+                ) : null}
+                <p
+                  className="text-center text-caption text-foreground/50"
+                  aria-hidden="true"
+                >
+                  {copy.cvUploadSampleSeparator}
+                </p>
                 <DropZone
                   onFileSelect={onFileSelect}
                   maxSizeBytes={MAX_FILE_SIZE_BYTES}
                   openFilePickerRef={openFilePickerRef}
                 />
+                <p className="text-caption text-foreground/50">
+                  {copy.maxFileHint}
+                </p>
+                <p className="text-caption text-foreground/50">
+                  {copy.uploadPrivacyLine}
+                </p>
               </div>
-              <p className="mt-1 text-caption text-foreground/50">
-                {copy.maxFileHint}
-              </p>
-              <CollapsibleCard
-                className="mt-3"
-                title={copy.sampleCvTitle}
-                titleId="sample-cv-preset-title"
-                contentId="sample-cv-preset-content"
-                ariaLabel={copy.sampleCvAriaLabel}
-                defaultExpanded={false}
-              >
-                <div className="space-y-3 text-caption text-foreground/60">
-                  <p className="text-caption text-foreground/60">
-                    {copy.sampleCvDescription.split(/\b(Clean|Dirty)\b/).map((segment, i) =>
-                      segment === "Clean" ? (
-                        <span key={i} className="text-accent font-mono">Clean</span>
-                      ) : segment === "Dirty" ? (
-                        <span key={i} className="text-success font-mono">Dirty</span>
-                      ) : (
-                        <span key={i}>{segment}</span>
-                      )
-                    )}
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-accent/30 bg-panel text-foreground hover:border-accent/60 hover:shadow-accent/40 flex flex-col items-start"
-                      disabled={isDemoLoading}
-                      onClick={() => loadPreset("clean", "docx")}
-                    >
-                      <span className="font-mono text-accent">{copy.cleanLabel}</span>
-                      <span className="text-xs text-foreground/60">
-                        {copy.cleanSublabel}
-                      </span>
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      className="min-h-[36px] px-3 py-2 text-caption sm:text-xs border border-amber-300/70 border-dashed bg-panel text-foreground hover:border-amber-400/80 flex flex-col items-start"
-                      disabled={isDemoLoading}
-                      onClick={() => loadPreset("dirty", "docx")}
-                    >
-                      <span className="font-mono text-success">{copy.dirtyLabel}</span>
-                      <span className="text-xs text-foreground/60">
-                        {copy.dirtySublabel}
-                      </span>
-                    </Button>
-                  </div>
-                  {isDemoLoading && (
-                    <p
-                      className="text-caption text-accent/80 font-mono"
-                      aria-live="polite"
-                    >
-                      {copy.demoLoadingMessage}
-                    </p>
-                  )}
-                  <p className="text-caption text-foreground/60">
-                    {copy.lastPresetLabel}{" "}
-                    <span className="font-mono text-success">
-                      {demoVariant === "clean" ? "clean" : "dirty"} ·{" "}
-                      {demoFormat.toUpperCase()}
-                    </span>
-                  </p>
-                  {hasDemoLoaded && selectedFileName ? (
-                    <p
-                      className="text-caption text-success font-mono mt-2"
-                      role="status"
-                      aria-live="polite"
-                    >
-                      {copy.demoArmedInlineHint}
-                    </p>
-                  ) : null}
-                </div>
-              </CollapsibleCard>
             </SectionFold>
             </div>
 

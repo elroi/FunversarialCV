@@ -42,13 +42,14 @@ export interface Copy {
   maxFileHint: string;
   verifyHowToAnchor: string;
   verifyPayloadHint: string;
-  sampleCvTitle: string;
-  sampleCvAriaLabel: string;
-  sampleCvDescription: string;
-  cleanLabel: string;
-  cleanSublabel: string;
-  dirtyLabel: string;
-  dirtySublabel: string;
+  /** Primary sample CV CTA (full label; trailing ▶ may be split for aria-hidden in UI). */
+  cleanCvCta: string;
+  /** Secondary sample CV CTA (pre-injected / dirty preset). */
+  dirtyCvCta: string;
+  /** Decorative line between sample CTAs and the file drop zone. */
+  cvUploadSampleSeparator: string;
+  /** Single trust line under the upload cluster (not repeated inside DropZone). */
+  uploadPrivacyLine: string;
   demoLoadingMessage: string;
   /** Shown under “Last preset” after a sample CV arms successfully (Engine section auto-opens). */
   demoArmedInlineHint: string;
@@ -146,7 +147,6 @@ export interface Copy {
   dropzoneTitle: string;
   dropzonePrompt: string;
   dropzoneHint: string;
-  dropzonePiiNotice: string;
   dropzoneSrHint: string;
   errorOnlyDocx: string;
   errorFileTooLarge: string;

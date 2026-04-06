@@ -116,9 +116,6 @@ export const DropZone: React.FC<DropZoneProps> = ({
             .docx (Word) • Drag &amp; drop or{" "}
             <span className="text-accent">{copy.dropzoneHint}</span>
           </p>
-          <p className="text-caption text-foreground/50">
-            {copy.dropzonePiiNotice}
-          </p>
         </div>
       </label>
 

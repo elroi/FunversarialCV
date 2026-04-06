@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import clsx from "clsx";
 import { DropZone } from "../src/components/DropZone";
 import {
   DualityMonitor,
@@ -492,6 +493,8 @@ export default function Home() {
 
   /** Applies a validated file to pipeline state (clears prior run, errors, PII map). */
   const armPipelineWithFile = useCallback((file: File) => {
+    // User file (or any non-preset arm) clears demo-loaded so sample CTAs are not shown as "selected".
+    setHasDemoLoaded(false);
     setError(null);
     setSuccessMessage(null);
     setLabHardenedDocxFile(null);
@@ -538,6 +541,7 @@ export default function Home() {
   };
 
   const clearFile = useCallback(() => {
+    setHasDemoLoaded(false);
     setSelectedFile(null);
     setSelectedFileName(null);
     setError(null);
@@ -1252,6 +1256,14 @@ export default function Home() {
     }
   };
 
+  /** Sample button chrome: emphasize the preset that is actually armed, or Clean when idle; neither when a user file is armed. */
+  const userHasArmedCv = Boolean(selectedFileName);
+  const cleanSampleActive = hasDemoLoaded && demoVariant === "clean";
+  const dirtySampleActive = hasDemoLoaded && demoVariant === "dirty";
+  const cleanIdleRecommended = !userHasArmedCv && !hasDemoLoaded;
+  const cleanEmphasized = cleanSampleActive || cleanIdleRecommended;
+  const dirtyEmphasized = dirtySampleActive;
+
   return (
     <>
       {serverPdfConfirm && (
@@ -1385,8 +1397,13 @@ export default function Home() {
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2">
                   <Button
                     type="button"
-                    variant="primary"
-                    className="min-h-[44px] h-auto px-3 py-2.5 text-left text-sm sm:text-xs font-mono justify-start items-start whitespace-normal border border-success/50 hover:border-success hover:shadow-success/30"
+                    variant={cleanEmphasized ? "primary" : "secondary"}
+                    className={clsx(
+                      "min-h-[44px] h-auto px-3 py-2.5 text-left text-sm sm:text-xs font-mono justify-start items-start whitespace-normal",
+                      cleanEmphasized
+                        ? "border border-success/50 hover:border-success hover:shadow-success/30"
+                        : "border border-border/80 text-foreground/80 hover:text-foreground"
+                    )}
                     disabled={isDemoLoading}
                     onClick={() => loadPreset("clean", "docx")}
                   >
@@ -1395,7 +1412,12 @@ export default function Home() {
                   <Button
                     type="button"
                     variant="secondary"
-                    className="min-h-[44px] h-auto px-3 py-2.5 text-left text-sm sm:text-xs font-mono text-success justify-start items-start whitespace-normal border border-amber-300/70 border-dashed hover:border-amber-400/80"
+                    className={clsx(
+                      "min-h-[44px] h-auto px-3 py-2.5 text-left text-sm sm:text-xs font-mono text-success justify-start items-start whitespace-normal",
+                      dirtyEmphasized
+                        ? "border-2 border-solid border-amber-400 bg-panel shadow-md shadow-amber-500/15 hover:border-amber-300"
+                        : "border border-amber-300/70 border-dashed hover:border-amber-400/80"
+                    )}
                     disabled={isDemoLoading}
                     onClick={() => loadPreset("dirty", "docx")}
                   >

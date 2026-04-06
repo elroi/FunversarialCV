@@ -15,5 +15,4 @@ export const securityUiRx = {
   ),
   piiModeBadge: new RegExp(escapeRegExp(securityCopy.piiModeBadge), "i"),
   armedCvLabel: new RegExp(escapeRegExp(securityCopy.armedCvLabel), "i"),
-  sampleCvButton: new RegExp(escapeRegExp(securityCopy.sampleCvTitle), "i"),
 } as const;

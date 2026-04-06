@@ -99,14 +99,14 @@ describe("Home page", () => {
       expect(introText).toMatch(/authorized testing and research only/i);
     });
 
-    it("places HR intro above the input channel (DOM order)", async () => {
+    it("places HR intro above TRY IT NOW (DOM order)", async () => {
       window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "hr");
       renderWithAudience(<Home />);
       const intro = await screen.findByText(
         /compare before-and-after results and learn how AI tools interpret the same CV under slightly different signal conditions/i
       );
       const inputChannelToggle = await screen.findByRole("button", {
-        name: /upload your cv: show or hide/i,
+        name: /try it now: show or hide/i,
       });
       expect(
         inputChannelToggle.compareDocumentPosition(intro) &
@@ -114,7 +114,7 @@ describe("Home page", () => {
       ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
     });
 
-    it("places security intro lead above the input channel (DOM order)", async () => {
+    it("places security intro lead above TRY IT NOW (DOM order)", async () => {
       window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "security");
       renderWithAudience(<Home />);
       const lead = await screen.findByText((_content, element) => {
@@ -126,7 +126,7 @@ describe("Home page", () => {
         );
       });
       const inputChannelToggle = await screen.findByRole("button", {
-        name: /input channel: show or hide/i,
+        name: /try it now: show or hide/i,
       });
       expect(
         inputChannelToggle.compareDocumentPosition(lead) &
@@ -134,7 +134,7 @@ describe("Home page", () => {
       ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
     });
 
-    it("places How to run a fair test fold after HR intro and before Upload your CV (DOM order)", async () => {
+    it("places How to run a fair test fold after HR intro and before TRY IT NOW (DOM order)", async () => {
       window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "hr");
       renderWithAudience(<Home />);
       const intro = await screen.findByText(
@@ -144,7 +144,7 @@ describe("Home page", () => {
         name: /how to run a fair test: show or hide steps/i,
       });
       const inputChannelToggle = await screen.findByRole("button", {
-        name: /upload your cv: show or hide/i,
+        name: /try it now: show or hide/i,
       });
       expect(
         experimentFold.compareDocumentPosition(intro) &
@@ -156,7 +156,7 @@ describe("Home page", () => {
       ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
     });
 
-    it("places How to run a fair test fold after security intro lead and before Input Channel (DOM order)", async () => {
+    it("places How to run a fair test fold after security intro lead and before TRY IT NOW (DOM order)", async () => {
       window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "security");
       renderWithAudience(<Home />);
       const lead = await screen.findByText((_content, element) => {
@@ -171,7 +171,7 @@ describe("Home page", () => {
         name: /how to run a fair test: show or hide steps/i,
       });
       const inputChannelToggle = await screen.findByRole("button", {
-        name: /input channel: show or hide/i,
+        name: /try it now: show or hide/i,
       });
       expect(
         experimentFold.compareDocumentPosition(lead) &
@@ -183,12 +183,12 @@ describe("Home page", () => {
       ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
     });
 
-    it("places security intro detail (OWASP) after the input channel (DOM order)", async () => {
+    it("places security intro detail (OWASP) after TRY IT NOW (DOM order)", async () => {
       window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "security");
       renderWithAudience(<Home />);
       const detail = await screen.findByText(/OWASP-aligned/i);
       const inputChannelToggle = await screen.findByRole("button", {
-        name: /input channel: show or hide/i,
+        name: /try it now: show or hide/i,
       });
       expect(
         detail.compareDocumentPosition(inputChannelToggle) &
@@ -273,9 +273,9 @@ describe("Home page", () => {
       expect((link as HTMLAnchorElement).getAttribute("href")).toBe("/resources");
     });
 
-    it("Input Channel section is expanded by default", () => {
+    it("TRY IT NOW section is expanded by default", () => {
       renderWithAudience(<Home />);
-      const btn = screen.getByRole("button", { name: /input channel: show or hide/i });
+      const btn = screen.getByRole("button", { name: /try it now: show or hide/i });
       expect(btn).toHaveAttribute("aria-expanded", "true");
     });
 

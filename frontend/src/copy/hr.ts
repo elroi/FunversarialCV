@@ -28,22 +28,19 @@ export const hrCopy: Copy = {
     "Use this to compare before-and-after results and learn how AI tools interpret the same CV under slightly different signal conditions.",
   introDetail: "",
   piiNotice:
-    "Your CV is processed in your browser first. Before anything leaves your device, we replace your email, phone, and other contact details (we call this PII) with temporary placeholders. Our server only sees those placeholders, never your real contact information. Processing is in memory only—we don’t store your document after your new CV is generated.",
+    "The server receives temporary stand-ins for your contact fields, not your real email or phone. Each run is processed in memory and we do not keep your document afterward.",
   privacyDetailsSummary: "How we protect your contact details",
 
-  inputChannel: "Upload your CV",
+  inputChannel: "TRY IT NOW",
   maxFileHint: "Max 4 MB. Word (.docx) only.",
   verifyHowToAnchor: "How to verify",
   verifyPayloadHint:
     "Only temporary placeholders are sent — your real contact details never leave your device.",
-  sampleCvTitle: "Use a sample CV",
-  sampleCvAriaLabel: "Expand Use a sample CV",
-  sampleCvDescription:
-    "Try the tool without your own file — use Clean for a normal example, or Dirty to see how hidden signals look in a CV.",
-  cleanLabel: "Clean · DOCX",
-  cleanSublabel: "Normal sample",
-  dirtyLabel: "Dirty · DOCX",
-  dirtySublabel: "Sample with hidden signals",
+  cleanCvCta: "Clean · DOCX — Start here, then add your own signals ▶",
+  dirtyCvCta: "Dirty · DOCX — See a pre-injected example (no config needed)",
+  cvUploadSampleSeparator: "— or drop your own CV below —",
+  uploadPrivacyLine:
+    "Contacts are replaced with placeholders before anything leaves your browser; nothing is stored.",
   demoLoadingMessage: "Generating sample CV… this may take a few seconds.",
   demoArmedInlineHint:
     "Sample CV loaded — How it runs is open below. Use Add signals when you're ready.",
@@ -138,13 +135,11 @@ export const hrCopy: Copy = {
     "FunversarialCV local log (only on your device; nothing is stored on our servers)\n",
   auditLogEmpty: "No entries yet. Upload a CV to start.\n",
 
-  dropzoneTitle: "Upload your CV",
+  dropzoneTitle: "Your document",
   dropzonePrompt: "Drop your CV here",
   dropzoneHint: "browse",
-  dropzonePiiNotice:
-    "Contacts are replaced with placeholders before anything is sent; we don’t keep your file after you download.",
   dropzoneSrHint:
-    "Upload a Word document (.docx). Contacts are replaced with placeholders before send; nothing is stored after you download your result.",
+    "Upload a Word document (.docx). Drag and drop or choose browse to open the file picker.",
   errorOnlyDocx: "Only Word documents (.docx) are allowed.",
   errorFileTooLarge: "File is too large.",
 

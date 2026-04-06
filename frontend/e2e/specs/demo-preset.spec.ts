@@ -66,7 +66,6 @@ test.describe("Demo preset", () => {
     await page.goto("/");
     await ensureSecurityAudienceForE2e(page);
 
-    await page.getByRole("button", { name: securityUiRx.sampleCvButton }).click();
     await page.getByRole("button", { name: /clean · docx/i }).click();
 
     await expandEngineConfigurationSection(page);
@@ -102,7 +101,6 @@ test.describe("Demo preset", () => {
     await page.goto("/");
     await ensureSecurityAudienceForE2e(page);
 
-    await page.getByRole("button", { name: securityUiRx.sampleCvButton }).click();
     await page.getByRole("button", { name: /dirty · docx/i }).click();
 
     await expandEngineConfigurationSection(page);

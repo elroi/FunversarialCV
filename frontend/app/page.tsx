@@ -1256,12 +1256,10 @@ export default function Home() {
     }
   };
 
-  /** Sample button chrome: emphasize the preset that is actually armed, or Clean when idle; neither when a user file is armed. */
-  const userHasArmedCv = Boolean(selectedFileName);
+  /** Sample button chrome: emphasize only the preset that is actually loaded (avoids looking “selected” before click). */
   const cleanSampleActive = hasDemoLoaded && demoVariant === "clean";
   const dirtySampleActive = hasDemoLoaded && demoVariant === "dirty";
-  const cleanIdleRecommended = !userHasArmedCv && !hasDemoLoaded;
-  const cleanEmphasized = cleanSampleActive || cleanIdleRecommended;
+  const cleanEmphasized = cleanSampleActive;
   const dirtyEmphasized = dirtySampleActive;
 
   return (
@@ -1394,6 +1392,9 @@ export default function Home() {
               defaultExpanded
             >
               <div id="console-cv-upload" className="scroll-mt-6 space-y-3">
+                <p className="text-caption text-foreground/70 whitespace-normal">
+                  {copy.inputChannelIntro}
+                </p>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2">
                   <Button
                     type="button"
@@ -1424,14 +1425,16 @@ export default function Home() {
                     {copy.dirtyCvCta}
                   </Button>
                 </div>
-                <p className="text-caption text-foreground/60">
-                  {copy.lastPresetLabel}{" "}
-                  <span className="font-mono text-success">
-                    {demoVariant === "clean" ? "clean" : "dirty"} ·{" "}
-                    {demoFormat.toUpperCase()}
-                  </span>
-                </p>
-                {hasDemoLoaded && selectedFileName ? (
+                {hasDemoLoaded ? (
+                  <p className="text-caption text-foreground/60">
+                    {copy.lastPresetLabel}{" "}
+                    <span className="font-mono text-success">
+                      {demoVariant === "clean" ? "clean" : "dirty"} ·{" "}
+                      {demoFormat.toUpperCase()}
+                    </span>
+                  </p>
+                ) : null}
+                {selectedFileName ? (
                   <p
                     className="text-caption text-success font-mono"
                     role="status"
@@ -1506,18 +1509,15 @@ export default function Home() {
                   {copy.armedCvLabel} <span className="font-semibold">{selectedFileName}</span>
                 </p>
                 <div className="mt-1 flex flex-col items-start gap-1">
-                  <button
-                    type="button"
-                    className={`px-0 text-caption underline underline-offset-2 ${
-                      hasDemoLoaded
-                        ? "text-accent hover:text-success"
-                        : "text-foreground/40 cursor-not-allowed"
-                    }`}
-                    onClick={hasDemoLoaded ? downloadCurrentDemo : undefined}
-                    disabled={!hasDemoLoaded}
-                  >
-                    {hasDemoLoaded ? copy.downloadDemoLabel : copy.selectDemoLabel}
-                  </button>
+                  {hasDemoLoaded ? (
+                    <button
+                      type="button"
+                      className="px-0 text-caption text-accent underline underline-offset-2 hover:text-success"
+                      onClick={() => void downloadCurrentDemo()}
+                    >
+                      {copy.downloadDemoLabel}
+                    </button>
+                  ) : null}
                   <Button
                     variant="secondary"
                     onClick={() => {

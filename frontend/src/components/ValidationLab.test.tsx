@@ -191,7 +191,8 @@ describe("ValidationLab", () => {
     ).toBeInTheDocument();
   });
 
-  it("LLM01, LLM02, LLM09 have external links in expanded body; BASE-00 does not", () => {
+  it("security: LLM01, LLM02, LLM09 have OWASP external links in expanded body; BASE-00 does not", () => {
+    window.localStorage.setItem("funversarialcv-audience", "security");
     renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
 
     const base00Card = screen.getByTestId("validation-prompt-BASE-00");
@@ -211,6 +212,17 @@ describe("ValidationLab", () => {
     expandPrompt("LLM09");
     const llm09Link = screen.getByRole("link", { name: /LLM09/i });
     expect(llm09Link).toHaveAttribute("href", "https://genai.owasp.org/llm09-overreliance/");
+  });
+
+  it("HR: LLM01, LLM02, LLM09 expanded body has no OWASP links", () => {
+    renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
+
+    expandPrompt("LLM01");
+    expandPrompt("LLM02");
+    expandPrompt("LLM09");
+    expect(screen.queryByRole("link", { name: /LLM01/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /LLM02/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /LLM09/i })).not.toBeInTheDocument();
   });
 
   it("copy button copies the correct prompt text and calls onPromptCopy with the right id", async () => {

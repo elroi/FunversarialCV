@@ -15,7 +15,7 @@ export const securityCopy: Copy = {
     "Inject adversarial layers",
     "Download your \"armed\" CV",
     "Open the [Validation Lab](#validation-lab) and run the ingestion lab on your baseline and armed builds—compare extractors, package metadata, and hyperlinks on this page for repeatable proof.",
-    "Optional: in an external LLM, mirror the BASE prompts from the same section in one or two tabs if you want a vendor-side comparison\n(e.g. Claude, Gemini, Copilot).",
+    "Optional: for a vendor-side comparison, use the External comparative evaluation block in the Validation Lab — send BASE-00 first, then the JD, then BASE-01 with the CV, then follow the numbered steps\n(e.g. Claude, Gemini, Copilot).",
     "If you use external chats, compare the model's replies using the goals under each test prompt, as the External comparative evaluation block describes.",
     "Confirm or reject the observed influence",
   ] as const,
@@ -30,6 +30,8 @@ export const securityCopy: Copy = {
   privacyDetailsSummary: "PII handling (details)",
 
   inputChannel: "TRY IT NOW",
+  inputChannelIntro:
+    "See how a hidden instruction in a Word file can shift model behavior on the same CV — try the pre-injected demo, or start clean and configure payloads yourself.",
   maxFileHint: "Max 4 MB. DOCX (Word) only.",
   verifyHowToAnchor: "How to verify",
   verifyPayloadHint:
@@ -41,7 +43,7 @@ export const securityCopy: Copy = {
     "Contacts are replaced with placeholders before anything leaves your browser; nothing is stored.",
   demoLoadingMessage: "> Generating demo CV… this may take a few seconds.",
   demoArmedInlineHint:
-    "> Sample CV armed — Engine Configuration opened below. Use Inject Eggs when ready.",
+    "> CV loaded — scroll down to Engine Configuration, run Inject Eggs, then download.",
   lastPresetLabel: "> Last preset:",
   armedCvLabel: "> Armed CV:",
   downloadDemoLabel: "Download to view current demo as-is",

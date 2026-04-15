@@ -39,6 +39,8 @@ export interface Copy {
 
   // —— Home: input ——
   inputChannel: string;
+  /** Framing paragraph inside the TRY IT NOW fold, above sample CV buttons. */
+  inputChannelIntro: string;
   maxFileHint: string;
   verifyHowToAnchor: string;
   verifyPayloadHint: string;
@@ -51,11 +53,12 @@ export interface Copy {
   /** Single trust line under the upload cluster (not repeated inside DropZone). */
   uploadPrivacyLine: string;
   demoLoadingMessage: string;
-  /** Shown under “Last preset” after a sample CV arms successfully (Engine section auto-opens). */
+  /** Shown in TRY IT NOW when any CV is loaded (preset or user upload); engine fold opens below. */
   demoArmedInlineHint: string;
   lastPresetLabel: string;
   armedCvLabel: string;
   downloadDemoLabel: string;
+  /** Preset-only; kept for copy parity / future empty states (not shown when the armed file is a user upload). */
   selectDemoLabel: string;
   changeFileButton: string;
   /** Shown at top of Engine Configuration when no CV is loaded yet. */

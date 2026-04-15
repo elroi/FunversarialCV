@@ -32,12 +32,14 @@ describe("SiteHeader", () => {
 });
 
 describe("SiteTopBar", () => {
-  it("renders toolbar with privacy badge and audience group (no decorative status pill)", () => {
+  it("renders toolbar with privacy icon and audience group (no decorative status pill)", () => {
     renderWithAudience(<SiteTopBar />);
     expect(
       screen.getByRole("toolbar", { name: /privacy note and audience/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/PII · client vault/i)).toBeInTheDocument();
+    // Privacy badge is now a lock icon; sr-only text carries the accessible label.
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(screen.getByTitle(/PII · client vault/i)).toBeInTheDocument();
     expect(
       screen.getByRole("group", {
         name: /choose audience: for security pros or for hr/i,

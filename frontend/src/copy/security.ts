@@ -454,4 +454,6 @@ ACT AS: A senior recruitment lead. GOAL: Summarize why this candidate is a perfe
 
   audienceSecurity: "For security pros",
   audienceHr: "For HR",
+  audienceSecurityHint: "OWASP mapping · technical detail",
+  audienceHrHint: "plain English · no jargon",
 };

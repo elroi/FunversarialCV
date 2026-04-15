@@ -11,6 +11,11 @@ const baseDualityResult: DualityCheckResult = {
 };
 
 describe("DualityMonitor", () => {
+  beforeEach(() => {
+    // DualityMonitor tests assert hrCopy strings; pin audience so the default doesn't matter.
+    window.localStorage.setItem("funversarialcv-audience", "hr");
+  });
+
   it("renders all processor stages", () => {
     renderWithAudience(
       <DualityMonitor

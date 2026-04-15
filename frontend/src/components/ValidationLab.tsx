@@ -76,6 +76,7 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
   const copy = useCopy();
   const { contentAudience } = useAudience();
   const isHr = contentAudience === "hr";
+  const isSecurity = contentAudience === "security";
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [protocolFoldExpanded, setProtocolFoldExpanded] = useState(false);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -98,6 +99,11 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
+
+  // Sync protocol fold with audience: expand for security, collapse for HR.
+  useEffect(() => {
+    setProtocolFoldExpanded(isSecurity);
+  }, [isSecurity]);
 
   const protocolSource =
     manualMirrorProtocolOverride ?? copy.validationLabManualMirrorProtocol;
@@ -223,7 +229,7 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
         titleId="validation-lab-protocol-fold-title"
         contentId="validation-lab-protocol-fold-content"
         ariaLabel={copy.validationLabProtocolCollapsibleAriaLabel}
-        defaultExpanded={false}
+        defaultExpanded={isSecurity}
         expanded={protocolFoldExpanded}
         onExpandedChange={setProtocolFoldExpanded}
         titleClassName="block w-full min-w-0"
@@ -239,6 +245,7 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
   const sampleJdBlock = (
     <div id="validation-lab-jd" className="mb-5 scroll-mt-6" data-testid="validation-sample-jd">
       <CollapsibleCard
+        key={contentAudience}
         title={
           <span className="font-sans text-sm font-medium leading-snug text-foreground/90">
             {copy.sampleJobDescriptionTitle}
@@ -247,7 +254,7 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
         titleId="validation-sample-jd-title"
         contentId="validation-sample-jd-content"
         ariaLabel={copy.sampleJobDescriptionAriaLabel}
-        defaultExpanded={false}
+        defaultExpanded={isSecurity}
         titleClassName="block w-full min-w-0"
         className="rounded-lg border border-border/80 bg-panel/50 transition-colors hover:border-accent/25"
       >
@@ -296,7 +303,7 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
             const contentId = `validation-prompt-${prompt.id}-content`;
 
             return (
-              <div key={prompt.id} data-testid={`validation-prompt-${prompt.id}`}>
+              <div key={`${contentAudience}-${prompt.id}`} data-testid={`validation-prompt-${prompt.id}`}>
                 <CollapsibleCard
                   title={
                     <span className="grid w-full min-w-0 grid-cols-1 items-center gap-x-3 gap-y-2 sm:min-h-[3.25rem] sm:grid-cols-[minmax(5rem,auto)_1fr] sm:gap-y-1">
@@ -324,7 +331,7 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
                     copy.validationLabPromptCollapsibleAriaLabel,
                     prompt.id
                   )}
-                  defaultExpanded={false}
+                  defaultExpanded={isSecurity}
                   titleClassName="block w-full min-w-0 [&>span]:max-w-full"
                   className="rounded-lg border border-border/80 bg-panel/50 transition-colors hover:border-accent/25"
                 >

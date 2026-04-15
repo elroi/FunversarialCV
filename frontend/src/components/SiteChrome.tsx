@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import clsx from "clsx";
+import { Lock } from "lucide-react";
 import { hrCopy, securityCopy, useCopy } from "../copy";
 import { useAudience } from "../contexts/AudienceContext";
 import { AudienceSwitcher } from "./AudienceSwitcher";
@@ -59,33 +60,25 @@ export function SiteHeader({ secondaryNav, taglineClassName }: SiteHeaderProps) 
 }
 
 /**
- * Stacked opacity crossfade between security vs HR privacy lines (same layout cell; inactive copy is aria-hidden).
+ * Compact privacy indicator: lock icon with tooltip. Full detail is in the upload-zone privacy line
+ * and the "How we protect your contact details" collapsible — no need to repeat copy here.
  */
 function PrivacyModeBadge() {
   const { contentAudience } = useAudience();
-  const lineClass =
-    "col-start-1 row-start-1 min-w-0 text-caption font-mono uppercase leading-snug tracking-[0.15em] text-accent/80 sm:text-xs sm:tracking-[0.2em]";
+  const hint =
+    contentAudience === "security" ? securityCopy.piiModeBadge : hrCopy.piiModeBadge;
 
   return (
-    <p
-      className="theme-toolbar-badge-crossfade grid min-w-0 sm:shrink-0"
+    <span
       role="status"
       aria-live="polite"
       aria-atomic="true"
+      title={hint}
+      className="flex items-center text-accent/70"
     >
-      <span
-        className={`${lineClass} ${contentAudience === "security" ? "z-[1] opacity-100" : "z-0 opacity-0"}`}
-        aria-hidden={contentAudience !== "security"}
-      >
-        {securityCopy.piiModeBadge}
-      </span>
-      <span
-        className={`${lineClass} ${contentAudience === "hr" ? "z-[1] opacity-100" : "z-0 opacity-0"}`}
-        aria-hidden={contentAudience !== "hr"}
-      >
-        {hrCopy.piiModeBadge}
-      </span>
-    </p>
+      <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+      <span className="sr-only">{hint}</span>
+    </span>
   );
 }
 

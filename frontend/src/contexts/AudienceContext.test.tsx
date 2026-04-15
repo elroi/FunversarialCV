@@ -21,7 +21,7 @@ function ContentAudienceProbe() {
 
 describe("AudienceProvider", () => {
   beforeEach(() => {
-    window.localStorage.removeItem("funversarialcv-audience");
+    window.localStorage.setItem("funversarialcv-audience", "hr");
     document.documentElement.removeAttribute("data-audience");
     document.documentElement.style.setProperty("--theme-transition-duration", "220ms");
   });

@@ -3,7 +3,9 @@ import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { renderWithAudience } from "../test-utils";
 
 beforeEach(() => {
-  window.localStorage.removeItem("funversarialcv-audience");
+  // Default to HR so tests that don't set audience explicitly get HR copy/state.
+  // Tests that want security set it explicitly via window.localStorage.setItem.
+  window.localStorage.setItem("funversarialcv-audience", "hr");
 });
 import { ValidationLab } from "./ValidationLab";
 import { hrCopy } from "../copy/hr";
@@ -141,17 +143,26 @@ describe("ValidationLab", () => {
     ).toBeInTheDocument();
   });
 
-  it("keeps External comparative evaluation steps inside collapsed protocol fold until expanded", () => {
+  it("security: protocol fold starts expanded; HR: starts collapsed until expanded", async () => {
+    // Security — protocol fold should be open by default.
     window.localStorage.setItem("funversarialcv-audience", "security");
-    renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
-
+    const { unmount } = renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
     const protocolContent = document.getElementById("validation-lab-protocol-fold-content");
     expect(protocolContent).toBeTruthy();
-    expect(protocolContent).toHaveClass("hidden");
-
-    expandExternalComparativeEvaluation();
-    expect(protocolContent).not.toHaveClass("hidden");
+    await waitFor(() => {
+      expect(protocolContent).not.toHaveClass("hidden");
+    });
     expect(screen.getByText(/Copy the BASE-00 prompt below/i)).toBeInTheDocument();
+    unmount();
+
+    // HR — protocol fold should start collapsed.
+    window.localStorage.setItem("funversarialcv-audience", "hr");
+    renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
+    const hrProtocolContent = document.getElementById("validation-lab-protocol-fold-content");
+    expect(hrProtocolContent).toBeTruthy();
+    expect(hrProtocolContent).toHaveClass("hidden");
+    expandExternalComparativeEvaluation();
+    expect(hrProtocolContent).not.toHaveClass("hidden");
   });
 
   it("keeps prompt descriptions inside collapsed prompt panels until expanded", () => {

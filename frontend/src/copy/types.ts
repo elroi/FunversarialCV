@@ -344,4 +344,6 @@ export interface Copy {
   // —— Audience switcher ——
   audienceSecurity: string;
   audienceHr: string;
+  audienceSecurityHint: string;
+  audienceHrHint: string;
 }

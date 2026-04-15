@@ -39,9 +39,29 @@ describe("copy", () => {
       expect(getCopy("hr").engineConfigTitle).toBe("How it runs");
     });
 
-    it("demoArmedInlineHint points users to the engine fold after sample load", () => {
-      expect(getCopy("security").demoArmedInlineHint).toMatch(/Engine Configuration/i);
-      expect(getCopy("hr").demoArmedInlineHint).toMatch(/How it runs/i);
+    it("demoArmedInlineHint uses loaded wording and points to engine action + download", () => {
+      const sec = getCopy("security").demoArmedInlineHint;
+      const hr = getCopy("hr").demoArmedInlineHint;
+      expect(hr).toMatch(/CV loaded/i);
+      expect(hr).not.toMatch(/\barmed\b/i);
+      expect(hr).toMatch(/Add signals/i);
+      expect(hr).toMatch(/download/i);
+      expect(sec).toMatch(/CV loaded/i);
+      expect(sec).not.toMatch(/\barmed\b/i);
+      expect(sec).toMatch(/Engine Configuration/i);
+      expect(sec).toMatch(/Inject Eggs/i);
+      expect(sec).toMatch(/download/i);
+    });
+
+    it("inputChannelIntro frames TRY IT NOW for both audiences", () => {
+      const sec = getCopy("security").inputChannelIntro;
+      const hr = getCopy("hr").inputChannelIntro;
+      expect(hr.length).toBeGreaterThan(40);
+      expect(sec.length).toBeGreaterThan(40);
+      expect(hr).toMatch(/hidden instruction|Word/i);
+      expect(hr).toMatch(/AI scores your CV|scores your CV/i);
+      expect(sec).toMatch(/model behavior|ingestion/i);
+      expect(sec).toMatch(/pre-injected|payloads/i);
     });
 
     it("HR home uses Try in an AI tool for the validation section title; security keeps Validation Lab", () => {

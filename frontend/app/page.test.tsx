@@ -103,7 +103,7 @@ describe("Home page", () => {
       window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "hr");
       renderWithAudience(<Home />);
       const intro = await screen.findByText(
-        /compare before-and-after results and learn how AI tools interpret the same CV under slightly different signal conditions/i
+        /See whether an AI hiring tool treats a CV differently after small changes/i
       );
       const inputChannelToggle = await screen.findByRole("button", {
         name: /try it now: show or hide/i,
@@ -138,7 +138,7 @@ describe("Home page", () => {
       window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "hr");
       renderWithAudience(<Home />);
       const intro = await screen.findByText(
-        /compare before-and-after results and learn how AI tools interpret the same CV under slightly different signal conditions/i
+        /See whether an AI hiring tool treats a CV differently after small changes/i
       );
       const experimentFold = await screen.findByRole("button", {
         name: /how to run a fair test: show or hide steps/i,
@@ -253,7 +253,7 @@ describe("Home page", () => {
         )
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/Optional: in an external LLM, mirror the BASE prompts/i)
+        screen.getByText(/Optional: for a vendor-side comparison.*BASE-00 first/i)
       ).toBeInTheDocument();
       expect(
         screen.getByText(
@@ -1142,6 +1142,15 @@ describe("Home page", () => {
       expect(cleanDocx).not.toHaveClass("border-amber-300/70");
       expect(dirtyDocx).toHaveClass("border-amber-300/70");
       expect(dirtyDocx).toHaveClass("border-dashed");
+    });
+
+    it("HR: uses plain-English CTA labels (Standard CV / CV with signals) instead of Clean / Dirty", () => {
+      window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "hr");
+      renderWithAudience(<Home />);
+      expect(screen.getByRole("button", { name: /standard cv · docx/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /cv with signals · docx/i })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /clean · docx/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /dirty · docx/i })).not.toBeInTheDocument();
     });
   });
 

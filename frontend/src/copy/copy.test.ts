@@ -69,6 +69,13 @@ describe("copy", () => {
       expect(getCopy("security").validationLabTitle).toBe("Validation Lab");
     });
 
+    it("fullSessionIntro declares full-session framing for both audiences", () => {
+      expect(getCopy("security").fullSessionIntro).toMatch(/full session/i);
+      expect(getCopy("security").fullSessionIntro).toMatch(/15.20 min/i);
+      expect(getCopy("hr").fullSessionIntro).toMatch(/full session/i);
+      expect(getCopy("hr").fullSessionIntro).toMatch(/15.20 min/i);
+    });
+
     it("lab harness strings exist for both audiences with distinct tone", () => {
       const sec = getCopy("security");
       const hr = getCopy("hr");

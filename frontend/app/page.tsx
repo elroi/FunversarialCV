@@ -1364,23 +1364,6 @@ export default function Home() {
 
         <section className="flex flex-1 flex-col gap-8 md:flex-row">
           <div className="flex-1">
-            {copy.introLead.trim() ? (
-              <div className="mb-6">{renderIntro(copy.introLead)}</div>
-            ) : null}
-            <div className="functional-group mb-6 overflow-hidden">
-              <CollapsibleCard
-                className="rounded-none border-0 bg-transparent shadow-none"
-                title={copy.experimentFlowCollapsibleTitle}
-                titleId="experiment-flow-card-title"
-                contentId="experiment-flow-card-content"
-                ariaLabel={`${copy.experimentFlowCollapsibleTitle}: show or hide steps`}
-                defaultExpanded={false}
-                expandOnWide
-              >
-                <ExperimentFlowPanelBody copy={copy} showPositioningLine />
-              </CollapsibleCard>
-            </div>
-
             <div ref={inputChannelSectionRef} className="min-w-0">
             <SectionFold
               ref={inputChannelTriggerRef}
@@ -1470,6 +1453,23 @@ export default function Home() {
                 </p>
               </div>
             </SectionFold>
+            </div>
+
+            {copy.introLead.trim() ? (
+              <div className="mb-6 mt-6">{renderIntro(copy.introLead)}</div>
+            ) : null}
+            <div className="functional-group mb-6 overflow-hidden">
+              <CollapsibleCard
+                className="rounded-none border-0 bg-transparent shadow-none"
+                title={copy.experimentFlowCollapsibleTitle}
+                titleId="experiment-flow-card-title"
+                contentId="experiment-flow-card-content"
+                ariaLabel={`${copy.experimentFlowCollapsibleTitle}: show or hide steps`}
+                defaultExpanded={false}
+                expandOnWide
+              >
+                <ExperimentFlowPanelBody copy={copy} showPositioningLine />
+              </CollapsibleCard>
             </div>
 
             {contentAudience === "security" && copy.introDetail.trim() ? (
@@ -1845,10 +1845,13 @@ export default function Home() {
             )}
             </SectionFold>
 
+            <p className="mt-8 mb-1 text-caption text-foreground/50">
+              {copy.fullSessionIntro}
+            </p>
             <SectionFold
               ref={validationLabTriggerRef}
               sectionId={VALIDATION_LAB_SECTION_ID}
-              className="functional-group mt-6 scroll-mt-6"
+              className="functional-group scroll-mt-6"
               title={copy.validationLabTitle}
               titleId="validation-lab-section-title"
               contentId="validation-lab-section-content"

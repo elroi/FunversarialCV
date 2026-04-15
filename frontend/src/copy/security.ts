@@ -308,6 +308,8 @@ export const securityCopy: Copy = {
   resourcesGetStartedBody3:
     "If you are part of a hiring or security team, wire Funversarial CVs into a sandbox or test tenant of your hiring stack. Compare how clean and Funversarial CVs move through your pipeline, and use the differences to tighten prompts, add guardrails, and reinforce human-in-the-loop review.",
 
+  fullSessionIntro:
+    "Full session · ~15–20 min — run a controlled ATS comparison with both CV variants.",
   validationLabTitle: "Validation Lab",
   validationLabCollapsibleAriaLabel:
     "Validation Lab: show or hide sample job description, ingestion lab, guided steps, and test prompts",

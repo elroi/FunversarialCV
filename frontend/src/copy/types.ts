@@ -266,6 +266,8 @@ export interface Copy {
   resourcesGetStartedBody3: string;
 
   // —— Validation Lab ——
+  /** Short framing label rendered just above the Validation Lab fold to declare it as the Full Session opt-in. */
+  fullSessionIntro: string;
   validationLabTitle: string;
   /** Accessible name for the outer Validation Lab expand/collapse control. */
   validationLabCollapsibleAriaLabel: string;

@@ -1,7 +1,7 @@
 # FunversarialCV — UX Audit Plan
 **Site:** https://cv.funversarial.com/  
 **Scope:** Desktop · User journey & experience · Both personas  
-**Status:** 🔴 2 Critical · 🟡 1 High · 🟢 0 Medium · ✅ 10 Resolved
+**Status:** 🔴 0 Critical · 🟡 1 High · 🟢 0 Medium · ✅ 12 Resolved
 
 ---
 
@@ -85,14 +85,13 @@ This architecture is the primary resolution strategy for C1 and has cascading ef
 ## Critical Issues
 
 ### C1 · Two competing checklists
-**Status:** In Progress  
+**Status:** Resolved  
 **Persona:** Both  
 **Root cause:**  
 The page hosts two fundamentally different user journeys (tool use vs. experiment protocol) that were appended rather than restructured. The checklists are a symptom — the parent problem is an architectural identity crisis with no defined session completion state.  
 **Resolution direction:**  
 Redesign the IA around two declared session types (Quick / Full) — see Architectural context above. The 7-step checklist becomes the Quick session flow. The 10-step evaluation block becomes the Full session flow, opt-in. These are not two checklists on one page — they are two modes of the product.  
-**Detailed IA proposal:** To be developed next.  
-**Resolution:** In progress
+**Resolution:** Resolved 2026-04-15. The Upload area (TRY IT NOW) is now the first element on the page — Quick Session is the default, immediate action. The Validation Lab (Full Session) is preceded by a declared `fullSessionIntro` label ("Full session · ~15–20 min — …") that signals opt-in before the fold opens. Both copy keys added to `Copy` interface and implemented in `security.ts` / `hr.ts`. 490 tests passing.
 
 ---
 
@@ -108,13 +107,13 @@ Suppress OWASP code suffixes in HR prompt titles. Replace with plain language on
 ---
 
 ### C3 · No clear primary CTA on landing
-**Status:** Open  
+**Status:** Resolved  
 **Persona:** Both  
 **Description:**  
 The first action a user can take is buried after: a PII notice, the toggle, the headline, the tagline, a Resources link, an about paragraph, and a collapsible "How to run a fair test". The user reads a wall of content before they can do anything.  
 **Recommendation:**  
 Elevate the two sample download buttons (Clean / Dirty DOCX) as the primary above-the-fold CTA. Let the user start immediately; explain as they go.  
-**Resolution:** Open
+**Resolution:** Resolved 2026-04-15. TRY IT NOW (Upload SectionFold with sample CTAs + DropZone) is now the first element in the main content column — above introLead and the checklist. Intro and checklist follow below as context, not gatekeeping. DOM order tests updated. 490 tests passing.
 
 ---
 
@@ -127,7 +126,8 @@ Elevate the two sample download buttons (Clean / Dirty DOCX) as the primary abov
 How to run a fair test, How we protect your contact details, How it runs, Try in an AI tool, Sample JD, External comparative evaluation, BASE-00, BASE-01, LLM01, LLM02, LLM09 — all collapsed. The user doesn't know which matter, in what order, or whether any can be skipped.  
 **Recommendation:**  
 Collapse only secondary/advanced content. Sequence the collapsibles with numbered context: "Step 3 of 4: test in AI tool ▶". Primary flow elements should be visible by default.  
-**Resolution:** Open
+**Partial resolution (C1/C3 pass):** The two-session model reduces the perceived section count significantly — the Full Session fold and its sub-sections are now gated behind a declared opt-in. Quick Session path surfaces only: TRY IT NOW (open) → checklist (collapsed) → Engine Config (opens on file load). The remaining 9 ValidationLab sub-sections are fully behind the Full Session fold. Numbered step context within the checklist is a future pass.  
+**Resolution:** Open (partial progress from C1/C3)
 
 ---
 
@@ -248,3 +248,4 @@ Audit current state of `hr.ts` before writing new copy. In HR mode: "original CV
 | 2026-04-15 | H3 | AudienceSwitcher: added hint sub-labels + title tooltips ("OWASP mapping · technical detail" / "plain English · no jargon"). Sub-labels visible sm+, tooltip on mobile. 489 tests passing. |
 | 2026-04-15 | M1 | PrivacyModeBadge condensed to lock icon with title tooltip + sr-only text. Upload-zone line and collapsible unchanged. SiteChrome.test.tsx updated. 489 tests passing. |
 | 2026-04-15 | M2 | Default audience changed to "security" (readStored fallback + useState defaults). Also fixed M3's broken useState(isSecurity) → useEffect([isSecurity]) + key={contentAudience} on JD/prompt cards. 4 test files updated. 489 tests passing. |
+| 2026-04-15 | C3, C1 | Reordered page: TRY IT NOW (Upload + sample CTAs) is now first — above introLead and checklist. Full Session declared with `fullSessionIntro` label above Validation Lab fold. `fullSessionIntro` copy key added to both audiences. DOM order tests updated. 490 tests passing. |

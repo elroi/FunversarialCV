@@ -309,6 +309,8 @@ export const hrCopy: Copy = {
   resourcesGetStartedBody3:
     "If you’re in hiring or HR, run this in a test environment. Compare how normal and “signaled” CVs move through your pipeline and use that to improve prompts and guardrails.",
 
+  fullSessionIntro:
+    "Full session · ~15–20 min — test both CVs in an AI tool and compare the results.",
   validationLabTitle: "Try in an AI tool",
   validationLabCollapsibleAriaLabel:
     "Try in an AI tool: show or hide sample job description, reader tools, guided steps, and sample prompts",

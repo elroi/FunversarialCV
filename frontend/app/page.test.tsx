@@ -99,7 +99,7 @@ describe("Home page", () => {
       expect(introText).toMatch(/authorized testing and research only/i);
     });
 
-    it("places HR intro above TRY IT NOW (DOM order)", async () => {
+    it("places TRY IT NOW above HR intro (DOM order — upload is first action)", async () => {
       window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "hr");
       renderWithAudience(<Home />);
       const intro = await screen.findByText(
@@ -108,13 +108,14 @@ describe("Home page", () => {
       const inputChannelToggle = await screen.findByRole("button", {
         name: /try it now: show or hide/i,
       });
+      // TRY IT NOW comes first; intro follows below
       expect(
-        inputChannelToggle.compareDocumentPosition(intro) &
+        intro.compareDocumentPosition(inputChannelToggle) &
           Node.DOCUMENT_POSITION_PRECEDING
       ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
     });
 
-    it("places security intro lead above TRY IT NOW (DOM order)", async () => {
+    it("places TRY IT NOW above security intro lead (DOM order — upload is first action)", async () => {
       window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "security");
       renderWithAudience(<Home />);
       const lead = await screen.findByText((_content, element) => {
@@ -128,13 +129,14 @@ describe("Home page", () => {
       const inputChannelToggle = await screen.findByRole("button", {
         name: /try it now: show or hide/i,
       });
+      // TRY IT NOW comes first; intro follows below
       expect(
-        inputChannelToggle.compareDocumentPosition(lead) &
+        lead.compareDocumentPosition(inputChannelToggle) &
           Node.DOCUMENT_POSITION_PRECEDING
       ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
     });
 
-    it("places How to run a fair test fold after HR intro and before TRY IT NOW (DOM order)", async () => {
+    it("places How to run a fair test fold after HR intro (DOM order)", async () => {
       window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "hr");
       renderWithAudience(<Home />);
       const intro = await screen.findByText(
@@ -143,20 +145,14 @@ describe("Home page", () => {
       const experimentFold = await screen.findByRole("button", {
         name: /how to run a fair test: show or hide steps/i,
       });
-      const inputChannelToggle = await screen.findByRole("button", {
-        name: /try it now: show or hide/i,
-      });
+      // intro comes before the checklist
       expect(
         experimentFold.compareDocumentPosition(intro) &
           Node.DOCUMENT_POSITION_PRECEDING
       ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
-      expect(
-        inputChannelToggle.compareDocumentPosition(experimentFold) &
-          Node.DOCUMENT_POSITION_PRECEDING
-      ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
     });
 
-    it("places How to run a fair test fold after security intro lead and before TRY IT NOW (DOM order)", async () => {
+    it("places How to run a fair test fold after security intro lead (DOM order)", async () => {
       window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "security");
       renderWithAudience(<Home />);
       const lead = await screen.findByText((_content, element) => {
@@ -170,15 +166,9 @@ describe("Home page", () => {
       const experimentFold = await screen.findByRole("button", {
         name: /how to run a fair test: show or hide steps/i,
       });
-      const inputChannelToggle = await screen.findByRole("button", {
-        name: /try it now: show or hide/i,
-      });
+      // intro comes before the checklist
       expect(
         experimentFold.compareDocumentPosition(lead) &
-          Node.DOCUMENT_POSITION_PRECEDING
-      ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
-      expect(
-        inputChannelToggle.compareDocumentPosition(experimentFold) &
           Node.DOCUMENT_POSITION_PRECEDING
       ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
     });

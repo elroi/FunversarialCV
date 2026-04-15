@@ -4,7 +4,7 @@
  */
 import { test, expect } from "@playwright/test";
 import { ensureFairTestPanelExpanded } from "../helpers/fair-test-panel";
-import { ensureSecurityAudienceForE2e } from "../helpers/security-audience";
+import { ensureSecurityAudienceForE2e, ensureHrAudienceForE2e } from "../helpers/security-audience";
 import { securityCopy } from "../../src/copy/security";
 import { hrCopy } from "../../src/copy/hr";
 
@@ -63,10 +63,7 @@ test.describe("Validation section", () => {
 
   test("HR audience: expand Try in an AI tool and see BASE-00", async ({ page }) => {
     await page.goto("/");
-    await page.waitForFunction(
-      () => document.documentElement.hasAttribute("data-audience"),
-      { timeout: 30_000 }
-    );
+    await ensureHrAudienceForE2e(page);
     await page
       .getByRole("button", {
         name: new RegExp(
@@ -112,11 +109,13 @@ test.describe("Validation section", () => {
         ),
       })
       .click();
-    await page
-      .getByRole("button", {
-        name: /External comparative evaluation: show or hide/i,
-      })
-      .click();
+    // In security mode the protocol fold starts expanded (M3); ensure it is open before clicking the link.
+    const protocolBtn = page.getByRole("button", {
+      name: /External comparative evaluation: show or hide/i,
+    });
+    if ((await protocolBtn.getAttribute("aria-expanded")) !== "true") {
+      await protocolBtn.click();
+    }
     await page.getByRole("link", { name: /Upload or sample CV/i }).first().click();
     await expect(page.locator("#console-cv-upload")).toBeVisible();
     await expect(page.locator("#console-cv-upload")).toBeInViewport({ timeout: 10_000 });
@@ -142,10 +141,7 @@ test.describe("Validation section", () => {
 
   test("HR audience: ingestion lab extracts fixture docx", async ({ page }) => {
     await page.goto("/");
-    await page.waitForFunction(
-      () => document.documentElement.hasAttribute("data-audience"),
-      { timeout: 30_000 }
-    );
+    await ensureHrAudienceForE2e(page);
     await page
       .getByRole("button", {
         name: new RegExp(`^${hrCopy.validationLabTitle}: show or hide`, "i"),
@@ -159,10 +155,7 @@ test.describe("Validation section", () => {
 
   test("HR audience: fair-test deep link opens section with pulse", async ({ page }) => {
     await page.goto("/");
-    await page.waitForFunction(
-      () => document.documentElement.hasAttribute("data-audience"),
-      { timeout: 30_000 }
-    );
+    await ensureHrAudienceForE2e(page);
     await ensureFairTestPanelExpanded(page);
     const stepLink = page.locator("#experiment-flow-card-content a[href=\"#validation-lab\"]");
     await expect(stepLink).toBeVisible({ timeout: 15_000 });

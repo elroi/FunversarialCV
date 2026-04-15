@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
 import type { Copy } from "../copy/types";
 import { CollapsibleCard } from "./ui/CollapsibleCard";
@@ -160,6 +160,8 @@ export const LabHarnessPanel: React.FC<LabHarnessPanelProps> = ({
   const [completeLoading, setCompleteLoading] = useState(false);
   const [completeError, setCompleteError] = useState<string | null>(null);
   const [completeText, setCompleteText] = useState<string | null>(null);
+  const [harnessExpanded, setHarnessExpanded] = useState(false);
+  const hasAutoExpandedRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -190,6 +192,14 @@ export const LabHarnessPanel: React.FC<LabHarnessPanelProps> = ({
     setResult(null);
     setCompleteText(null);
     setCompleteError(null);
+  }, [activeFile]);
+
+  // Auto-expand on first file: panel starts collapsed, opens once a file arrives.
+  useEffect(() => {
+    if (activeFile && !hasAutoExpandedRef.current) {
+      hasAutoExpandedRef.current = true;
+      setHarnessExpanded(true);
+    }
   }, [activeFile]);
 
   const runExtract = useCallback(async () => {
@@ -284,7 +294,8 @@ export const LabHarnessPanel: React.FC<LabHarnessPanelProps> = ({
         titleId="lab-harness-title"
         contentId="lab-harness-content"
         ariaLabel={`${copy.labHarnessTitle}: show or hide`}
-        defaultExpanded
+        expanded={harnessExpanded}
+        onExpandedChange={setHarnessExpanded}
         className="rounded-lg border border-border/80 bg-panel/40"
       >
         <p className="mb-3 text-sm leading-relaxed text-foreground/75">{copy.labHarnessIntro}</p>

@@ -1,8 +1,9 @@
 import { expect, type Page } from "@playwright/test";
 import { securityUiRx } from "./security-ui";
+import { hrCopy } from "../../src/copy/hr";
 
 /**
- * Home defaults to HR; E2E specs assert security strings (Armed CV, Inject Eggs, sample CV row, PII badge).
+ * Home defaults to security; E2E specs assert security strings (Armed CV, Inject Eggs, sample CV row, PII badge).
  * Call after `page.goto("/")` (or `"/?…"`) before assertions or uploads.
  *
  * Waits for `AudienceProvider` hydration (`data-audience` on `<html>`) before clicking — otherwise
@@ -27,6 +28,26 @@ export async function ensureSecurityAudienceForE2e(page: Page): Promise<void> {
     timeout: 15_000,
   });
   await expect(page.getByText(securityUiRx.piiModeBadge)).toBeVisible({
+    timeout: 15_000,
+  });
+}
+
+/**
+ * Switches to HR audience and waits for the theme to settle.
+ * Call after `page.goto("/")` before any HR-specific assertions.
+ */
+export async function ensureHrAudienceForE2e(page: Page): Promise<void> {
+  await page.waitForFunction(
+    () => document.documentElement.hasAttribute("data-audience"),
+    { timeout: 30_000 }
+  );
+
+  const hrBtn = page.getByRole("button", { name: new RegExp(hrCopy.audienceHr, "i") });
+  if ((await hrBtn.getAttribute("aria-pressed")) !== "true") {
+    await hrBtn.click();
+  }
+
+  await expect(page.locator("html")).toHaveAttribute("data-audience", "hr", {
     timeout: 15_000,
   });
 }

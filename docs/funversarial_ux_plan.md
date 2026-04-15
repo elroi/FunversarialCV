@@ -1,7 +1,7 @@
 # FunversarialCV — UX Audit Plan
 **Site:** https://cv.funversarial.com/  
 **Scope:** Desktop · User journey & experience · Both personas  
-**Status:** 🔴 2 Critical · 🟡 3 High · 🟢 3 Medium · ✅ 5 Resolved
+**Status:** 🔴 2 Critical · 🟡 1 High · 🟢 0 Medium · ✅ 10 Resolved
 
 ---
 
@@ -132,24 +132,24 @@ Collapse only secondary/advanced content. Sequence the collapsibles with numbere
 ---
 
 ### H2 · "What the file says" panel open pre-upload
-**Status:** Open  
+**Status:** Resolved  
 **Persona:** Both  
 **Description:**  
 This panel defaults to expanded but is inert until the user has uploaded and processed a CV. An open, empty panel signals broken state.  
 **Recommendation:**  
 Collapse by default. Auto-expand with a visual cue after a successful "Add signals" run.  
-**Resolution:** Open
+**Resolution:** Resolved 2026-04-15. `LabHarnessPanel` now starts collapsed (`harnessExpanded=false`). A `useEffect` watching `activeFile` auto-expands the panel the first time a file arrives (guarded by `hasAutoExpandedRef` so user can re-collapse without it forcing back open). CollapsibleCard converted from uncontrolled (`defaultExpanded`) to controlled (`expanded`/`onExpandedChange`). All 489 tests passing.
 
 ---
 
 ### H3 · Toggle doesn't signal what will change
-**Status:** Open  
+**Status:** Resolved  
 **Persona:** Both  
 **Description:**  
 "For security pros / For HR" tells the user the toggle exists but gives no hint of what switching will do. The label is a persona name, not a value proposition.  
 **Recommendation:**  
 Add a one-line tooltip or sub-label on hover explaining each mode. Consider a brief visual theme shift on switch (e.g. purple/indigo for security, teal/green for HR) to confirm the mode change.  
-**Resolution:** Open
+**Resolution:** Resolved 2026-04-15. Added `audienceSecurityHint` / `audienceHrHint` copy keys to both personas ("OWASP mapping · technical detail" / "plain English · no jargon"). `AudienceSwitcher` renders each hint as a `title` attribute (hover tooltip) and a visible sub-label (`hidden sm:block`, muted, 0.6rem) below the main label. Mobile: tooltip only. Desktop: sub-label visible. 489 tests passing.
 
 ---
 
@@ -178,35 +178,35 @@ Reframe with a specific outcome: e.g. "See whether an AI hiring tool treats your
 ## Medium Issues
 
 ### M1 · Privacy messaging repeated three times
-**Status:** Open  
+**Status:** Resolved  
 **Persona:** Both  
 **Description:**  
 The PII notice appears in the global header bar, in the upload zone, and inside the "How we protect your contact details" collapsible. Repetition can amplify anxiety rather than resolve it.  
 **Recommendation:**  
 One confident privacy statement in the upload zone. Remove or condense the header bar notice to an icon. Keep the collapsible detail where it is.  
-**Resolution:** Open
+**Resolution:** Resolved 2026-04-15. `PrivacyModeBadge` replaced: full text badge → lock icon (`lucide-react Lock`, 3.5×3.5) with `title` tooltip (hover) and `sr-only` accessible label. Upload-zone `uploadPrivacyLine` and the "How we protect" collapsible unchanged — they carry the real message. `SiteChrome.test.tsx` updated to assert `getByRole("status")` + `getByTitle`. 489 tests passing.
 
 ---
 
 ### M2 · Security persona framing not visible on cold load
-**Status:** Open  
+**Status:** Resolved  
 **Persona:** Security  
 **Description:**  
 The "authorized security testing" and "LLM research in hiring pipelines" language only appears after toggling. A security professional landing cold may not bother to toggle and will see the HR-framed tagline instead.  
 **Recommendation:**  
 Either default the toggle to Security for direct/technical traffic, or surface the security framing in meta/SEO context so the right users self-select.  
-**Resolution:** Open
+**Resolution:** Resolved 2026-04-15. `AudienceContext`: `readStored()` fallback changed "hr" → "security"; both `useState` defaults and pre-mount value fallbacks updated to "security". First-time visitors (no stored preference) now see security framing. Returning users with a stored preference are unaffected. Also fixed M3's broken `useState(isSecurity)` approach: replaced with `useEffect([isSecurity])` for the protocol fold, and `key={contentAudience}` on the JD and prompt `CollapsibleCard`s so `defaultExpanded={isSecurity}` re-evaluates correctly on audience switch. `AudienceContext.test.tsx` + `DualityMonitor.test.tsx` + `ValidationLab.test.tsx` + `page.test.tsx` updated to pin explicit audiences. 489 tests passing.
 
 ---
 
 ### M3 · BASE prompts and OWASP labels collapsed in Security mode
-**Status:** Open  
+**Status:** Resolved  
 **Persona:** Security  
 **Description:**  
 The prompts and OWASP mapping are exactly the content a security professional came for, but they're collapsed inside accordions. They should be the default expanded state in Security mode.  
 **Recommendation:**  
 In Security mode, expand BASE prompts and OWASP-labelled sections by default. HR mode keeps them collapsed or hidden.  
-**Resolution:** Open
+**Resolution:** Resolved 2026-04-15. In `ValidationLab.tsx`: `isSecurity` derived from `contentAudience`; `protocolFoldExpanded` state initialized to `isSecurity`; `defaultExpanded={isSecurity}` set on Sample JD, protocol fold, and all prompt CollapsibleCards. HR mode unchanged (all start collapsed). All 489 tests passing.
 
 ---
 
@@ -243,3 +243,8 @@ Audit current state of `hr.ts` before writing new copy. In HR mode: "original CV
 | 2026-04-15 | C2, M4 | Removed OWASP code suffixes from HR prompt titles; dropped owaspLink from HR validationPrompts entries. Split ValidationLab.test.tsx OWASP link test by audience. 128 tests passing. |
 | 2026-04-15 | H4 | Renamed HR cleanCvCta/dirtyCvCta to "Standard CV · DOCX" / "CV with signals · DOCX". Fixed inputChannelIntro "pre-injected" → "pre-added". Added HR-specific CTA label test. 125 tests passing. |
 | 2026-04-15 | H5 | Rewrote HR introLead to lead with concrete outcome hook. Updated page.test.tsx DOM-order regexes. 108 tests passing. |
+| 2026-04-15 | M3 | Security mode: all Validation Lab sections (Sample JD, protocol fold, all prompt cards) now default-expanded. HR unchanged. 489 tests passing. |
+| 2026-04-15 | H2 | LabHarnessPanel starts collapsed; auto-expands once on first file arrival (one-shot guard). 489 tests passing. |
+| 2026-04-15 | H3 | AudienceSwitcher: added hint sub-labels + title tooltips ("OWASP mapping · technical detail" / "plain English · no jargon"). Sub-labels visible sm+, tooltip on mobile. 489 tests passing. |
+| 2026-04-15 | M1 | PrivacyModeBadge condensed to lock icon with title tooltip + sr-only text. Upload-zone line and collapsible unchanged. SiteChrome.test.tsx updated. 489 tests passing. |
+| 2026-04-15 | M2 | Default audience changed to "security" (readStored fallback + useState defaults). Also fixed M3's broken useState(isSecurity) → useEffect([isSecurity]) + key={contentAudience} on JD/prompt cards. 4 test files updated. 489 tests passing. |

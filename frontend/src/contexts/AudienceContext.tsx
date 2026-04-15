@@ -26,14 +26,14 @@ function prefersReducedMotion(): boolean {
 }
 
 function readStored(): Audience {
-  if (typeof window === "undefined") return "hr";
+  if (typeof window === "undefined") return "security";
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw === "security" || raw === "hr") return raw;
   } catch {
     // ignore
   }
-  return "hr";
+  return "security";
 }
 
 interface AudienceContextValue {
@@ -51,8 +51,8 @@ interface AudienceContextValue {
 const AudienceContext = createContext<AudienceContextValue | null>(null);
 
 export function AudienceProvider({ children }: { children: React.ReactNode }) {
-  const [audience, setAudienceState] = useState<Audience>("hr");
-  const [contentAudience, setContentAudience] = useState<Audience>("hr");
+  const [audience, setAudienceState] = useState<Audience>("security");
+  const [contentAudience, setContentAudience] = useState<Audience>("security");
   const [copyFadePhase, setCopyFadePhase] = useState<CopyFadePhase>("idle");
   const [mounted, setMounted] = useState(false);
 
@@ -137,8 +137,8 @@ export function AudienceProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo(
     () => ({
-      audience: mounted ? audience : "hr",
-      contentAudience: mounted ? contentAudience : "hr",
+      audience: mounted ? audience : "security",
+      contentAudience: mounted ? contentAudience : "security",
       copyFadePhase,
       setAudience,
     }),

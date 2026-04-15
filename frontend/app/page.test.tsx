@@ -389,9 +389,11 @@ describe("Home page", () => {
       });
 
       it("opens protocol fold when hash changes to #validation-lab-guided after mount", async () => {
+        // HR mode: protocol fold starts collapsed; verify hashchange expands it.
+        window.localStorage.setItem(AUDIENCE_STORAGE_KEY, "hr");
         renderWithAudience(<Home />);
         fireEvent.click(
-          screen.getByRole("button", { name: /validation lab: show or hide/i })
+          screen.getByRole("button", { name: /try in an ai tool: show or hide/i })
         );
         const protocolBtn = screen.getByRole("button", {
           name: /External comparative evaluation: show or hide/i,

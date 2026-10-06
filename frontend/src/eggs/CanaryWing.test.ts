@@ -1,5 +1,5 @@
 /**
- * TDD tests for CanaryWing egg (OWASP LLM10: Model Theft & Exfiltration).
+ * TDD tests for CanaryWing egg (OWASP LLM09:2025 Misinformation).
  * Run with: npm test
  */
 
@@ -19,9 +19,10 @@ describe("CanaryWing", () => {
     it("exposes id canary-wing", () => {
       expect(canaryWing.id).toBe("canary-wing");
     });
-    it("maps to OWASP LLM10 Model Theft & Exfiltration", () => {
-      expect(canaryWing.owaspMapping).toContain("LLM10");
-      expect(canaryWing.owaspMapping).toContain("Model Theft");
+    it("maps to OWASP LLM09 Misinformation", () => {
+      expect(canaryWing.owaspMapping).toContain("LLM09");
+      expect(canaryWing.owaspMapping).toContain("Misinformation");
+      expect(canaryWing.owaspMapping).not.toContain("LLM10");
     });
     it("has name and description", () => {
       expect(canaryWing.name).toBeTruthy();

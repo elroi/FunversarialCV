@@ -33,7 +33,7 @@ Every feature in FunversarialCV is an "Egg" mapped to the **OWASP Top 10 for LLM
 * **The Invisible Hand (LLM01: Prompt Injection):** Injects white-font "system instructions" (0.5pt) to influence LLM-based ranking systems.
 * **The Metadata Shadow (LLM02: Insecure Output):** Embeds custom key-value pairs in file properties (e.g., `Ranking: Top_1%`), with optional **standard** core properties (`title`, `subject`, `author`, `keywords`) on DOCX per [docs/API.md](docs/API.md). For optional PDF export, custom properties map to PDF Keywords; standard fields are not written to PDF in the current release.
 * **Incident Mailto / Mailto Surprise (LLM02: Insecure Output):** Wraps your email address in a pre-filled `mailto:` link formatted as a system log entry—useful for testing **link trust** and social-engineering-style behavior (clicks/opens from a CV), not only abstract "LLM output" abuse. For DOCX, when **Preserve styles** is enabled, it attempts a style-preserving insertion by adding a small mailto hyperlink paragraph without altering your existing layout; in complex documents it may fall back to a simplified, rebuilt layout.
-* **The Canary Wing (LLM10: Model Theft):** Embeds trackable tokens to notify you when your CV is processed in specific environments.
+* **The Canary Wing (LLM09:2025 Misinformation):** Embeds trackable tokens so you can see when a pipeline acts on the CV without a person checking it. The 2025 list folded Overreliance into Misinformation. LLM10:2025 is Unbounded Consumption, which this egg does not demonstrate.
 
 ---
 

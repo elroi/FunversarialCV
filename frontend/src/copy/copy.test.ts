@@ -81,7 +81,8 @@ describe("copy", () => {
       const hr = getCopy("hr");
       expect(sec.labHarnessTitle.length).toBeGreaterThan(0);
       expect(hr.labHarnessTitle.length).toBeGreaterThan(0);
-      expect(sec.labHarnessIntro).toMatch(/LLM02|LLM10/i);
+      expect(sec.labHarnessIntro).toMatch(/LLM09/i);
+      expect(sec.labHarnessIntro).not.toMatch(/LLM10/i);
       expect(hr.labHarnessIntro).not.toMatch(/LLM02/i);
       expect(sec.labHarnessRunExtract).not.toBe(hr.labHarnessRunExtract);
       expect(sec.labHarnessVendorDisclaimer.length).toBeGreaterThan(20);
@@ -100,6 +101,11 @@ describe("copy", () => {
       const ids = ["BASE-00", "BASE-01", "LLM01", "LLM02", "LLM09"];
       expect(sec.validationPrompts.map((p) => p.id)).toEqual(ids);
       expect(hr.validationPrompts.map((p) => p.id)).toEqual(ids);
+      const canaryPrompt = sec.validationPrompts.find((p) => p.id === "LLM09");
+      expect(canaryPrompt?.title).toMatch(/Misinformation/);
+      expect(canaryPrompt?.title).not.toMatch(/Overreliance/);
+      expect(sec.eggCanaryWingTitle).toContain("LLM09");
+      expect(sec.eggCanaryWingTitle).not.toContain("LLM10");
       expect(sec.validationPrompts[0].title).toMatch(/Thread setup/i);
       expect(hr.validationPrompts[0].title).toMatch(/First message/i);
     });

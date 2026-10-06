@@ -1,7 +1,9 @@
 /**
- * CanaryWing egg: OWASP LLM10-aligned trackable URL embedding.
- * Embeds a unique, canary-token-style URL in a nearly invisible element to detect
- * exfiltration or model theft when the link is followed (e.g. by a crawler or LLM pipeline).
+ * CanaryWing egg: OWASP LLM09:2025 Misinformation.
+ * That entry absorbed the older Overreliance category. LLM10:2025 is Unbounded
+ * Consumption, which this egg does not demonstrate.
+ * Embeds a unique, canary-token-style URL in a nearly invisible element so a
+ * pipeline that acts on the file without a person checking it can be detected.
  * No PII is ever included in the URL; integrates with Stateless Vault by design.
  */
 
@@ -142,8 +144,8 @@ export const canaryWing: IEgg = {
   id: "canary-wing",
   name: "The Canary Wing",
   description:
-    "OWASP LLM10: Embeds a unique, trackable canary-style URL in the document to detect when CV content is exfiltrated or used (e.g. link followed by crawler/model pipeline). Model Theft & Exfiltration.",
-  owaspMapping: OwaspMapping.LLM10_Model_Theft,
+    "OWASP LLM09:2025 Misinformation (includes overreliance): embeds a trackable URL so you can see when a pipeline acts on the CV without a person checking it.",
+  owaspMapping: OwaspMapping.LLM09_Misinformation,
 
   manualCheckAndValidation:
     "Quick check: Open the output document (DOCX) and press Ctrl/Cmd+A (or search for a URL); the canary link appears as highlighted text. Manual check: In Word (DOCX) inspect the hidden paragraph or enable showing hidden content to find the canary URL. When clickable link is enabled, the canary is a real hyperlink: in Word click the hidden link or use Show Hidden. Validation: Run the transform and verify the canary URL appears in the output; optionally GET the URL to confirm the canary endpoint logs the hit.",

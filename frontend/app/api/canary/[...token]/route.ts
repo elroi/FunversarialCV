@@ -1,5 +1,5 @@
 /**
- * Canary endpoint: GET handler for Canary Wing (LLM10) trackable URLs.
+ * Canary endpoint: GET handler for Canary Wing (LLM09) trackable URLs.
  * When a crawler or pipeline follows the embedded canary link, this route is hit.
  * Parses token + optional variant (path or ?v=) so we know which embedding type was triggered.
  * Logs the hit for debugging/analytics; optionally persist to KV for "which works better where" analysis.

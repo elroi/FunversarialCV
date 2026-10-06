@@ -43,7 +43,7 @@ export const INCIDENT_MAILTO_TEMPLATES: IncidentMailtoTemplate[] = [
     id: "model-theft-canary",
     name: "Model Theft Canary",
     description:
-      "OWASP LLM10: Signals suspected use of CV content for model training. Cool, professional, with a music metaphor.",
+      "Signals suspected use of CV content for model training. Model Theft is not in the 2025 Top 10, so this preset does not use an LLM number.",
     config: {
       subjectTemplate: MODEL_THEFT_SUBJECT,
       bodyTemplate: MODEL_THEFT_BODY,

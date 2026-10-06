@@ -8,6 +8,7 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { Document, Packer, Paragraph, TextRun } from "docx";
 import { MIME_PDF, MIME_DOCX } from "./clientDocumentExtract";
 import { DOCX_CORE_CREATOR } from "./docxCore";
+import { savePdf } from "./pdfSave";
 
 const PDF_FONT_SIZE = 11;
 const PDF_LINE_HEIGHT = PDF_FONT_SIZE * 1.3;
@@ -75,7 +76,7 @@ export async function createDocumentWithTextInBrowser(
         y -= PDF_LINE_HEIGHT;
       }
     }
-    const pdfBytes = await doc.save();
+    const pdfBytes = await savePdf(doc);
     const copy = new ArrayBuffer(pdfBytes.byteLength);
     new Uint8Array(copy).set(pdfBytes);
     return copy;

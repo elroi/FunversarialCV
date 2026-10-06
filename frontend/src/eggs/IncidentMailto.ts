@@ -4,6 +4,7 @@
  */
 
 import { PDFDocument, StandardFonts, rgb, PDFName, PDFString } from "pdf-lib";
+import { savePdf } from "../lib/pdfSave";
 import { toWinAnsiSafe } from "../lib/pdfWinAnsi";
 import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
@@ -157,7 +158,7 @@ async function addMailtoAnnotationToPdf(
     page.node.set(PDFName.of("Annots"), doc.context.obj([linkRef]));
   }
 
-  const pdfBytes = await doc.save();
+  const pdfBytes = await savePdf(doc);
   return Buffer.from(pdfBytes);
 }
 

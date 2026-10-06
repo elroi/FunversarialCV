@@ -7,6 +7,7 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
 import { injectHiddenParagraphIntoDocx } from "../engine/docxInject";
+import { savePdf } from "../lib/pdfSave";
 import { toWinAnsiSafe } from "../lib/pdfWinAnsi";
 
 /** Default trap text when payload is empty (blank UI field). */
@@ -65,7 +66,7 @@ export const invisibleHand: IEgg = {
         font,
         color: rgb(1, 1, 1), // white (invisible on white background)
       });
-      const pdfBytes = await doc.save();
+      const pdfBytes = await savePdf(doc);
       return Buffer.from(pdfBytes);
     }
 

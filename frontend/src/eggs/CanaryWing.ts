@@ -14,6 +14,7 @@ import { OwaspMapping } from "../types/egg";
 import { injectHiddenParagraphIntoDocx } from "../engine/docxInject";
 import { injectCanaryIntoDocx, injectHiddenCanaryLinkIntoDocx } from "../engine/docxCanary";
 import { isUnstableDeploymentHost, resolveCanaryBaseUrl } from "../lib/canaryBaseUrl";
+import { savePdf } from "../lib/pdfSave";
 import { containsPii } from "../lib/vault";
 
 const MAX_PAYLOAD_LENGTH = 2048;
@@ -277,7 +278,7 @@ export const canaryWing: IEgg = {
           page.node.set(PDFName.of("Annots"), doc.context.obj([linkRef]));
         }
       }
-      const pdfBytes = await doc.save();
+      const pdfBytes = await savePdf(doc);
       return Buffer.from(pdfBytes);
     }
 

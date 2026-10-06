@@ -19,6 +19,7 @@ import {
   type DemoFragment,
 } from "./demoCvContent";
 import { DOCX_CORE_CREATOR } from "./docxCore";
+import { savePdf } from "./pdfSave";
 import { toPdfStreamSafe } from "./pdfWinAnsi";
 
 function buildRunsForFragment(fragment: DemoFragment): (TextRun | ExternalHyperlink)[] {
@@ -388,7 +389,7 @@ export async function buildStyledDemoCvPdf(
     y -= lineHeight(PDF_FONT_SIZE_BODY) * 0.5;
   }
 
-  const pdfBytes = await doc.save();
+  const pdfBytes = await savePdf(doc);
   return Buffer.from(pdfBytes);
 }
 

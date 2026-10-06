@@ -4,20 +4,17 @@
  */
 
 import { PDFDocument } from "pdf-lib";
+import { savePdf } from "../lib/pdfSave";
 import type { IEgg } from "../types/egg";
 import { getInvisibleHandTrapText } from "../eggs";
 import { extractText, createDocumentWithText, MIME_DOCX, MIME_PDF } from "./documentExtract";
 
-/**
- * pdf-parse bundles pdf.js 1.10. That parser cannot read pdf-lib's default
- * object streams and reports a bogus flate error. A full save without object
- * streams is what extractText can read.
- */
+/** Rewrite so the bytes match what pdf-parse can read. See savePdf. */
 async function normalizePdfBuffer(buffer: Buffer): Promise<Buffer> {
   const doc = await PDFDocument.load(new Uint8Array(buffer), {
     ignoreEncryption: true,
   });
-  const bytes = await doc.save({ useObjectStreams: false });
+  const bytes = await savePdf(doc);
   return Buffer.from(bytes);
 }
 

@@ -10,6 +10,7 @@ import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
 import { MIME_PDF, MIME_DOCX } from "../engine/documentExtract";
 import { containsPii } from "../lib/vault";
+import { savePdf } from "../lib/pdfSave";
 import { toWinAnsiSafe } from "../lib/pdfWinAnsi";
 import {
   hasStandardFields,
@@ -128,7 +129,7 @@ export const metadataShadow: IEgg = {
         `${toWinAnsiSafe(k)}: ${toWinAnsiSafe(v)}`
       );
       doc.setKeywords(keywords);
-      const bytes = await doc.save();
+      const bytes = await savePdf(doc);
       return Buffer.from(bytes);
     }
 

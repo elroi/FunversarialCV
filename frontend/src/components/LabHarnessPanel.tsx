@@ -358,6 +358,11 @@ export const LabHarnessPanel: React.FC<LabHarnessPanelProps> = ({
                 <h4 className="mb-1 font-mono text-caption font-semibold uppercase tracking-wider text-accent/90">
                   {labelForMode(copy, m.modeId)}
                 </h4>
+                {m.modeId === "docx_forensic_body" ? (
+                  <p className="mb-1 text-caption text-foreground/60">
+                    {copy.labHarnessForensicCaption}
+                  </p>
+                ) : null}
                 {renderModeBody(copy, m)}
                 {m.warnings.length > 0 ? (
                   <p className="mt-1 text-caption text-amber-400/90">

@@ -160,6 +160,8 @@ describe("copy", () => {
       expect(hrCopy.hardenButton).toBe("Add signals");
       expect(hrCopy.resourcesPreserveStylesBody).not.toMatch(/PDF/i);
       expect(hrCopy.resourcesPreserveStylesBody).toMatch(/Word documents only/);
+      expect(securityCopy.labHarnessForensicCaption).toMatch(/no spaces/i);
+      expect(hrCopy.labHarnessForensicCaption).toMatch(/no spaces/i);
     });
 
     it("engine output section and PDF export disclosure copy are set for both audiences", () => {

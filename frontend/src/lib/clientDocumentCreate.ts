@@ -7,6 +7,7 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { Document, Packer, Paragraph, TextRun } from "docx";
 import { MIME_PDF, MIME_DOCX } from "./clientDocumentExtract";
+import { DOCX_CORE_CREATOR } from "./docxCore";
 
 const PDF_FONT_SIZE = 11;
 const PDF_LINE_HEIGHT = PDF_FONT_SIZE * 1.3;
@@ -87,6 +88,8 @@ export async function createDocumentWithTextInBrowser(
         })
     );
     const doc = new Document({
+      creator: DOCX_CORE_CREATOR,
+      lastModifiedBy: DOCX_CORE_CREATOR,
       sections: [
         {
           children:

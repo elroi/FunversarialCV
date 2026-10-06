@@ -364,6 +364,8 @@ Optional: If you prefer to keep this exercise separate from your usual chat hist
   labHarnessNoFile: "Upload a .docx on the main console or choose a file below to analyze.",
   labHarnessError: "Lab extract failed. Try another file or check your connection.",
   labHarnessModeDocxForensic: "docx_forensic_body (w:t forensic)",
+  labHarnessForensicCaption:
+    "Raw text from Word runs, joined with no spaces. Missing spaces here are how this extractor works, not a broken file.",
   labHarnessModeServerWordExtractor: "server_word_extractor",
   labHarnessModeServerMammoth: "server_mammoth_raw",
   labHarnessModePackageMetadata: "docx_package_metadata",

@@ -365,6 +365,8 @@ Optional: If you prefer to keep this exercise separate from your usual chat hist
   labHarnessNoFile: "Add a Word file on the main page first, or pick one below.",
   labHarnessError: "Something went wrong reading the file. Try again or use another .docx.",
   labHarnessModeDocxForensic: "Raw text from document XML",
+  labHarnessForensicCaption:
+    "This view joins pieces of text with no spaces between them. Gaps are from that reading method, not a broken file.",
   labHarnessModeServerWordExtractor: "Word-style extraction",
   labHarnessModeServerMammoth: "Alternate text reader",
   labHarnessModePackageMetadata: "File properties",

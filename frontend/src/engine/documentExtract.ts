@@ -6,6 +6,7 @@
 
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { Document, Packer, Paragraph, TextRun } from "docx";
+import { DOCX_CORE_CREATOR } from "../lib/docxCore";
 
 // Lazy-loaded to avoid pulling in Node-only deps at module load (Next.js client bundle).
 let pdfParse: ((buf: Buffer) => Promise<{ text: string }>) | null = null;
@@ -141,6 +142,8 @@ export async function createDocumentWithText(
         })
     );
     const doc = new Document({
+      creator: DOCX_CORE_CREATOR,
+      lastModifiedBy: DOCX_CORE_CREATOR,
       sections: [{ children: paragraphs.length ? paragraphs : [new Paragraph({ children: [new TextRun({ text: " " })] })] }],
     });
     const blob = await Packer.toBuffer(doc);

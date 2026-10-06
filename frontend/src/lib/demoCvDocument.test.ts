@@ -1,5 +1,7 @@
+import JSZip from "jszip";
 import { buildDemoCvText } from "./demoCvContent";
 import { createDocumentWithText, MIME_DOCX, MIME_PDF, extractText } from "../engine/documentExtract";
+import { DOCX_CORE_CREATOR } from "./docxCore";
 
 describe("demoCvDocument", () => {
   it("builds a DOCX from clean demo content that Scanner would treat as mostly harmless", async () => {
@@ -12,6 +14,10 @@ describe("demoCvDocument", () => {
      expect(roundTrip).toContain("linkedin.com/in/alex-mercer-sec");
      expect(roundTrip).toContain("github.com/alex-mercer-sec");
     expect(roundTrip.toLowerCase()).not.toContain("ignore previous instructions");
+    const zip = await JSZip.loadAsync(buffer);
+    const core = await zip.file("docProps/core.xml")!.async("string");
+    expect(core).toContain(`<dc:creator>${DOCX_CORE_CREATOR}</dc:creator>`);
+    expect(core).not.toContain("Un-named");
   }, 15000);
 
   it("builds a DOCX from dirty demo content that clearly contains injection patterns", async () => {

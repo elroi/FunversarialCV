@@ -18,6 +18,7 @@ import {
   type DemoSection,
   type DemoFragment,
 } from "./demoCvContent";
+import { DOCX_CORE_CREATOR } from "./docxCore";
 import { toPdfStreamSafe } from "./pdfWinAnsi";
 
 function buildRunsForFragment(fragment: DemoFragment): (TextRun | ExternalHyperlink)[] {
@@ -152,6 +153,8 @@ export async function buildStyledDemoCvDocx(
   }
 
   const doc = new Document({
+    creator: DOCX_CORE_CREATOR,
+    lastModifiedBy: DOCX_CORE_CREATOR,
     sections: [
       {
         children,

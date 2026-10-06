@@ -312,6 +312,8 @@ export interface Copy {
   labHarnessNoFile: string;
   labHarnessError: string;
   labHarnessModeDocxForensic: string;
+  /** Shown under the forensic extractor: runs are concatenated with no added spaces. */
+  labHarnessForensicCaption: string;
   labHarnessModeServerWordExtractor: string;
   labHarnessModeServerMammoth: string;
   labHarnessModePackageMetadata: string;

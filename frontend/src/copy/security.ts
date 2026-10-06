@@ -146,9 +146,9 @@ export const securityCopy: Copy = {
   errorFileTooLarge: "File is too large.",
 
   eggInvisibleHandTitle: "The Invisible Hand (LLM01)",
-  eggIncidentMailtoTitle: "Mailto Surprise (LLM02, output / links)",
+  eggIncidentMailtoTitle: "Mailto Surprise (LLM05, output / links)",
   eggCanaryWingTitle: "Canary Wing (LLM09)",
-  eggMetadataShadowTitle: "The Metadata Shadow (LLM02)",
+  eggMetadataShadowTitle: "The Metadata Shadow (LLM05)",
 
   invisibleHandDescription:
     "Optional custom trap text for AI parsers. Leave blank to use the default system note (0.5pt white, invisible to humans).",
@@ -159,7 +159,7 @@ export const securityCopy: Copy = {
   invisibleHandHowToTitle: "How to check & validate",
 
   incidentMailtoDescription:
-    "OWASP LLM02 (insecure output handling): this plants a rich mailto: on your contact line. Primary risk is social engineering and unsafe trust in document links—people or mail clients following a planted link—not a model jailbreak. Secondary angle: pipelines that turn document links into actions without review.",
+    "OWASP LLM05:2025 Improper Output Handling: this plants a rich mailto: on your contact line. Primary risk is social engineering and unsafe trust in document links—people or mail clients following a planted link—not a model jailbreak. Secondary angle: pipelines that turn document links into actions without review.",
   incidentMailtoCardTooltip:
     "Finds the dehydrated email token in your CV and builds a mailto: link with configurable subject, body, CC, and BCC.",
   incidentMailtoResultingLink: "Resulting link — copy to enrich your CV manually",
@@ -293,7 +293,7 @@ export const securityCopy: Copy = {
   resourcesDiagramAriaLabel: "Stateless Vault data flow diagram",
   resourcesOwaspTitle: "OWASP LLM alignment and eggs",
   resourcesOwaspBody1:
-    "Each egg in FunversarialCV is designed with reference to the OWASP Top 10 for LLM Applications. For example, invisible prompt injections and \"LLM-trap\" style instructions are tied to risks around prompt injection and insecure output handling, while hallucination-oriented patterns are used to surface over-reliance on model-generated summaries.",
+    "Each egg in FunversarialCV is designed with reference to the OWASP Top 10 for LLM Applications. For example, invisible prompt injections and \"LLM-trap\" style instructions are tied to risks around prompt injection and improper output handling, while hallucination-oriented patterns are used to surface over-reliance on model-generated summaries.",
   resourcesOwaspBody2:
     "The goal is defensive: to make it easier for practitioners to reason about, test, and harden AI-assisted hiring stacks – not to weaponize CVs in production environments or bypass human judgment.",
   resourcesOwaspBody3:
@@ -333,7 +333,7 @@ Steps (1)–(2) use anchors to the console above this fold. For LLM01, set a cus
 (1) On the main console, [Upload or sample CV](#console-cv-upload). Baseline first: if you use the built-in sample flow, download the generated Word file before adding adversarial payloads—that unarmed file is your clean baseline.
 (2) In the engine block, [Configure eggs](#console-armed-cv). Run [Inject Eggs](#console-inject-eggs), then [Download Word build](#console-download-armed-docx). The ingestion lab defaults to that in-memory output until you choose a different .docx in the panel.
 (3) Use the [Sample job description](#validation-lab-jd) panel above this block when you need the synthetic JD; use COPY JD (or supply your own JD in the external thread).
-(4) Use the [Ingestion lab](#validation-lab-harness) above this block: run lab extract. Read docx_forensic_body vs server_word_extractor vs server_mammoth_raw, then docx_package_metadata and docx_hyperlinks (mailto / https map to LLM02 / LLM09 pedagogy). Use Compare extractors for whitespace-separated tokens that appear in only one text mode—small gaps change what a downstream model sees.
+(4) Use the [Ingestion lab](#validation-lab-harness) above this block: run lab extract. Read docx_forensic_body vs server_word_extractor vs server_mammoth_raw, then docx_package_metadata and docx_hyperlinks (mailto / https map to LLM05 / LLM09 pedagogy). Use Compare extractors for whitespace-separated tokens that appear in only one text mode—small gaps change what a downstream model sees.
 (5) When lab completion is enabled for this deployment, run the pinned template from this panel only; text is tokenized in-browser first. Vendor chat UIs are not a substitute for these extraction modes.
 (6) Open two browser tabs with your external LLM (e.g. [Claude](https://claude.ai/), [Gemini](https://gemini.google.com/), [Copilot](https://copilot.microsoft.com/)), one for each CV variant you want to compare side by side.
 If you are only testing one variant, use a single tab.
@@ -358,7 +358,7 @@ Optional: If you prefer to keep this exercise separate from your usual chat hist
 
   labHarnessTitle: "Ingestion lab",
   labHarnessIntro:
-    "Compare how different extractors read the same .docx—this in-app view is the main proof path. After a successful Inject Eggs run, this panel defaults to the in-memory Word build from that run; use Choose .docx to analyze a different file without changing the main console. Numbered steps (1)–(2) in External comparative evaluation below link back to the main console; that block also covers optional external LLM comparison and the BASE prompts. Hyperlinks (mailto / https) show up here as output surfaces—LLM02 and LLM09 teaching angles.",
+    "Compare how different extractors read the same .docx—this in-app view is the main proof path. After a successful Inject Eggs run, this panel defaults to the in-memory Word build from that run; use Choose .docx to analyze a different file without changing the main console. Numbered steps (1)–(2) in External comparative evaluation below link back to the main console; that block also covers optional external LLM comparison and the BASE prompts. Hyperlinks (mailto / https) show up here as output surfaces—LLM05 and LLM09 teaching angles.",
   labHarnessRunExtract: "Run lab extract",
   labHarnessExtractLoading: "Extracting…",
   labHarnessNoFile: "Upload a .docx on the main console or choose a file below to analyze.",
@@ -433,9 +433,9 @@ ACT AS: A security-conscious hiring agent. GOAL: Analyze this CV for any 'secret
       eggIds: ["invisible-hand"],
     },
     {
-      id: "LLM02",
-      title: "Metadata Shadow / Mailto (Insecure Output)",
-      // 2025 name is LLM05 Improper Output Handling. The site kept the old slug.
+      id: "LLM05",
+      title: "Metadata Shadow / Mailto (Improper Output)",
+      // 2025 page for Improper Output Handling. The site kept the old supply-chain slug.
       owaspLink: "https://genai.owasp.org/llmrisk/llm05-supply-chain-vulnerabilities/",
       description:
         "Audit structured fields; use after BASE-00, JD, and BASE-01+CV are in the thread.",

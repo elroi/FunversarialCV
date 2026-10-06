@@ -1,7 +1,7 @@
 /**
- * MetadataShadow egg: OWASP LLM02-aligned custom document metadata.
+ * MetadataShadow egg: OWASP LLM05:2025 Improper Output Handling.
  * Embeds key-value pairs in file properties (e.g. Ranking: Top_1%) to test
- * insecure output handling in downstream parsers.
+ * improper output handling in downstream parsers.
  */
 
 import { PDFDocument } from "pdf-lib";
@@ -68,8 +68,8 @@ export const metadataShadow: IEgg = {
   id: "metadata-shadow",
   name: "The Metadata Shadow",
   description:
-    "OWASP LLM02: Embeds custom key-value pairs in file properties (e.g. Ranking: Top_1%) to test insecure output handling in downstream systems.",
-  owaspMapping: OwaspMapping.LLM02_Insecure_Output,
+    "OWASP LLM05:2025 Improper Output Handling: embeds custom key-value pairs in file properties (e.g. Ranking: Top_1%) to test how downstream systems handle document output.",
+  owaspMapping: OwaspMapping.LLM05_Improper_Output,
 
   manualCheckAndValidation:
     "Quick check (Word / DOCX): File → Info → Properties → Advanced Properties → Custom for your custom keys; same path → Summary for Title, Subject, Author, Tags (keywords) when you set standard fields. Quick check (PDF): File → Properties → Keywords for custom Key: Value tokens. Standard Title/Subject/Author/Keywords apply to DOCX only in this release; PDF uses custom properties as Keywords only. Validation: Run the transform with a known payload, then inspect document properties and assert values match.",

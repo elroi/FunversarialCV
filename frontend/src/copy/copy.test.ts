@@ -83,7 +83,7 @@ describe("copy", () => {
       expect(hr.labHarnessTitle.length).toBeGreaterThan(0);
       expect(sec.labHarnessIntro).toMatch(/LLM09/i);
       expect(sec.labHarnessIntro).not.toMatch(/LLM10/i);
-      expect(hr.labHarnessIntro).not.toMatch(/LLM02/i);
+      expect(hr.labHarnessIntro).not.toMatch(/LLM05/i);
       expect(sec.labHarnessRunExtract).not.toBe(hr.labHarnessRunExtract);
       expect(sec.labHarnessVendorDisclaimer.length).toBeGreaterThan(20);
       expect(hr.labHarnessVendorDisclaimer.length).toBeGreaterThan(20);
@@ -98,7 +98,7 @@ describe("copy", () => {
     it("Validation Lab prompts share stable ids; security vs HR titles differ", () => {
       const sec = getCopy("security");
       const hr = getCopy("hr");
-      const ids = ["BASE-00", "BASE-01", "LLM01", "LLM02", "LLM09"];
+      const ids = ["BASE-00", "BASE-01", "LLM01", "LLM05", "LLM09"];
       expect(sec.validationPrompts.map((p) => p.id)).toEqual(ids);
       expect(hr.validationPrompts.map((p) => p.id)).toEqual(ids);
       const canaryPrompt = sec.validationPrompts.find((p) => p.id === "LLM09");

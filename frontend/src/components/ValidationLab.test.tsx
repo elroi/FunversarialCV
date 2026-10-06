@@ -191,7 +191,7 @@ describe("ValidationLab", () => {
       screen.getByText(/Tests whether hidden instructions in the CV change the reply/i)
     ).toBeInTheDocument();
 
-    expandPrompt("LLM02");
+    expandPrompt("LLM05");
     expect(
       screen.getByText(/Looks at structured fields and contact details/i)
     ).toBeInTheDocument();
@@ -202,7 +202,7 @@ describe("ValidationLab", () => {
     ).toBeInTheDocument();
   });
 
-  it("security: LLM01, LLM02, LLM09 have OWASP external links in expanded body; BASE-00 does not", () => {
+  it("security: LLM01, LLM05, LLM09 have OWASP external links in expanded body; BASE-00 does not", () => {
     window.localStorage.setItem("funversarialcv-audience", "security");
     renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
 
@@ -216,9 +216,9 @@ describe("ValidationLab", () => {
     expect(llm01Link).toHaveAttribute("target", "_blank");
     expect(llm01Link).toHaveAttribute("rel", "noopener noreferrer");
 
-    expandPrompt("LLM02");
-    const llm02Link = screen.getByRole("link", { name: /LLM02/i });
-    expect(llm02Link).toHaveAttribute(
+    expandPrompt("LLM05");
+    const llm05Link = screen.getByRole("link", { name: /LLM05/i });
+    expect(llm05Link).toHaveAttribute(
       "href",
       "https://genai.owasp.org/llmrisk/llm05-supply-chain-vulnerabilities/"
     );
@@ -228,14 +228,14 @@ describe("ValidationLab", () => {
     expect(llm09Link).toHaveAttribute("href", "https://genai.owasp.org/llmrisk/llm09-overreliance/");
   });
 
-  it("HR: LLM01, LLM02, LLM09 expanded body has no OWASP links", () => {
+  it("HR: LLM01, LLM05, LLM09 expanded body has no OWASP links", () => {
     renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
 
     expandPrompt("LLM01");
-    expandPrompt("LLM02");
+    expandPrompt("LLM05");
     expandPrompt("LLM09");
     expect(screen.queryByRole("link", { name: /LLM01/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /LLM02/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /LLM05/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /LLM09/i })).not.toBeInTheDocument();
   });
 
@@ -300,23 +300,23 @@ describe("ValidationLab", () => {
     expect(screen.queryByLabelText(matchBadgeAriaHr)).not.toBeInTheDocument();
   });
 
-  it("when armedEggIds contains metadata-shadow, LLM02 card shows match badge", () => {
+  it("when armedEggIds contains metadata-shadow, LLM05 card shows match badge", () => {
     renderWithAudience(
       <ValidationLab armedEggIds={new Set(["metadata-shadow"])} />
     );
 
     const matchBadge = screen.getByLabelText(matchBadgeAriaHr);
-    const llm02Card = screen.getByTestId("validation-prompt-LLM02");
-    expect(llm02Card).toContainElement(matchBadge);
+    const llm05Card = screen.getByTestId("validation-prompt-LLM05");
+    expect(llm05Card).toContainElement(matchBadge);
   });
 
-  it("when armedEggIds contains incident-mailto only, LLM02 card shows match badge", () => {
+  it("when armedEggIds contains incident-mailto only, LLM05 card shows match badge", () => {
     renderWithAudience(
       <ValidationLab armedEggIds={new Set(["incident-mailto"])} />
     );
 
     const matchBadge = screen.getByLabelText(matchBadgeAriaHr);
-    expect(screen.getByTestId("validation-prompt-LLM02")).toContainElement(matchBadge);
+    expect(screen.getByTestId("validation-prompt-LLM05")).toContainElement(matchBadge);
   });
 
   it("when armedEggIds contains canary-wing, LLM09 card shows match badge", () => {

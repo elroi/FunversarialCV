@@ -11,6 +11,7 @@ import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
 import { injectHiddenParagraphIntoDocx } from "../engine/docxInject";
 import { injectCanaryIntoDocx, injectHiddenCanaryLinkIntoDocx } from "../engine/docxCanary";
+import { isUnstableDeploymentHost, resolveCanaryBaseUrl } from "../lib/canaryBaseUrl";
 import { containsPii } from "../lib/vault";
 
 const MAX_PAYLOAD_LENGTH = 2048;
@@ -35,18 +36,32 @@ function isDocxBuffer(buffer: Buffer): boolean {
 }
 
 /**
- * Default base URL for canary endpoint (app's own deployment).
- * Uses CANARY_BASE_URL, else VERCEL_URL + /api/canary, else localhost for dev/test.
+ * Default canary prefix written into the file when the payload has no baseUrl.
+ * CANARY_BASE_URL, else NEXT_PUBLIC_SITE_URL, else localhost outside production,
+ * else https://cv.funversarial.com/api/canary. VERCEL_URL is never used.
  */
+/** Payload baseUrl wins, except a vercel.app host, which is replaced by the stable default. */
+function baseUrlFromPayloadOrDefault(payloadBase: string | undefined): string {
+  const trimmed = payloadBase?.trim().replace(/\/+$/, "") ?? "";
+  if (!trimmed) return getDefaultBaseUrl();
+  try {
+    const host = new URL(trimmed).hostname;
+    if (isUnstableDeploymentHost(host)) return getDefaultBaseUrl();
+  } catch {
+    return getDefaultBaseUrl();
+  }
+  return trimmed;
+}
+
 function getDefaultBaseUrl(): string {
-  if (typeof process !== "undefined" && process.env?.CANARY_BASE_URL) {
-    const base = process.env.CANARY_BASE_URL.trim().replace(/\/+$/, "");
-    return base;
+  if (typeof process === "undefined") {
+    return resolveCanaryBaseUrl({});
   }
-  if (typeof process !== "undefined" && process.env?.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}/api/canary`;
-  }
-  return "http://localhost:3000/api/canary";
+  return resolveCanaryBaseUrl({
+    CANARY_BASE_URL: process.env.CANARY_BASE_URL,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    NODE_ENV: process.env.NODE_ENV,
+  });
 }
 
 interface CanaryPayload {
@@ -199,8 +214,7 @@ export const canaryWing: IEgg = {
   async transform(buffer: Buffer, payload: string): Promise<Buffer> {
     const { config } = parsePayload(payload);
     const useFullUrl = config.url != null && config.url.trim() !== "";
-    const baseUrl =
-      config.baseUrl?.trim().replace(/\/+$/, "") ?? getDefaultBaseUrl();
+    const baseUrl = baseUrlFromPayloadOrDefault(config.baseUrl);
     const token = config.token ?? crypto.randomUUID();
 
     const urlForVariant = (variant: string): string => {

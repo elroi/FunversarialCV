@@ -306,6 +306,43 @@ describe("CanaryWing", () => {
       );
     });
 
+    it("writes hyperlinks with CANARY_BASE_URL and never a vercel.app preview host", async () => {
+      const previousCanary = process.env.CANARY_BASE_URL;
+      const previousVercel = process.env.VERCEL_URL;
+      process.env.CANARY_BASE_URL = "https://cv.funversarial.com";
+      process.env.VERCEL_URL = "funversarial-dd4k6uw5r-elroi1s-projects.vercel.app";
+      try {
+        const buf = await createDocumentWithText("Resume", MIME_DOCX);
+        const result = await canaryWing.transform(
+          buf,
+          JSON.stringify({
+            token: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+            docxHiddenText: true,
+            docxClickableLink: true,
+          })
+        );
+        const extracted = await extractText(Buffer.from(result), MIME_DOCX);
+        expect(extracted).toContain(
+          "https://cv.funversarial.com/api/canary/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/docx-hidden"
+        );
+        expect(extracted).toContain(
+          "https://cv.funversarial.com/api/canary/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/docx-clickable"
+        );
+        expect(extracted).not.toContain("vercel.app");
+        const zip = await JSZip.loadAsync(result);
+        const relsXml = await zip.file("word/_rels/document.xml.rels")!.async("string");
+        expect(relsXml).toContain(
+          'Target="https://cv.funversarial.com/api/canary/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/docx-clickable"'
+        );
+        expect(relsXml).not.toContain("vercel.app");
+      } finally {
+        if (previousCanary === undefined) delete process.env.CANARY_BASE_URL;
+        else process.env.CANARY_BASE_URL = previousCanary;
+        if (previousVercel === undefined) delete process.env.VERCEL_URL;
+        else process.env.VERCEL_URL = previousVercel;
+      }
+    });
+
     it("uses custom baseUrl and token from payload for DOCX", async () => {
       const text = "Dehydrated content";
       const buf = await createDocumentWithText(text, MIME_DOCX);

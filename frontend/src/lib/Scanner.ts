@@ -1,6 +1,6 @@
 /**
  * Pre-hardening defensive Scanner: Pattern Recognition Engine.
- * Detects existing adversarial layers (LLM01 prompt injection, LLM10 canaries, metadata stuffing)
+ * Detects existing adversarial layers (LLM01 prompt injection, LLM09 canaries, metadata stuffing)
  * before eggs are applied. Observational only — does not modify input or block processing.
  */
 
@@ -54,7 +54,7 @@ const LLM01_PATTERNS: Array<{ name: string; regex: RegExp }> = [
   { name: "role_override", regex: /you\s+are\s+now\s+|act\s+as\s+if\s+you/gi },
 ];
 
-/** Configurable: own canary path and known third-party canary domains (LLM10). */
+/** Configurable: own canary path and known third-party canary domains (LLM09). */
 const CANARY_PATTERNS: Array<{ name: "existing_canary_url"; regex: RegExp }> = [
   { name: "existing_canary_url", regex: /\/api\/canary\/[^\s"'<>]+/g },
   { name: "existing_canary_url", regex: /https?:\/\/[^/\s]*canarytokens\.com\/[^\s"'<>]+/gi },
@@ -158,7 +158,7 @@ async function scanMetadata(buffer: Buffer, mimeType: string): Promise<{ matched
 }
 
 /**
- * Runs the full defensive scan: LLM01 patterns, LLM10 canary URLs, metadata stuffing.
+ * Runs the full defensive scan: LLM01 patterns, LLM09 canary URLs, metadata stuffing.
  * Does not throw on metadata read failure; returns combined result.
  */
 export async function runScan(input: ScanInput): Promise<ScanResult> {

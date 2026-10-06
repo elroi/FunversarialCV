@@ -31,7 +31,7 @@ export const INCIDENT_MAILTO_TEMPLATES: IncidentMailtoTemplate[] = [
     id: "llm-red-team-incident",
     name: "LLM Red Team Incident",
     description:
-      "OWASP LLM02: Flags potential prompt abuse. Use when testing if recruiters’ tools follow mailto links from parsed CVs.",
+      "OWASP LLM05:2025 Improper Output Handling: flags potential prompt abuse. Use when testing if recruiters’ tools follow mailto links from parsed CVs.",
     config: {
       subjectTemplate: DEFAULT_SUBJECT,
       bodyTemplate: DEFAULT_BODY,
@@ -43,7 +43,7 @@ export const INCIDENT_MAILTO_TEMPLATES: IncidentMailtoTemplate[] = [
     id: "model-theft-canary",
     name: "Model Theft Canary",
     description:
-      "OWASP LLM10: Signals suspected use of CV content for model training. Cool, professional, with a music metaphor.",
+      "Signals suspected use of CV content for model training. Model Theft is not in the 2025 Top 10, so this preset does not use an LLM number.",
     config: {
       subjectTemplate: MODEL_THEFT_SUBJECT,
       bodyTemplate: MODEL_THEFT_BODY,

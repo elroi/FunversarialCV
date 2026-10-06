@@ -81,8 +81,9 @@ describe("copy", () => {
       const hr = getCopy("hr");
       expect(sec.labHarnessTitle.length).toBeGreaterThan(0);
       expect(hr.labHarnessTitle.length).toBeGreaterThan(0);
-      expect(sec.labHarnessIntro).toMatch(/LLM02|LLM10/i);
-      expect(hr.labHarnessIntro).not.toMatch(/LLM02/i);
+      expect(sec.labHarnessIntro).toMatch(/LLM09/i);
+      expect(sec.labHarnessIntro).not.toMatch(/LLM10/i);
+      expect(hr.labHarnessIntro).not.toMatch(/LLM05/i);
       expect(sec.labHarnessRunExtract).not.toBe(hr.labHarnessRunExtract);
       expect(sec.labHarnessVendorDisclaimer.length).toBeGreaterThan(20);
       expect(hr.labHarnessVendorDisclaimer.length).toBeGreaterThan(20);
@@ -97,9 +98,14 @@ describe("copy", () => {
     it("Validation Lab prompts share stable ids; security vs HR titles differ", () => {
       const sec = getCopy("security");
       const hr = getCopy("hr");
-      const ids = ["BASE-00", "BASE-01", "LLM01", "LLM02", "LLM09"];
+      const ids = ["BASE-00", "BASE-01", "LLM01", "LLM05", "LLM09"];
       expect(sec.validationPrompts.map((p) => p.id)).toEqual(ids);
       expect(hr.validationPrompts.map((p) => p.id)).toEqual(ids);
+      const canaryPrompt = sec.validationPrompts.find((p) => p.id === "LLM09");
+      expect(canaryPrompt?.title).toMatch(/Misinformation/);
+      expect(canaryPrompt?.title).not.toMatch(/Overreliance/);
+      expect(sec.eggCanaryWingTitle).toContain("LLM09");
+      expect(sec.eggCanaryWingTitle).not.toContain("LLM10");
       expect(sec.validationPrompts[0].title).toMatch(/Thread setup/i);
       expect(hr.validationPrompts[0].title).toMatch(/First message/i);
     });
@@ -138,6 +144,24 @@ describe("copy", () => {
       expect(sec.engineConfigIntroCvReady).toMatch(/expand|list|Inject Eggs|output options/i);
       expect(hr.engineConfigIntroNoCv).toMatch(/signals|options|Add signals/i);
       expect(hr.engineConfigIntroCvReady).toMatch(/expand|format|Add signals/i);
+    });
+
+    it("resources wording matches each audience’s console, and does not mention PDF uploads", () => {
+      expect(securityCopy.resourcesSecurityBody4).toMatch(/Inject Eggs/);
+      expect(securityCopy.resourcesSecurityBody4).not.toMatch(/Add signals/);
+      expect(securityCopy.resourcesWhatAreEggsTitle).toMatch(/eggs/i);
+      expect(securityCopy.resourcesPreserveStylesBody).not.toMatch(/PDF/i);
+      expect(securityCopy.resourcesPreserveStylesBody).toMatch(/\.docx/);
+
+      expect(hrCopy.resourcesSecurityBody4).toMatch(/Add signals/);
+      expect(hrCopy.resourcesSecurityBody4).not.toMatch(/Inject Eggs/);
+      expect(hrCopy.resourcesWhatAreEggsTitle).toMatch(/options/i);
+      expect(hrCopy.resourcesWhatAreEggsTitle).not.toMatch(/eggs/i);
+      expect(hrCopy.hardenButton).toBe("Add signals");
+      expect(hrCopy.resourcesPreserveStylesBody).not.toMatch(/PDF/i);
+      expect(hrCopy.resourcesPreserveStylesBody).toMatch(/Word documents only/);
+      expect(securityCopy.labHarnessForensicCaption).toMatch(/no spaces/i);
+      expect(hrCopy.labHarnessForensicCaption).toMatch(/no spaces/i);
     });
 
     it("engine output section and PDF export disclosure copy are set for both audiences", () => {

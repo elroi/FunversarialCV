@@ -1,6 +1,6 @@
 /**
  * Lists external hyperlink targets from DOCX (relationships + document hyperlinks).
- * Tied to LLM02/LLM10 pedagogy: mailto and https surfaces differ from plain body text.
+ * Tied to LLM05/LLM09 pedagogy: mailto and https surfaces differ from plain body text.
  */
 import JSZip from "jszip";
 import { decodeXmlEntities } from "./xmlEntities";

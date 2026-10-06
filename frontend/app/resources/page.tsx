@@ -160,7 +160,7 @@ export default function ResourcesPage() {
             <p className="text-foreground/80">
               {copy.resourcesOwaspBody3}{" "}
               <Link
-                href="https://owasp.org/www-project-top-10-for-large-language-model-applications/"
+                href="https://genai.owasp.org/llm-top-10/"
                 target="_blank"
                 rel="noreferrer"
                 className="underline decoration-dotted underline-offset-2 text-accent hover:text-success"

@@ -1,7 +1,7 @@
 export enum OwaspMapping {
     LLM01_Prompt_Injection = "LLM01: Direct Prompt Injection",
-    LLM02_Insecure_Output = "LLM02: Insecure Output Handling",
-    LLM10_Model_Theft = "LLM10: Model Theft & Exfiltration",
+    LLM05_Improper_Output = "LLM05: Improper Output Handling",
+    LLM09_Misinformation = "LLM09: Misinformation",
     CREATIVE_HANDSHAKE = "Creative: Technical Handshake"
   }
   

@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CollapsibleCard } from "./ui/CollapsibleCard";
 import { CheckAndValidateBlock } from "./CheckAndValidateBlock";
+import { defaultCanaryBaseForBrowser, PRODUCTION_CANARY_BASE_URL } from "../lib/canaryBaseUrl";
 import { useCopy } from "../copy";
 
 /** v1 is DOCX-only: no PDF embedding UI. Egg still accepts these keys when PDF returns. */
@@ -77,10 +78,9 @@ export const CanaryWingConfigBody: React.FC<CanaryWingConfigCardProps> = ({
   const [docxPlacement, setDocxPlacement] = useState<"end" | "footer">(initial.docxPlacement ?? "end");
   const [docxDisplayText, setDocxDisplayText] = useState(initial.docxDisplayText ?? "");
 
-  // Default base when url and baseUrl are both empty. Same value on server and first client render to avoid hydration mismatch; then set to window.location.origin in useEffect (client-only).
-  const [defaultCanaryBase, setDefaultCanaryBase] = useState(
-    "https://this-app/api/canary"
-  );
+  // Same value on server and first client render (no hydration mismatch). After mount,
+  // use the tab origin only when it is not a vercel.app deployment host.
+  const [defaultCanaryBase, setDefaultCanaryBase] = useState(PRODUCTION_CANARY_BASE_URL);
 
   // "Did my canary sing?" — candidate-facing status (best-effort, process-local).
   const [statusHits, setStatusHits] = useState<Array<{ variant: string; ts: string; userAgent?: string; referer?: string }> | null>(null);
@@ -126,11 +126,11 @@ export const CanaryWingConfigBody: React.FC<CanaryWingConfigCardProps> = ({
     setDocxDisplayText((prev) => (prev === nextDisplay ? prev : nextDisplay));
   }, [payload]);
 
-  // After mount, use current origin for default canary base so the preview matches what the server would use in dev.
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setDefaultCanaryBase(`${window.location.origin}/api/canary`);
-    }
+    if (typeof window === "undefined") return;
+    setDefaultCanaryBase(
+      defaultCanaryBaseForBrowser(window.location.origin, window.location.hostname)
+    );
   }, []);
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 /**
- * Scanner tests (TDD): Pre-hardening defensive scan — LLM01, LLM10, metadata, edge cases.
+ * Scanner tests (TDD): Pre-hardening defensive scan — LLM01, LLM09 canaries, metadata, edge cases.
  */
 
 import { runScan, buildScannerReport, DUALITY_ALERT_MESSAGE } from "./Scanner";
@@ -54,7 +54,7 @@ describe("Scanner", () => {
     });
   });
 
-  describe("LLM10 — existing canary URLs", () => {
+  describe("LLM09 — existing canary URLs", () => {
     it("detects own canary path /api/canary/", async () => {
       const result = await runScan({
         text: "Contact: https://example.com/api/canary/abc-123-uuid",

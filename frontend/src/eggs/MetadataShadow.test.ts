@@ -1,5 +1,5 @@
 /**
- * TDD tests for MetadataShadow egg (OWASP LLM02: Insecure Output).
+ * TDD tests for MetadataShadow egg (OWASP LLM05:2025 Improper Output Handling).
  */
 
 import { metadataShadow } from "./MetadataShadow";
@@ -10,8 +10,9 @@ describe("MetadataShadow", () => {
     it("exposes id metadata-shadow", () => {
       expect(metadataShadow.id).toBe("metadata-shadow");
     });
-    it("maps to OWASP LLM02 Insecure Output", () => {
-      expect(metadataShadow.owaspMapping).toContain("LLM02");
+    it("maps to OWASP LLM05 Improper Output Handling", () => {
+      expect(metadataShadow.owaspMapping).toContain("LLM05");
+      expect(metadataShadow.owaspMapping).toContain("Improper Output");
     });
     it("has name and description", () => {
       expect(metadataShadow.name).toBeTruthy();

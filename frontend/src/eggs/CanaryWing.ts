@@ -1,7 +1,9 @@
 /**
- * CanaryWing egg: OWASP LLM10-aligned trackable URL embedding.
- * Embeds a unique, canary-token-style URL in a nearly invisible element to detect
- * exfiltration or model theft when the link is followed (e.g. by a crawler or LLM pipeline).
+ * CanaryWing egg: OWASP LLM09:2025 Misinformation.
+ * That entry absorbed the older Overreliance category. LLM10:2025 is Unbounded
+ * Consumption, which this egg does not demonstrate.
+ * Embeds a unique, canary-token-style URL in a nearly invisible element so a
+ * pipeline that acts on the file without a person checking it can be detected.
  * No PII is ever included in the URL; integrates with Stateless Vault by design.
  */
 
@@ -11,6 +13,8 @@ import type { IEgg } from "../types/egg";
 import { OwaspMapping } from "../types/egg";
 import { injectHiddenParagraphIntoDocx } from "../engine/docxInject";
 import { injectCanaryIntoDocx, injectHiddenCanaryLinkIntoDocx } from "../engine/docxCanary";
+import { isUnstableDeploymentHost, resolveCanaryBaseUrl } from "../lib/canaryBaseUrl";
+import { savePdf } from "../lib/pdfSave";
 import { containsPii } from "../lib/vault";
 
 const MAX_PAYLOAD_LENGTH = 2048;
@@ -35,18 +39,32 @@ function isDocxBuffer(buffer: Buffer): boolean {
 }
 
 /**
- * Default base URL for canary endpoint (app's own deployment).
- * Uses CANARY_BASE_URL, else VERCEL_URL + /api/canary, else localhost for dev/test.
+ * Default canary prefix written into the file when the payload has no baseUrl.
+ * CANARY_BASE_URL, else NEXT_PUBLIC_SITE_URL, else localhost outside production,
+ * else https://cv.funversarial.com/api/canary. VERCEL_URL is never used.
  */
+/** Payload baseUrl wins, except a vercel.app host, which is replaced by the stable default. */
+function baseUrlFromPayloadOrDefault(payloadBase: string | undefined): string {
+  const trimmed = payloadBase?.trim().replace(/\/+$/, "") ?? "";
+  if (!trimmed) return getDefaultBaseUrl();
+  try {
+    const host = new URL(trimmed).hostname;
+    if (isUnstableDeploymentHost(host)) return getDefaultBaseUrl();
+  } catch {
+    return getDefaultBaseUrl();
+  }
+  return trimmed;
+}
+
 function getDefaultBaseUrl(): string {
-  if (typeof process !== "undefined" && process.env?.CANARY_BASE_URL) {
-    const base = process.env.CANARY_BASE_URL.trim().replace(/\/+$/, "");
-    return base;
+  if (typeof process === "undefined") {
+    return resolveCanaryBaseUrl({});
   }
-  if (typeof process !== "undefined" && process.env?.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}/api/canary`;
-  }
-  return "http://localhost:3000/api/canary";
+  return resolveCanaryBaseUrl({
+    CANARY_BASE_URL: process.env.CANARY_BASE_URL,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    NODE_ENV: process.env.NODE_ENV,
+  });
 }
 
 interface CanaryPayload {
@@ -127,8 +145,8 @@ export const canaryWing: IEgg = {
   id: "canary-wing",
   name: "The Canary Wing",
   description:
-    "OWASP LLM10: Embeds a unique, trackable canary-style URL in the document to detect when CV content is exfiltrated or used (e.g. link followed by crawler/model pipeline). Model Theft & Exfiltration.",
-  owaspMapping: OwaspMapping.LLM10_Model_Theft,
+    "OWASP LLM09:2025 Misinformation (includes overreliance): embeds a trackable URL so you can see when a pipeline acts on the CV without a person checking it.",
+  owaspMapping: OwaspMapping.LLM09_Misinformation,
 
   manualCheckAndValidation:
     "Quick check: Open the output document (DOCX) and press Ctrl/Cmd+A (or search for a URL); the canary link appears as highlighted text. Manual check: In Word (DOCX) inspect the hidden paragraph or enable showing hidden content to find the canary URL. When clickable link is enabled, the canary is a real hyperlink: in Word click the hidden link or use Show Hidden. Validation: Run the transform and verify the canary URL appears in the output; optionally GET the URL to confirm the canary endpoint logs the hit.",
@@ -199,8 +217,7 @@ export const canaryWing: IEgg = {
   async transform(buffer: Buffer, payload: string): Promise<Buffer> {
     const { config } = parsePayload(payload);
     const useFullUrl = config.url != null && config.url.trim() !== "";
-    const baseUrl =
-      config.baseUrl?.trim().replace(/\/+$/, "") ?? getDefaultBaseUrl();
+    const baseUrl = baseUrlFromPayloadOrDefault(config.baseUrl);
     const token = config.token ?? crypto.randomUUID();
 
     const urlForVariant = (variant: string): string => {
@@ -261,7 +278,7 @@ export const canaryWing: IEgg = {
           page.node.set(PDFName.of("Annots"), doc.context.obj([linkRef]));
         }
       }
-      const pdfBytes = await doc.save();
+      const pdfBytes = await savePdf(doc);
       return Buffer.from(pdfBytes);
     }
 

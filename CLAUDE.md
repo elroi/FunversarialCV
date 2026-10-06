@@ -48,7 +48,7 @@ The repo is a monorepo with one active package:
 Every feature is an "Egg" — a plugin implementing `IEgg` (`src/types/egg.ts`):
 - `id`, `name`, `owaspMapping`, `transform(buffer, payload): Promise<Buffer>`, `validatePayload(payload): boolean`
 - Eggs live in `src/eggs/` and are registered in `src/eggs/registry.ts`
-- Current eggs: **InvisibleHand** (LLM01 prompt injection, white 0.5pt font), **MetadataShadow** (LLM02, custom DOCX properties), **IncidentMailto** (creative mailto hyperlink), **CanaryWing** (LLM10, trackable ping token)
+- Current eggs: **InvisibleHand** (LLM01 prompt injection, white 0.5pt font), **MetadataShadow** (LLM05:2025 Improper Output Handling, custom DOCX properties), **IncidentMailto** (creative mailto hyperlink), **CanaryWing** (LLM09:2025 Misinformation, trackable ping token)
 
 ### Audience system (dual-copy)
 

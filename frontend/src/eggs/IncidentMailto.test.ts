@@ -17,9 +17,9 @@ describe("IncidentMailto", () => {
     it("exposes id incident-mailto", () => {
       expect(incidentMailto.id).toBe("incident-mailto");
     });
-    it("maps to OWASP LLM02 Insecure Output", () => {
-      expect(incidentMailto.owaspMapping).toContain("LLM02");
-      expect(incidentMailto.owaspMapping).toContain("Insecure Output");
+    it("maps to OWASP LLM05 Improper Output Handling", () => {
+      expect(incidentMailto.owaspMapping).toContain("LLM05");
+      expect(incidentMailto.owaspMapping).toContain("Improper Output");
     });
     it("has name and description", () => {
       expect(incidentMailto.name).toBeTruthy();
@@ -29,9 +29,9 @@ describe("IncidentMailto", () => {
       expect(incidentMailto.manualCheckAndValidation).toBeTruthy();
       expect(incidentMailto.manualCheckAndValidation.length).toBeGreaterThan(20);
     });
-    it("description frames LLM02 and primary link-trust / social engineering risk", () => {
+    it("description frames LLM05 and primary link-trust / social engineering risk", () => {
       const d = incidentMailto.description.toLowerCase();
-      expect(d).toMatch(/llm02/);
+      expect(d).toMatch(/llm05/);
       expect(d).toMatch(/social engineering|trust in .*link|link trust/);
     });
     it("manualCheckAndValidation prefixes expectation about mailto trust vs LLM compromise", () => {

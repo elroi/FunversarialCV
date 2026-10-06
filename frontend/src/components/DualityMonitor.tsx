@@ -102,7 +102,7 @@ export const DualityMonitor: React.FC<DualityMonitorProps> = ({
   return (
     <section className="flex flex-col gap-4 rounded-xl border border-border bg-panel/60 p-4 text-sm text-foreground/80">
       <header className="flex min-h-10 flex-wrap items-center justify-between gap-x-6 gap-y-2">
-        <h2 className="whitespace-nowrap text-caption font-medium uppercase tracking-[0.2em] text-accent sm:text-xs">
+        <h2 className="min-w-0 whitespace-normal text-caption font-medium uppercase tracking-[0.2em] text-accent sm:text-xs">
           {copy.dualityMonitorTitle}
         </h2>
         <div className="flex items-center gap-3">

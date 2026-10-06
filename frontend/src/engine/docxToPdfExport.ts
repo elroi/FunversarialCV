@@ -4,16 +4,17 @@
  */
 
 import { PDFDocument } from "pdf-lib";
+import { savePdf } from "../lib/pdfSave";
 import type { IEgg } from "../types/egg";
 import { getInvisibleHandTrapText } from "../eggs";
 import { extractText, createDocumentWithText, MIME_DOCX, MIME_PDF } from "./documentExtract";
 
-/** pdf-parse (used by extractText) can choke on some pdf-lib incremental saves; round-trip normalizes streams. */
+/** Rewrite so the bytes match what pdf-parse can read. See savePdf. */
 async function normalizePdfBuffer(buffer: Buffer): Promise<Buffer> {
   const doc = await PDFDocument.load(new Uint8Array(buffer), {
     ignoreEncryption: true,
   });
-  const bytes = await doc.save();
+  const bytes = await savePdf(doc);
   return Buffer.from(bytes);
 }
 

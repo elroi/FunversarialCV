@@ -106,7 +106,7 @@ describe("Resources page", () => {
     renderWithAudience(<ResourcesPage />);
     expect(
       screen.getByRole("link", { name: /owasp top 10 for llm applications/i })
-    ).toBeInTheDocument();
+    ).toHaveAttribute("href", "https://genai.owasp.org/llm-top-10/");
     expect(
       screen.getByRole("link", { name: /recommended talk: owasp's top 10 ways to attack llms/i })
     ).toBeInTheDocument();

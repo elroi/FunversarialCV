@@ -212,17 +212,20 @@ describe("ValidationLab", () => {
 
     expandPrompt("LLM01");
     const llm01Link = screen.getByRole("link", { name: /LLM01/i });
-    expect(llm01Link).toHaveAttribute("href", "https://genai.owasp.org/llm01-prompt-injection/");
+    expect(llm01Link).toHaveAttribute("href", "https://genai.owasp.org/llmrisk/llm01-prompt-injection/");
     expect(llm01Link).toHaveAttribute("target", "_blank");
     expect(llm01Link).toHaveAttribute("rel", "noopener noreferrer");
 
     expandPrompt("LLM02");
     const llm02Link = screen.getByRole("link", { name: /LLM02/i });
-    expect(llm02Link).toHaveAttribute("href", "https://genai.owasp.org/llm02-insecure-output-handling/");
+    expect(llm02Link).toHaveAttribute(
+      "href",
+      "https://genai.owasp.org/llmrisk/llm05-supply-chain-vulnerabilities/"
+    );
 
     expandPrompt("LLM09");
     const llm09Link = screen.getByRole("link", { name: /LLM09/i });
-    expect(llm09Link).toHaveAttribute("href", "https://genai.owasp.org/llm09-overreliance/");
+    expect(llm09Link).toHaveAttribute("href", "https://genai.owasp.org/llmrisk/llm09-overreliance/");
   });
 
   it("HR: LLM01, LLM02, LLM09 expanded body has no OWASP links", () => {

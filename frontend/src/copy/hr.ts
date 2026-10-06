@@ -231,7 +231,7 @@ export const hrCopy: Copy = {
     "The formatting trap — If a CV has complex graphics, tables within tables, or unusual fonts, the ATS might fail to read the text correctly, so your experience might not show up the way you expect.",
   resourcesPreserveStylesTitle: "Preserve styles and layout",
   resourcesPreserveStylesBody:
-    "When you turn on “Preserve styles”, we try to keep your existing layout and formatting by editing the document’s structure instead of rebuilding it from plain text. When that isn’t possible (for example with some PDFs or when an option changes the main text), we rebuild and the interface will show which approach was used.",
+    "When you turn on “Preserve styles”, we try to keep your existing layout and formatting by editing the document’s structure instead of rebuilding it from plain text. When that isn’t possible (for example when an option changes the main text), we rebuild and the interface will show which approach was used. You can upload Word documents only.",
   resourcesWhatAreEggsTitle: "What are these options?",
   resourcesWhatAreEggsBody1:
     "Each option adds a different kind of hidden or test signal to your CV. For example: a note only AI systems can see, a trackable link, or extra metadata. The document stays readable for people.",

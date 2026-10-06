@@ -146,6 +146,22 @@ describe("copy", () => {
       expect(hr.engineConfigIntroCvReady).toMatch(/expand|format|Add signals/i);
     });
 
+    it("resources wording matches each audience’s console, and does not mention PDF uploads", () => {
+      expect(securityCopy.resourcesSecurityBody4).toMatch(/Inject Eggs/);
+      expect(securityCopy.resourcesSecurityBody4).not.toMatch(/Add signals/);
+      expect(securityCopy.resourcesWhatAreEggsTitle).toMatch(/eggs/i);
+      expect(securityCopy.resourcesPreserveStylesBody).not.toMatch(/PDF/i);
+      expect(securityCopy.resourcesPreserveStylesBody).toMatch(/\.docx/);
+
+      expect(hrCopy.resourcesSecurityBody4).toMatch(/Add signals/);
+      expect(hrCopy.resourcesSecurityBody4).not.toMatch(/Inject Eggs/);
+      expect(hrCopy.resourcesWhatAreEggsTitle).toMatch(/options/i);
+      expect(hrCopy.resourcesWhatAreEggsTitle).not.toMatch(/eggs/i);
+      expect(hrCopy.hardenButton).toBe("Add signals");
+      expect(hrCopy.resourcesPreserveStylesBody).not.toMatch(/PDF/i);
+      expect(hrCopy.resourcesPreserveStylesBody).toMatch(/Word documents only/);
+    });
+
     it("engine output section and PDF export disclosure copy are set for both audiences", () => {
       const sec = getCopy("security");
       const hr = getCopy("hr");

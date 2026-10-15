@@ -191,8 +191,8 @@ describe("Home page", () => {
       fireEvent.click(
         screen.getByRole("button", { name: /how to run a fair test/i })
       );
-      expect(screen.getByText(/controlled before\/after evaluation/i)).toBeInTheDocument();
-      expect(screen.getByText(/model behavior shifts/i)).toBeInTheDocument();
+      expect(screen.getByText(/adversarial signals plant in a CV/i)).toBeInTheDocument();
+      expect(screen.getByText(/which ones a human never sees/i)).toBeInTheDocument();
     });
 
     it("renders philosophy line (breaking the model / inputs shape outcomes)", () => {
@@ -243,14 +243,14 @@ describe("Home page", () => {
         )
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/Optional: for a vendor-side comparison.*BASE-00 first/i)
+        screen.getByText(/to see how a live model reads the file/i)
       ).toBeInTheDocument();
       expect(
         screen.getByText(
-          /If you use external chats, compare the model's replies using the goals under each test prompt/i
+          /The repeatable result is in the Ingestion Lab, not an external chat/i
         )
       ).toBeInTheDocument();
-      expect(screen.getByText(/Confirm or reject the observed influence/i)).toBeInTheDocument();
+      expect(screen.getByText(/Decide what the file reveals about each signal/i)).toBeInTheDocument();
       const list = document.querySelector("ol");
       expect(list).toBeInTheDocument();
       expect(list?.querySelectorAll("li")).toHaveLength(7);

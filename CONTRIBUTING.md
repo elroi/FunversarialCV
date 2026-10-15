@@ -39,7 +39,9 @@ cd frontend && npm install && npm run dev
 
 1. Split the full string on **blank lines** (`\n\n`).
 2. The **first block** is the headline: first line = title; if the second line starts with an em dash (—) or en dash (–), it becomes the subtitle; any further lines in that block form the description paragraph.
-3. The **remaining text** (after the first block) is the step body: each step starts with a line matching `(1)`, `(2)`, … `(10)` (parenthesized number + space). Lines that do not match are **continuations** of the previous step.
+3. The **remaining text** (after the first block) is the step body: each step starts with a line matching a parenthesized number + space — `(1)`, `(2)`, … for as many steps as the copy has (the parser accepts any count; the current protocol is four steps). Lines that do not match are **continuations** of the previous step.
+
+> The current protocol is the honest-sequence version: the Ingestion Lab is the real, repeatable proof, external chat is an optional step (4), and the per-pattern "what reaches a chat model" story lives once in `validationLabPublicLlmNotice` (rendered at the top of the Validation Lab), not in the protocol steps. See `docs/VALIDATION_LAB_HONEST_SEQUENCE_SPEC.md`.
 
 **Verification:** From `frontend/`, run `npm test -- src/lib/validationLabProtocol.test.ts`.
 

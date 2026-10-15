@@ -1,6 +1,6 @@
 /**
  * InvisibleHand egg: LLM01-aligned prompt-injection "trap".
- * Injects a 0.5pt white system instruction invisible to humans but readable by parsers/LLMs.
+ * Injects a near-invisible white system instruction (≈1pt in Word, 0.5pt in PDF) — invisible to humans but readable by parsers/LLMs.
  */
 
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
@@ -35,7 +35,7 @@ function isDocxBuffer(buffer: Buffer): boolean {
 export const invisibleHand: IEgg = {
   id: "invisible-hand",
   name: "The Invisible Hand",
-  description: "OWASP LLM01: Injects a 0.5pt white system note for AI parsers; invisible to humans, readable by LLMs.",
+  description: "OWASP LLM01: Injects a near-invisible white system note (≈1pt in Word, 0.5pt in PDF) for AI parsers; invisible to humans, readable by LLMs.",
   owaspMapping: OwaspMapping.LLM01_Prompt_Injection,
 
   manualCheckAndValidation:

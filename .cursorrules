@@ -38,7 +38,7 @@ You are an expert Fullstack Security Engineer and AI Architect. You are assistin
 ## 📝 Coding Standards
 - Use functional programming patterns where possible.
 - Provide clear comments for every security-related logic block.
-- Ensure the "LLM-Trap" (Invisible Prompt Injection) is rendered at 0.5pt font in white to ensure invisibility to humans but readability for parsers.
+- Ensure the "LLM-Trap" (Invisible Prompt Injection) is rendered at a near-invisible white font (≈1pt in the Word/DOCX build, 0.5pt in PDF) to ensure invisibility to humans but readability for parsers.
 
 ## 🔧 Development Practices
 - **TDD (hard requirement):** For any non-trivial code change, follow TDD: write or describe tests first (using the project’s existing testing stack and conventions where possible), then implement only the minimal code required to make those tests pass.

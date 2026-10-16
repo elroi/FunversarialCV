@@ -1,6 +1,8 @@
 /**
- * Layout tests: viewport export for mobile (explicit device-width, viewport-fit=cover).
+ * Layout tests: viewport export for mobile (explicit device-width, viewport-fit=cover)
+ * and the document title shown in the browser tab.
  */
+import { metadata } from "./siteMetadata";
 import { viewport } from "./viewport";
 
 describe("Root layout viewport", () => {
@@ -9,5 +11,11 @@ describe("Root layout viewport", () => {
     expect(viewport.width).toBe("device-width");
     expect(viewport.initialScale).toBe(1);
     expect(viewport.viewportFit).toBe("cover");
+  });
+});
+
+describe("Root layout document title", () => {
+  it("names the browser tab FunversarialCV", () => {
+    expect(metadata.title).toBe("FunversarialCV");
   });
 });

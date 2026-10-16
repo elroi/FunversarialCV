@@ -50,7 +50,8 @@ The repo is a monorepo with one active package:
 Every feature is an "Egg" — a plugin implementing `IEgg` (`src/types/egg.ts`):
 - `id`, `name`, `owaspMapping`, `transform(buffer, payload): Promise<Buffer>`, `validatePayload(payload): boolean`
 - Eggs live in `src/eggs/` and are registered in `src/eggs/registry.ts`
-- Current eggs: **InvisibleHand** (LLM01 prompt injection, white 0.5pt font), **MetadataShadow** (LLM05:2025 Improper Output Handling, custom DOCX properties), **IncidentMailto** (creative mailto hyperlink), **CanaryWing** (LLM09:2025 Misinformation, trackable ping token)
+- Current eggs: **InvisibleHand** (LLM01 prompt injection, near-invisible white font — **~1pt in the DOCX build** (`w:sz=2`), 0.5pt in PDF), **MetadataShadow** (LLM05:2025 Improper Output Handling, custom DOCX properties), **IncidentMailto** (creative mailto hyperlink), **CanaryWing** (LLM09:2025 Misinformation, trackable ping token)
+- Egg surfaces, the Validation Lab "honest sequence", its string-locked tests, and cloud-session gotchas are documented in `AGENTS.md` and `docs/VALIDATION_LAB_HONEST_SEQUENCE_SPEC.md` — read those before editing Validation Lab copy or the egg size claims.
 
 ### Audience system (dual-copy)
 

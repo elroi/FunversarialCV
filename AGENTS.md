@@ -31,6 +31,27 @@ Every PDF this app saves goes through `savePdf` in `frontend/src/lib/pdfSave.ts`
 
 The `docx` library writes core creator `Un-named` unless `creator` is set. Files we generate set it to `FunversarialCV`. An uploaded Word file keeps its own author.
 
+## Validation Lab & egg surfaces (the "honest sequence")
+
+The eggs land on *different* DOCX surfaces, and only **body text** reaches an LLM that ingests a `.docx`:
+
+- **InvisibleHand** — body text (white ~1pt run, `w:sz=2` in `docxInject.ts`). Reaches a chat model; may be acted on or flagged.
+- **CanaryWing** — the URL is body text (white ~1pt hyperlink run), so the *address* can appear in a chat upload, but the **recorded hit** only fires when something fetches the link (`/api/canary/...`); chat apps don't fetch.
+- **MetadataShadow** — `docProps/custom.xml` / `core.xml`. **Does not reach a chat model** (document properties aren't exposed). The console always sends `divergenceProfile=machine`, so armed files carry `Company` + `ParserDirective_Priority` / `LLM_Context_Seed` / `SchemaHint_Resume`. There is **no "Internal Priority Level"** field — don't write copy that asks a model to extract one.
+- **IncidentMailto** — a hyperlink target; not read as an instruction.
+
+So **public AI chat tools are not a reliable test**; the in-app Ingestion Lab ("What the file says") is the real, repeatable proof. The Validation Lab copy encodes this — see `docs/VALIDATION_LAB_HONEST_SEQUENCE_SPEC.md`. `GET /api/eggs` returns only `id`/`name`/`manualCheckAndValidation` (not `description`); the engine card renders `copy.invisibleHandDescription`.
+
+`validationLabManualMirrorProtocol` is **schema-bearing** (parsed by `validationLabProtocol.ts`; bad shape → plain-paragraph fallback). The Validation Lab copy is **string-locked** across `src/copy/copy.test.ts` (e.g. `labHarnessIntro` must contain `LLM09`/not `LLM05`; `fullSessionIntro` must keep "full session" + "15–20 min"), `src/lib/validationLabProtocol.test.ts`, `src/components/ValidationLab.test.tsx`, and `app/page.test.tsx`. Change those strings and their tests in the same commit.
+
+## Cloud sessions (claude.ai/code)
+
+- A fresh container has **no `node_modules`** — run `npm install` (from `frontend/`) before `npm test` / `tsc`.
+- This checkout often has **no git `origin`** wired. Attach with the session's repo-add (push access) and ensure the Claude GitHub App is installed on the repo. PR **merge** writes work through the egress proxy, but **branch/ref deletion does not** (`git push --delete` disconnects; REST `DELETE /git/refs` returns 403). Delete merged branches from the GitHub UI, not the session.
+- **Playwright E2E can't run** in-container — the pinned `chrome-headless-shell` build isn't present and the env forbids `playwright install`. Verify the extract/ingestion engine via Jest (`src/engine/labExtract/*`, `app/api/lab/extract/route.test.ts`) instead; do the browser pass on the deployed site.
+- The live domain `cv.funversarial.com` is **blocked by the egress proxy**, so live smoke tests need a real browser (Claude in Chrome / built-in browser) or a manual check, not `curl` from the shell.
+- The stop hook flags any dirty file. Apply judgment: never commit to `main`, don't fold unrelated WIP into a feature branch, and discard regenerated fixtures (e.g. `frontend/e2e/fixtures/*.docx` get rewritten by a run) rather than committing them.
+
 ## Checks
 
 From `frontend/`, continuous integration (CI) runs `npm test` and `npm run lint` on Node 22. `tsc --noEmit` also type-checks tests and already reports older errors that CI does not run. End-to-end tests are a separate job. A green test file is not a green suite when the failure depends on what ran earlier.

@@ -1,6 +1,6 @@
 # Validation Lab — honest sequence spec (rev. 7)
 
-**Status:** Draft for sign-off (wording not yet applied to code)
+**Status:** Applied — merged to `main` in PR #55 (`401cb0c`). Follow-up review nits (notice theming, LLM05 dual-target wording, this status/tracker update) tracked on `fix/validation-lab-followups`.
 **Date:** 2026-10-15
 **Owner:** Elroi
 **Scope:** Copy + flow of the Validation Lab. No egg/engine logic changes.

@@ -286,7 +286,7 @@ export const ValidationLab: React.FC<ValidationLabProps> = ({
       <p
         id="validation-lab-public-llm-notice"
         data-testid="validation-lab-public-llm-notice"
-        className="mb-5 rounded-lg border border-amber-400/40 bg-amber-400/[0.06] px-3 py-2.5 font-sans text-caption leading-relaxed text-foreground/80"
+        className="mb-5 rounded-lg border border-accent/30 bg-accent/[0.06] px-3 py-2.5 font-sans text-caption leading-relaxed text-foreground/80"
       >
         {copy.validationLabPublicLlmNotice}
       </p>

@@ -1,10 +1,11 @@
 import "./globals.css";
 import { JetBrains_Mono } from "next/font/google";
+import { metadata } from "./siteMetadata";
 import { viewport } from "./viewport";
 import { AudienceProvider } from "../src/contexts/AudienceContext";
 import { Analytics } from "@vercel/analytics/next";
 
-export { viewport };
+export { metadata, viewport };
 
 const jetBrainsMono = JetBrains_Mono({
   subsets: ["latin"],

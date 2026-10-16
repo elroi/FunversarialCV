@@ -49,11 +49,14 @@ describe("ValidationLab", () => {
         name: /External comparative evaluation: show or hide/i,
       })
     ).toBeInTheDocument();
+    const notice = document.getElementById("validation-lab-public-llm-notice");
     const guided = document.getElementById("validation-lab-guided");
     const jd = document.getElementById("validation-lab-jd");
     const harness = document.getElementById("validation-lab-harness");
     const firstPrompt = document.querySelector("[data-testid^=\"validation-prompt-\"]");
-    expect(guided && jd && harness && firstPrompt).toBeTruthy();
+    expect(notice && guided && jd && harness && firstPrompt).toBeTruthy();
+    // Notice is the first thing in the section, above the sample job description (§5.6).
+    expect(notice!.compareDocumentPosition(jd!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(jd!.compareDocumentPosition(harness!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(harness!.compareDocumentPosition(guided!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(guided!.compareDocumentPosition(firstPrompt!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -70,36 +73,17 @@ describe("ValidationLab", () => {
     await waitFor(() => {
       expect(screen.getByText("About the ENABLED badge")).toBeInTheDocument();
     });
-    expect(screen.getByText("Test prompts")).toBeInTheDocument();
+    expect(screen.getByText("Illustrative prompts · on-page results only")).toBeInTheDocument();
     expect(screen.getByText("Thread setup (before job description)")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Upload or sample CV/i })).toHaveAttribute(
       "href",
       "#console-cv-upload"
     );
-    expect(screen.getByText(/Copy the BASE-00 prompt below/i)).toBeInTheDocument();
+    expect(screen.getByText(/paste BASE-00, then the JD/i)).toBeInTheDocument();
     expect(
-      screen.getByText(
-        /download the generated Word file before adding adversarial payloads/i
-      )
+      screen.getByText(/download the unarmed file first as your baseline/i)
     ).toBeInTheDocument();
-    expect(screen.getByText(/In one tab: attach the baseline CV/i)).toBeInTheDocument();
-  });
-
-  it("renders protocol step with vendor examples as external links", () => {
-    window.localStorage.setItem("funversarialcv-audience", "security");
-    renderWithAudience(<ValidationLab armedEggIds={new Set()} />);
-
-    expandExternalComparativeEvaluation();
-    const claude = screen.getByRole("link", { name: "Claude" });
-    expect(claude).toHaveAttribute("href", "https://claude.ai/");
-    const gemini = screen.getByRole("link", { name: "Gemini" });
-    expect(gemini).toHaveAttribute("href", "https://gemini.google.com/");
-    const copilot = screen.getByRole("link", { name: "Copilot" });
-    expect(copilot).toHaveAttribute("href", "https://copilot.microsoft.com/");
-    [claude, gemini, copilot].forEach((a) => {
-      expect(a).toHaveAttribute("target", "_blank");
-      expect(a).toHaveAttribute("rel", "noopener noreferrer");
-    });
+    expect(screen.getByText(/For LLM05 and LLM09, see the note/i)).toBeInTheDocument();
   });
 
   it("uses HR copy for badge explainer and prompt list caption", async () => {
@@ -109,7 +93,7 @@ describe("ValidationLab", () => {
     await waitFor(() => {
       expect(screen.getByText("About the Enabled badge")).toBeInTheDocument();
     });
-    expect(screen.getByText("Sample prompts")).toBeInTheDocument();
+    expect(screen.getByText("Example prompts · on-page results only")).toBeInTheDocument();
   });
 
   it("renders HR guided protocol with ingestion anchor", async () => {
@@ -152,7 +136,7 @@ describe("ValidationLab", () => {
     await waitFor(() => {
       expect(protocolContent).not.toHaveClass("hidden");
     });
-    expect(screen.getByText(/Copy the BASE-00 prompt below/i)).toBeInTheDocument();
+    expect(screen.getByText(/paste BASE-00, then the JD/i)).toBeInTheDocument();
     unmount();
 
     // HR — protocol fold should start collapsed.
@@ -181,24 +165,22 @@ describe("ValidationLab", () => {
 
     expandPrompt("BASE-01");
     expect(
-      screen.getByText(
-        /Use after the job description, with the CV in the same message or attached \(see numbered steps above\)/i
-      )
+      screen.getByText(/Illustrative recruiter framing/i)
     ).toBeInTheDocument();
 
     expandPrompt("LLM01");
     expect(
-      screen.getByText(/Tests whether hidden instructions in the CV change the reply/i)
+      screen.getByText(/Tests whether a hidden note can steer the AI/i)
     ).toBeInTheDocument();
 
     expandPrompt("LLM05");
     expect(
-      screen.getByText(/Looks at structured fields and contact details/i)
+      screen.getByText(/File-property pattern/i)
     ).toBeInTheDocument();
 
     expandPrompt("LLM09");
     expect(
-      screen.getByText(/Tests whether the AI over-trusts a positive summary/i)
+      screen.getByText(/Two separate things/i)
     ).toBeInTheDocument();
   });
 

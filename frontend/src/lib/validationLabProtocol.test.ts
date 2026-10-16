@@ -32,49 +32,36 @@ describe("parseValidationLabProtocol", () => {
     expect(parsed!.steps[1]).toBe("Only line.");
   });
 
-  it("parses security external comparative evaluation copy into headline and ten steps", () => {
+  it("parses security external comparative evaluation copy into headline and four steps", () => {
     const parsed = parseValidationLabProtocol(
       securityCopy.validationLabManualMirrorProtocol
     );
     expect(parsed).not.toBeNull();
     expect(parsed!.headline).toMatch(/External comparative evaluation/i);
     expect(parsed!.title).toMatch(/^External comparative evaluation$/i);
-    expect(parsed!.subtitle).toMatch(/Proof on this page first/i);
-    expect(parsed!.description).toMatch(/Invisible Hand|Inject Eggs/i);
-    expect(parsed!.steps).toHaveLength(10);
-    expect(parsed!.steps.some((s) => /BASE-00/i.test(s))).toBe(true);
-    expect(parsed!.steps.some((s) => /BASE-01/i.test(s))).toBe(true);
-    expect(parsed!.steps[0]).toMatch(/Upload or sample CV.*#console-cv-upload/s);
+    expect(parsed!.subtitle).toMatch(/not a reliable test/i);
+    expect(parsed!.steps).toHaveLength(4);
+    expect(parsed!.steps[0]).toMatch(/Upload or sample CV[\s\S]*#console-cv-upload/);
     expect(parsed!.steps[1]).toMatch(
-      /#console-armed-cv|#console-inject-eggs|#console-download-armed-docx/s
+      /#console-armed-cv|#console-inject-eggs|#console-download-armed-docx/
     );
-    expect(parsed!.steps[2]).toMatch(/Sample job description/i);
-    expect(parsed!.steps[3]).toMatch(/#validation-lab-harness|Ingestion lab/i);
-    expect(parsed!.steps[4]).toMatch(/lab completion|pinned template/i);
-    expect(parsed!.steps[5]).toMatch(/Open two browser tabs[\s\S]*Claude/i);
-    expect(parsed!.steps[6]).toMatch(/BASE-00/i);
-    expect(parsed!.steps[7]).toMatch(/sample job description/i);
-    expect(parsed!.steps[8]).toMatch(/BASE-01/i);
-    expect(parsed!.steps[9]).toMatch(
-      /armed CV|step \(2\)|Pick a test prompt|\(A\).*Check for hidden/is
-    );
+    expect(parsed!.steps[2]).toMatch(/#validation-lab-harness|Ingestion lab/i);
+    expect(parsed!.steps[3]).toMatch(/BASE-00/i);
+    expect(parsed!.steps[3]).toMatch(/BASE-01/i);
+    expect(parsed!.steps[3]).toMatch(/see the note/i);
   });
 
-  it("parses HR validation copy into headline and ten steps", () => {
+  it("parses HR validation copy into headline and four steps", () => {
     const parsed = parseValidationLabProtocol(hrCopy.validationLabManualMirrorProtocol);
     expect(parsed).not.toBeNull();
     expect(parsed!.headline).toMatch(/External comparative evaluation/i);
     expect(parsed!.title).toMatch(/^External comparative evaluation$/i);
-    expect(parsed!.subtitle).toMatch(/Proof on this page first/i);
-    expect(parsed!.description).toMatch(/Add signals|LLM01/i);
-    expect(parsed!.steps).toHaveLength(10);
-    expect(parsed!.steps.some((s) => /BASE-00/i.test(s))).toBe(true);
-    expect(parsed!.steps.some((s) => /BASE-01/i.test(s))).toBe(true);
-    expect(parsed!.steps[0]).toMatch(/Upload or sample CV|console-cv-upload/i);
+    expect(parsed!.subtitle).toMatch(/not a reliable test/i);
+    expect(parsed!.steps).toHaveLength(4);
+    expect(parsed!.steps[0]).toMatch(/upload or use the sample CV|console-cv-upload/i);
     expect(parsed!.steps[1]).toMatch(/Add signals|console-download-armed-docx/i);
-    expect(parsed!.steps[3]).toMatch(/What the file says|validation-lab-harness/i);
-    expect(parsed!.steps[5]).toMatch(/Open two browser tabs[\s\S]*Claude/i);
-    expect(parsed!.steps[6]).toMatch(/BASE-00/i);
-    expect(parsed!.steps[9]).toMatch(/signaled CV|Pick a test prompt|\(A\).*Check for hidden/is);
+    expect(parsed!.steps[2]).toMatch(/What the file says|validation-lab-harness/i);
+    expect(parsed!.steps[3]).toMatch(/BASE-00/i);
+    expect(parsed!.steps[3]).toMatch(/BASE-01/i);
   });
 });

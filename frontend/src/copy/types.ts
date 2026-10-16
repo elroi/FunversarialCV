@@ -290,6 +290,8 @@ export interface Copy {
   /** Accessible name for the External comparative evaluation expand/collapse control. */
   validationLabProtocolCollapsibleAriaLabel: string;
   validationLabManualMirrorProtocol: string;
+  /** Canonical, single-sourced notice: public chat tools are not a reliable test. Rendered once at the top of the Validation Lab. */
+  validationLabPublicLlmNotice: string;
   /** Short label for the collapsible block that explains the ENABLED / Enabled badge. */
   validationLabMatchBadgeHintTitle: string;
   validationLabMatchBadgeHint: string;

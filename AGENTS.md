@@ -10,6 +10,10 @@ Generated Canary Wing hyperlinks must use `CANARY_BASE_URL`. That value may be t
 
 A fresh clone has no `.env`. The production value lives in the Vercel project, not in git.
 
+## Vercel command-line interface (CLI)
+
+`frontend/` is not linked to the `funversarial-cv` project. `vc curl --yes` from that directory creates an empty Vercel project named `frontend`. Preview hosts (`*.vercel.app`) are behind Vercel login. Read `https://cv.funversarial.com`, or link the CLI to `funversarial-cv` before `vc curl`.
+
 ## Open Worldwide Application Security Project (OWASP) labels
 
 The 2025 Top 10 for large language model (LLM) applications renamed categories. The live site kept many 2023 address slugs.
@@ -30,6 +34,12 @@ Every PDF this app saves goes through `savePdf` in `frontend/src/lib/pdfSave.ts`
 ## Word files
 
 The `docx` library writes core creator `Un-named` unless `creator` is set. Files we generate set it to `FunversarialCV`. An uploaded Word file keeps its own author.
+
+## Document title
+
+The root layout exports metadata the same way it exports the viewport: `export { metadata, viewport }` in `frontend/app/layout.tsx`. The browser tab stays `FunversarialCV`. It does not follow the HR or security audience.
+
+A test of the metadata object can pass while the built page still has no `<title>`. Confirm `<title>FunversarialCV</title>` in `frontend/.next/server/app/index.html` and `document.title` on `/` and `/resources`.
 
 ## Checks
 

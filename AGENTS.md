@@ -14,6 +14,18 @@ A fresh clone has no `.env`. The production value lives in the Vercel project, n
 
 `frontend/` is not linked to the `funversarial-cv` project. `vc curl --yes` from that directory creates an empty Vercel project named `frontend`. Preview hosts (`*.vercel.app`) are behind Vercel login. Read `https://cv.funversarial.com`, or link the CLI to `funversarial-cv` before `vc curl`.
 
+## Vercel builds
+
+Three warnings recur. Only a stale Browserslist database is a change in this repo.
+
+From `frontend/`, `npx update-browserslist-db@latest` refreshes `caniuse-lite` and `baseline-browser-mapping`, then uninstalls both from `package.json`. From the repo root, `git diff -- frontend/package.json frontend/package-lock.json` should show only the lockfile. If that uninstall stops halfway, `package.json` lists those packages and should be cleaned. The next Vercel log goes from "Creating an optimized production build" to "Compiled successfully" with no age warning. A restored build cache can still apply the lockfile bump.
+
+`cache-dir` is not set in this repo. npm's setting is `cache`. The unknown-config warning comes from the Vercel build environment.
+
+`esbuild` is required only by `tsx`. The Next.js 14.1.0 production build uses the `@next/swc-*` packages. `unrs-resolver` comes from `eslint-config-next` through `eslint-import-resolver-typescript`. The Vercel build log may name `npm install-scripts approve <pkg>` for those two. That subcommand is absent from npm 10.9.8. Approving them does not fix a failure that is happening now.
+
+The production deploy is Vercel's Git integration. It is not a workflow file in this repo.
+
 ## Open Worldwide Application Security Project (OWASP) labels
 
 The 2025 Top 10 for large language model (LLM) applications renamed categories. The live site kept many 2023 address slugs.
@@ -43,4 +55,4 @@ A test of the metadata object can pass while the built page still has no `<title
 
 ## Checks
 
-From `frontend/`, continuous integration (CI) runs `npm test` and `npm run lint` on Node 22. `tsc --noEmit` also type-checks tests and already reports older errors that CI does not run. End-to-end tests are a separate job. A green test file is not a green suite when the failure depends on what ran earlier.
+From `frontend/`, continuous integration (CI) runs `npm test` and `npm run lint` on Node 22 for a pull request into `main`. That job does not run again on a push to `main`. End-to-end tests run on both a pull request and a push to `main`. `tsc --noEmit` also type-checks tests and already reports older errors that CI does not run. A green test file is not a green suite when the failure depends on what ran earlier.
